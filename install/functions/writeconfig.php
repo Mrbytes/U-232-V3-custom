@@ -22,6 +22,11 @@ $foo = array(
             'input' => 'config[mysql_db]',
             'info' => 'Your mysql database name.'
         ) ,
+        array(
+            'text' => 'Table prefix',
+            'input' => 'config[table_prefix]',
+            'info' => 'Prefix that you\'ll give to tables [default \'U232v3\']'
+        ) ,
     ) ,
     'Tracker' => array(
         array(
@@ -123,6 +128,7 @@ function saveconfig()
         $config = file_get_contents('extra/config.sample.php');
         $keys = array_map('foo', array_keys($_POST['config']));
         $values = array_values($_POST['config']);
+        $values[4] = ($values[4] == '') ? 'U232v3' : $values[4];
         $config = preg_replace($keys, $values, $config);
         if (file_put_contents($root.'include/config.php', $config)) {
             $out.= '<div class="readable">Config file was saved</div>';
@@ -146,7 +152,7 @@ function saveconfig()
         }
     } else $out.= '<div class="readable">Announce file was already written</div>';
     if ($continue) {
-        $out.= '<div style="text-align:center" class="info"><input type="button" value="Next step" onclick="window.location.href=\'index.php?step=2\'"/></div>';
+        $out.= '<div style="text-align:center" class="info"><input type="button" value="Next step" onclick="window.location.href=\'index.php?step=2\'"/></div></fieldset>';
         file_put_contents('step1.lock', 1);
     } else $out.= '<div style="text-align:center" class="info"><input type="button" value="Go back" onclick="window.go(-1)"/></div>';
     $out.= '</fieldset>';
