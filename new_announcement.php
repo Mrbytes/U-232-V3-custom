@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (!isset($flag)) stderr('Error', 'Invalid expiry selection');
         $expires = TIME_NOW + (86400 * $expiry); // 86400 seconds in one day.
         $created = TIME_NOW;
-        $query = sprintf('INSERT INTO announcement_main '.'(owner_id, created, expires, sql_query, subject, body) '.'VALUES (%s, %s, %s, %s, %s, %s)', sqlesc($CURUSER['id']) , sqlesc($created) , sqlesc($expires) , sqlesc($ann_query) , sqlesc($subject) , sqlesc($body));
+        $query = sprintf('INSERT INTO '.TBL_ANNOUNCEMENT_MAIN.' '.'(owner_id, created, expires, sql_query, subject, body) '.'VALUES (%s, %s, %s, %s, %s, %s)', sqlesc($CURUSER['id']) , sqlesc($created) , sqlesc($expires) , sqlesc($ann_query) , sqlesc($subject) , sqlesc($body));
         sql_query($query);
         if (mysqli_affected_rows($GLOBALS["___mysqli_ston"])) stderr('Success', 'Announcement was successfully created');
         stderr('Error', 'Contact an administrator');

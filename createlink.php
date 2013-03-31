@@ -16,7 +16,7 @@ if ($CURUSER['class'] < UC_STAFF) stderr("No Permision", "system file");
 $id = (int)$_GET['id'];
 if (!is_valid_id($id)) die();
 $action = isset($_GET['action']) ? htmlsafechars($_GET['action']) : '';
-$res = sql_query("SELECT hash1, username, passhash FROM users WHERE id = ".sqlesc($id)." AND class >= ".UC_STAFF) or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT hash1, username, passhash FROM ".TBL_USERS." WHERE id = ".sqlesc($id)." AND class >= ".UC_STAFF) or sqlerr(__FILE__, __LINE__);
 $arr = mysqli_fetch_assoc($res);
 $hash1 = md5($arr['username'].TIME_NOW.$arr['passhash']);
 $hash2 = md5($hash1.TIME_NOW.$arr['username']);
@@ -25,7 +25,7 @@ $hash1.= $hash2.$hash3;
 if ($action == 'reset') {
     $sure = isset($_GET['sure']) ? (int)($_GET['sure']) : 0;
     if ($sure != '1') stderr("Sanity check...", "You are about to reset your login link: Click <a href='createlink.php?action=reset&amp;id=$id&amp;sure=1'>here</a> if you are sure.");
-    sql_query("UPDATE users SET hash1 = ".sqlesc($hash1)." WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    sql_query("UPDATE ".TBL_USERS." SET hash1 = ".sqlesc($hash1)." WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $mc1->begin_transaction('user'.$id);
     $mc1->update_row(false, array(
         'hash1' => $hash1
@@ -45,7 +45,7 @@ if ($action == 'reset') {
     stderr("Success", "Your login link reset successfully.");
 } else {
     if ($arr['hash1'] === '') {
-        sql_query("UPDATE users SET hash1 = ".sqlesc($hash1)." WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_USERS." SET hash1 = ".sqlesc($hash1)." WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
         header("Refresh: 2; url={$INSTALLER09['baseurl']}/userdetails.php?id=$id");
         $mc1->begin_transaction('user'.$id);
         $mc1->update_row(false, array(

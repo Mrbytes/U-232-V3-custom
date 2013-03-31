@@ -32,7 +32,7 @@ if (!is_valid_id($post_id) || !is_valid_id($topic_id)) {
     stderr('Error', 'Bad ID.');
 }
 //=== make sure it's their post or they are staff... this may change
-$res_post = sql_query('SELECT p.user_id, p.staff_lock, u.id, u.class, u.suspended, t.locked, t.user_id AS owner_id, t.first_post, f.min_class_read, f.min_class_write, f.id AS forum_id FROM posts AS p LEFT JOIN users AS u ON p.user_id = u.id LEFT JOIN topics AS t ON t.id = p.topic_id LEFT JOIN forums AS f ON t.forum_id = f.id WHERE p.id=' . sqlesc($post_id));
+$res_post = sql_query('SELECT p.user_id, p.staff_lock, u.id, u.class, u.suspended, t.locked, t.user_id AS owner_id, t.first_post, f.min_class_read, f.min_class_write, f.id AS forum_id FROM '.TBL_POSTS.' AS p LEFT JOIN '.TBL_USERS.' AS u ON p.user_id = u.id LEFT JOIN '.TBL_TOPICS.' AS t ON t.id = p.topic_id LEFT JOIN '.TBL_FORUMS.' AS f ON t.forum_id = f.id WHERE p.id=' . sqlesc($post_id));
 $arr_post = mysqli_fetch_assoc($res_post);
 //=== if staff or post owner let them delete post
 $can_delete = ($arr_post['user_id'] === $CURUSER['id'] || $CURUSER['class'] >= UC_STAFF);
@@ -64,17 +64,17 @@ if ($sanity_check > 0) {
     //=== if you want the un-delete option (only admin and up can see "deleted" posts)
     if ($delete_for_real === 1) {
         //=== re-do that last post thing ;)
-        $res = sql_query('SELECT p.id, t.forum_id FROM posts AS p LEFT JOIN topics as t ON p.topic_id = t.id WHERE p.topic_id = ' . sqlesc($topic_id) . ' ORDER BY id DESC LIMIT 1');
+        $res = sql_query('SELECT p.id, t.forum_id FROM '.TBL_POSTS.' AS p LEFT JOIN '.TBL_TOPICS.' as t ON p.topic_id = t.id WHERE p.topic_id = ' . sqlesc($topic_id) . ' ORDER BY id DESC LIMIT 1');
         $arr = mysqli_fetch_assoc($res);
-        sql_query('UPDATE topics SET last_post = ' . sqlesc($arr['id']) . ', post_count = post_count - 1 WHERE id = ' . sqlesc($topic_id));
-        sql_query('UPDATE forums SET post_count = post_count - 1 WHERE id = ' . sqlesc($arr['forum_id']));
-        sql_query('DELETE FROM posts WHERE id = ' . sqlesc($post_id));
-        sql_query("UPDATE usersachiev SET forumposts=forumposts-1 WHERE id=" . sqlesc($arr_post['userid'])) or sqlerr(__FILE__, __LINE__);
+        sql_query('UPDATE '.TBL_TOPICS.' SET last_post = ' . sqlesc($arr['id']) . ', post_count = post_count - 1 WHERE id = ' . sqlesc($topic_id));
+        sql_query('UPDATE '.TBL_FORUMS.' SET post_count = post_count - 1 WHERE id = ' . sqlesc($arr['forum_id']));
+        sql_query('DELETE FROM '.TBL_POSTS.' WHERE id = ' . sqlesc($post_id));
+        sql_query("UPDATE ".TBL_USERSACHIEV." SET forumposts=forumposts-1 WHERE id=" . sqlesc($arr_post['userid'])) or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('last_post_' . $post_id . '_' . $CURUSER['class']);
         $mc1->delete_value('sv_last_post_' . $post_id . '_' . $CURUSER['class']);
         $mc1->delete_value('last_posts_' . $CURUSER['class']);
     } else {
-        sql_query('UPDATE posts SET status = \'deleted\'  WHERE id = ' . sqlesc($post_id) . ' AND topic_id = ' . sqlesc($topic_id));
+        sql_query('UPDATE '.TBL_POSTS.' SET status = \'deleted\'  WHERE id = ' . sqlesc($post_id) . ' AND topic_id = ' . sqlesc($topic_id));
     }
     //=== ok, all done here, send them back! \o/
     header('Location: ' . $INSTALLER09['baseurl'] . '/forums.php?action=view_topic&topic_id=' . $topic_id);

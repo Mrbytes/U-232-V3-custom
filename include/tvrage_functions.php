@@ -88,7 +88,7 @@ function tvrage(&$torrents)
             'poster' => $tvrage_showinfo['image']
         ));
         $mc1->commit_transaction(0);
-        if (count($row_update)) sql_query('UPDATE torrents set '.join(', ', $row_update).' WHERE id = '.$torrents['id']) or sqlerr(__FILE__, __LINE__);
+        if (count($row_update)) sql_query('UPDATE '.TBL_TORRENTS.' set '.join(', ', $row_update).' WHERE id = '.$torrents['id']) or sqlerr(__FILE__, __LINE__);
         $tvrage_showinfo = tvrage_format($tvrage_showinfo, 'show').'<br/>';
         $mc1->cache_value($memkey, $tvrage_showinfo, 0);
         $tvrage_data.= $tvrage_showinfo;

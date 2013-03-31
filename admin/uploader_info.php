@@ -27,12 +27,12 @@ require_once (CLASS_DIR.'class_check.php');
 class_check(UC_STAFF);
 $lang = array_merge($lang);
 $HTMLOUT = $count = '';
-$count1 = get_row_count('torrents');
+$count1 = get_row_count('TBL_TORRENTS');
 $perpage = 15;
 $pager = pager($perpage, $count1, 'staffpanel.php?tool=uploader_info&amp;');
 //=== main query
 $res = sql_query('SELECT COUNT(t.id) as how_many_torrents, t.owner, t.added, u.username, u.uploaded, u.downloaded, u.id, u.donor, u.suspended, u.class, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king
-            FROM torrents AS t LEFT JOIN users as u ON u.id = t.owner GROUP BY t.owner ORDER BY how_many_torrents DESC '.$pager['limit']);
+            FROM '.TBL_TORRENTS.' AS t LEFT JOIN '.TBL_USERS.' as u ON u.id = t.owner GROUP BY t.owner ORDER BY how_many_torrents DESC '.$pager['limit']);
 if ($count1 > $perpage) $HTMLOUT.= $pager['pagertop'];
 $HTMLOUT.= '<table border="0" cellspacing="0" cellpadding="5">
    <tr><td class="colhead" align="center">Rank</td><td class="colhead" align="center">#Torrents</td><td class="colhead" align="left">Member</td><td class="colhead" align="left">Class</td><td class="colhead" align="left">Ratio</td><td class="colhead" align="left">Last Upload</td><td class="colhead" align="center">Send Pm</td></tr>';

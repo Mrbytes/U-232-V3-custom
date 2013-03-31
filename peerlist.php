@@ -50,15 +50,15 @@ function dltable($name, $arr, $torrent)
     $htmlout.= "</table>\n";
     return $htmlout;
 }
-$res = sql_query("SELECT * FROM torrents WHERE id = $id") or sqlerr();
+$res = sql_query("SELECT * FROM ".TBL_TORRENTS." WHERE id = $id") or sqlerr();
 if (mysqli_num_rows($res) == 0) stderr("{$lang['peerslist_error']}", "{$lang['peerslist_nothing']}");
 $row = mysqli_fetch_assoc($res);
 $downloaders = array();
 $seeders = array();
 $subres = sql_query("SELECT u.username, u.anonymous, u.paranoia, t.owner, t.anonymous as tanonymous, p.seeder, p.finishedat, p.downloadoffset, p.uploadoffset, p.ip, p.port, p.uploaded, p.downloaded, p.to_go, p.started AS st, p.connectable, p.agent, p.last_action AS la, p.userid, p.peer_id
-    FROM peers p
-    LEFT JOIN users u ON p.userid = u.id
-	LEFT JOIN torrents as t on t.id = p.torrent
+    FROM ".TBL_PEERS." p
+    LEFT JOIN ".TBL_USERS." u ON p.userid = u.id
+	LEFT JOIN ".TBL_TORRENTS." as t on t.id = p.torrent
     WHERE p.torrent = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
 if (mysqli_num_rows($subres) == 0) stderr("{$lang['peerslist_warning']}", "{$lang['peerslist_no_data']}");
 while ($subrow = mysqli_fetch_assoc($subres)) {

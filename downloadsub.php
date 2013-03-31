@@ -19,7 +19,7 @@ if ($action == "download") {
     $id = isset($_POST["sid"]) ? 0 + $_POST["sid"] : 0;
     if ($id == 0) stderr("Err", "Not a valid id");
     else {
-        $res = sql_query("SELECT id, name, filename FROM subtitles WHERE id={$id} ") or sqlerr(__FILE__, __LINE__);
+        $res = sql_query("SELECT id, name, filename FROM ".TBL_SUBTITLES." WHERE id={$id} ") or sqlerr(__FILE__, __LINE__);
         $arr = mysqli_fetch_assoc($res);
         $ext = (substr($arr["filename"], -3));
         $fileName = str_replace(array(
@@ -44,7 +44,7 @@ if ($action == "download") {
         $zip->forceDownload($fName);
         @unlink($fName);
         @unlink("{$INSTALLER09['sub_up_dir']}/$fileName");
-        sql_query("UPDATE subtitles SET hits=hits+1 where id={$id}");
+        sql_query("UPDATE ".TBL_SUBTITLES." SET hits=hits+1 where id={$id}");
     }
 } else stderr("Err", "No way");
 ?>

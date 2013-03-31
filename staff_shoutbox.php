@@ -24,7 +24,7 @@ $HTMLOUT = $query = $dellall = $dtcolor = $fontcolor = $bg = $pm = $reply = '';
 header('Content-Type: text/html; charset='.charset());
 // === added turn on / off shoutbox - sir snuggs
 if ((isset($_GET['show_staffshout'])) && (($show_staffshout = $_GET['show_staff']) !== $CURUSER['show_staffshout'])) {
-    sql_query("UPDATE users SET show_staffshout = ".sqlesc($_GET['show_staff'])." WHERE id = ".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+    sql_query("UPDATE ".TBL_USERS." SET show_staffshout = ".sqlesc($_GET['show_staff'])." WHERE id = ".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
     $mc1->begin_transaction('MyUser_'.$CURUSER['id']);
     $mc1->update_row(false, array(
         'show_staffshout' => $_GET['show_staff']
@@ -34,21 +34,21 @@ if ((isset($_GET['show_staffshout'])) && (($show_staffshout = $_GET['show_staff'
 }
 // Delete single shout
 if (isset($_GET['del']) && $CURUSER['class'] >= UC_STAFF && is_valid_id($_GET['del'])) {
-    sql_query("DELETE FROM shoutbox WHERE staff_shout='yes' AND id=".sqlesc($_GET['del'])) or sqlerr(__FILE__, __LINE__);
+    sql_query("DELETE FROM ".TBL_SHOUTBOX." WHERE staff_shout='yes' AND id=".sqlesc($_GET['del'])) or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('staff_shoutbox_');
     //$mc1->delete_value('shoutbox_');
     
 }
 // Empty shout - sysop
 if (isset($_GET['delall']) && $CURUSER['class'] == UC_MAX) {
-    sql_query("TRUNCATE TABLE shoutbox") or sqlerr(__FILE__, __LINE__);
+    sql_query("TRUNCATE TABLE ".TBL_SHOUTBOX."") or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('staff_shoutbox_');
     //$mc1->delete_value('shoutbox_');
     
 }
 // Staff edit
 if (isset($_GET['edit']) && $CURUSER['class'] >= UC_STAFF && is_valid_id($_GET['edit'])) {
-    $sql = sql_query('SELECT id, text FROM shoutbox WHERE staff_shout="yes" AND id='.sqlesc($_GET['edit'])) or sqlerr(__FILE__, __LINE__);
+    $sql = sql_query('SELECT id, text FROM '.TBL_SHOUTBOX.' WHERE staff_shout="yes" AND id='.sqlesc($_GET['edit'])) or sqlerr(__FILE__, __LINE__);
     $res = mysqli_fetch_assoc($sql);
     unset($sql);
     $HTMLOUT.= "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
@@ -93,7 +93,7 @@ background: #000000 repeat-x left top;
 }
 // Power Users+ can edit anyones single shouts //== pdq
 if (isset($_GET['edit']) && ($_GET['user'] == $CURUSER['id']) && ($CURUSER['class'] >= UC_POWER_USER && $CURUSER['class'] <= UC_STAFF) && is_valid_id($_GET['edit'])) {
-    $sql = sql_query('SELECT id, text, userid FROM shoutbox WHERE staff_shout="yes" AND userid ='.sqlesc($_GET['user']).' AND id='.sqlesc($_GET['edit'])) or sqlerr(__FILE__, __LINE__);
+    $sql = sql_query('SELECT id, text, userid FROM '.TBL_SHOUTBOX.' WHERE staff_shout="yes" AND userid ='.sqlesc($_GET['user']).' AND id='.sqlesc($_GET['edit'])) or sqlerr(__FILE__, __LINE__);
     $res = mysqli_fetch_array($sql);
     $HTMLOUT.= "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
 <html xmlns='http://www.w3.org/1999/xhtml'>
@@ -141,7 +141,7 @@ if (isset($_POST['text']) && $CURUSER['class'] >= UC_STAFF && is_valid_id($_POST
     require_once (INCL_DIR.'bbcode_functions.php');
     $text = trim($_POST['text']);
     $text_parsed = format_comment($text);
-    sql_query('UPDATE shoutbox SET text = '.sqlesc($text).', text_parsed = '.sqlesc($text_parsed).' WHERE id='.sqlesc($_POST['id'])) or sqlerr(__FILE__, __LINE__);
+    sql_query('UPDATE '.TBL_SHOUTBOX.' SET text = '.sqlesc($text).', text_parsed = '.sqlesc($text_parsed).' WHERE id='.sqlesc($_POST['id'])) or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('staff_shoutbox_');
     //$mc1->delete_value('shoutbox_');
     unset($text, $text_parsed);
@@ -151,7 +151,7 @@ if (isset($_POST['text']) && (isset($_POST['user']) == $CURUSER['id']) && ($CURU
     require_once (INCL_DIR.'bbcode_functions.php');
     $text = trim($_POST['text']);
     $text_parsed = format_comment($text);
-    sql_query('UPDATE shoutbox SET text = '.sqlesc($text).', text_parsed = '.sqlesc($text_parsed).' WHERE userid='.sqlesc($_POST['user']).' AND id='.sqlesc($_POST['id'])) or sqlerr(__FILE__, __LINE__);
+    sql_query('UPDATE '.TBL_SHOUTBOX.' SET text = '.sqlesc($text).', text_parsed = '.sqlesc($text_parsed).' WHERE userid='.sqlesc($_POST['user']).' AND id='.sqlesc($_POST['id'])) or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('staff_shoutbox_');
     //$mc1->delete_value('shoutbox_');
     unset($text, $text_parsed);
@@ -264,14 +264,14 @@ if (isset($_GET['staff_sent']) && ($_GET['staff_sent'] == "yes")) {
     if (preg_match($pattern, $text, $vars) && $CURUSER["class"] >= UC_STAFF) {
         $command = $vars[1];
         $user = $vars[2];
-        $c = sql_query("SELECT id, class, modcomment FROM users where username=".sqlesc($user)) or sqlerr(__FILE__, __LINE__);
+        $c = sql_query("SELECT id, class, modcomment FROM ".TBL_USERS." where username=".sqlesc($user)) or sqlerr(__FILE__, __LINE__);
         $a = mysqli_fetch_row($c);
         if (mysqli_num_rows($c) == 1 && $CURUSER["class"] > $a[1]) {
             switch ($command) {
             case "/EMPTY":
                 $what = 'deleted all shouts';
                 $msg = "[b]".htmlsafechars($user)."'s[/b] shouts have been deleted";
-                $query = "DELETE FROM shoutbox where userid = ".sqlesc($a[0]);
+                $query = "DELETE FROM ".TBL_SHOUTBOX." where userid = ".sqlesc($a[0]);
                 $mc1->delete_value('staff_shoutbox_');
                 //$mc1->delete_value('shoutbox_');
                 break;
@@ -280,7 +280,7 @@ if (isset($_GET['staff_sent']) && ($_GET['staff_sent'] == "yes")) {
                 $what = 'gagged';
                 $modcomment = get_date(TIME_NOW, 'DATE', 1)." - [ShoutBox] User has been gagged by ".$CURUSER["username"]."\n".$a[2];
                 $msg = "[b]".htmlsafechars($user)."[/b] - has been gagged by ".$CURUSER["username"];
-                $query = "UPDATE users SET chatpost='0', modcomment = concat(".sqlesc($modcomment).", modcomment) WHERE id = ".sqlesc($a[0]);
+                $query = "UPDATE ".TBL_USERS." SET chatpost='0', modcomment = concat(".sqlesc($modcomment).", modcomment) WHERE id = ".sqlesc($a[0]);
                 $mc1->begin_transaction('MyUser_'.$a[0]);
                 $mc1->update_row(false, array(
                     'chatpost' => 0
@@ -302,7 +302,7 @@ if (isset($_GET['staff_sent']) && ($_GET['staff_sent'] == "yes")) {
                 $what = 'ungagged';
                 $modcomment = get_date(TIME_NOW, 'DATE', 1)." - [ShoutBox] User has been ungagged by ".$CURUSER["username"]."\n".$a[2];
                 $msg = "[b]".htmlsafechars($user)."[/b] - has been ungagged by ".$CURUSER["username"];
-                $query = "UPDATE users SET chatpost='1', modcomment = concat(".sqlesc($modcomment).", modcomment) WHERE id = ".sqlesc($a[0]);
+                $query = "UPDATE ".TBL_USERS." SET chatpost='1', modcomment = concat(".sqlesc($modcomment).", modcomment) WHERE id = ".sqlesc($a[0]);
                 $mc1->begin_transaction('MyUser_'.$a[0]);
                 $mc1->update_row(false, array(
                     'chatpost' => 1
@@ -324,7 +324,7 @@ if (isset($_GET['staff_sent']) && ($_GET['staff_sent'] == "yes")) {
                 $what = 'warned';
                 $modcomment = get_date(TIME_NOW, 'DATE', 1)." - [ShoutBox] User has been warned by ".$CURUSER["username"]."\n".$a[2];
                 $msg = "[b]".htmlsafechars($user)."[/b] - has been warned by ".$CURUSER["username"];
-                $query = "UPDATE users SET warned='1', modcomment = concat(".sqlesc($modcomment).", modcomment) WHERE id = ".sqlesc($a[0]);
+                $query = "UPDATE ".TBL_USERS." SET warned='1', modcomment = concat(".sqlesc($modcomment).", modcomment) WHERE id = ".sqlesc($a[0]);
                 $mc1->begin_transaction('MyUser_'.$a[0]);
                 $mc1->update_row(false, array(
                     'warned' => 1
@@ -346,7 +346,7 @@ if (isset($_GET['staff_sent']) && ($_GET['staff_sent'] == "yes")) {
                 $what = 'unwarned';
                 $modcomment = get_date(TIME_NOW, 'DATE', 1)." - [ShoutBox] User has been unwarned by ".$CURUSER["username"]."\n".$a[2];
                 $msg = "[b]".htmlsafechars($user)."[/b] - warning removed by ".$CURUSER["username"];
-                $query = "UPDATE users SET warned='0', modcomment = concat(".sqlesc($modcomment).", modcomment) WHERE id = ".sqlesc($a[0]);
+                $query = "UPDATE ".TBL_USERS." SET warned='0', modcomment = concat(".sqlesc($modcomment).", modcomment) WHERE id = ".sqlesc($a[0]);
                 $mc1->begin_transaction('MyUser_'.$a[0]);
                 $mc1->update_row(false, array(
                     'warned' => 0
@@ -368,7 +368,7 @@ if (isset($_GET['staff_sent']) && ($_GET['staff_sent'] == "yes")) {
                 $what = 'disabled';
                 $modcomment = get_date(TIME_NOW, 'DATE', 1)." - [ShoutBox] User has been disabled by ".$CURUSER["username"]."\n".$a[2];
                 $msg = "[b]".htmlsafechars($user)."[/b] - has been disabled by ".$CURUSER["username"];
-                $query = "UPDATE users SET enabled='no', modcomment = concat(".sqlesc($modcomment).", modcomment) WHERE id = ".sqlesc($a[0]);
+                $query = "UPDATE ".TBL_USERS." SET enabled='no', modcomment = concat(".sqlesc($modcomment).", modcomment) WHERE id = ".sqlesc($a[0]);
                 $mc1->begin_transaction('MyUser_'.$a[0]);
                 $mc1->update_row(false, array(
                     'enabled' => 'no'
@@ -390,7 +390,7 @@ if (isset($_GET['staff_sent']) && ($_GET['staff_sent'] == "yes")) {
                 $what = 'enabled';
                 $modcomment = get_date(TIME_NOW, 'DATE', 1)." - [ShoutBox] User has been enabled by ".$CURUSER["username"]."\n".$a[2];
                 $msg = "[b]".htmlsafechars($user)."[/b] - has been enabled by ".$CURUSER["username"];
-                $query = "UPDATE users SET enabled='yes', modcomment = concat(".sqlesc($modcomment).", modcomment) WHERE id = ".sqlesc($a[0]);
+                $query = "UPDATE ".TBL_USERS." SET enabled='yes', modcomment = concat(".sqlesc($modcomment).", modcomment) WHERE id = ".sqlesc($a[0]);
                 $mc1->begin_transaction('MyUser_'.$a[0]);
                 $mc1->update_row(false, array(
                     'enabled' => 'yes'
@@ -417,7 +417,7 @@ if (isset($_GET['staff_sent']) && ($_GET['staff_sent'] == "yes")) {
         }
     } elseif (preg_match($private_pattern, $text, $vars)) {
         $to_user = 0;
-        $p_res = sql_query(sprintf('SELECT id FROM users WHERE username = %s', sqlesc($vars[2]))) or exit(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
+        $p_res = sql_query(sprintf('SELECT id FROM '.TBL_USERS.' WHERE username = %s', sqlesc($vars[2]))) or exit(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
         if (mysqli_num_rows($p_res) == 1) {
             $p_arr = mysqli_fetch_row($p_res);
             $to_user = (int)$p_arr[0];
@@ -425,20 +425,20 @@ if (isset($_GET['staff_sent']) && ($_GET['staff_sent'] == "yes")) {
         if ($to_user != 0 && $to_user != $CURUSER['id']) {
             $text = $vars[2]." - ".$vars[3];
             $text_parsed = format_comment($text);
-            sql_query("INSERT INTO shoutbox (userid, date, text, text_parsed, to_user, staff_shout) VALUES (".sqlesc($userid).", $date, ".sqlesc($text).",".sqlesc($text_parsed).",".sqlesc($to_user).", 'yes')") or sqlerr(__FILE__, __LINE__);
-            sql_query("UPDATE usersachiev SET dailyshouts=dailyshouts+1, weeklyshouts = weeklyshouts+1, monthlyshouts = monthlyshouts+1, totalshouts = totalshouts+1 WHERE id= ".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_SHOUTBOX." (userid, date, text, text_parsed, to_user, staff_shout) VALUES (".sqlesc($userid).", $date, ".sqlesc($text).",".sqlesc($text_parsed).",".sqlesc($to_user).", 'yes')") or sqlerr(__FILE__, __LINE__);
+            sql_query("UPDATE ".TBL_USERSACHIEV." SET dailyshouts=dailyshouts+1, weeklyshouts = weeklyshouts+1, monthlyshouts = monthlyshouts+1, totalshouts = totalshouts+1 WHERE id= ".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
             $mc1->delete_value('staff_shoutbox_');
             //$mc1->delete_value('shoutbox_');
             
         }
         $HTMLOUT.= "<script type=\"text/javascript\">parent.document.forms[0].staff_shbox_text.value='';</script>";
     } else {
-        $a = mysqli_fetch_row(sql_query("SELECT userid, date FROM shoutbox WHERE staff_shout='yes' ORDER by id DESC LIMIT 1")) or print ("First shout or an error :)");
+        $a = mysqli_fetch_row(sql_query("SELECT userid, date FROM ".TBL_SHOUTBOX." WHERE staff_shout='yes' ORDER by id DESC LIMIT 1")) or print ("First shout or an error :)");
         if (empty($text) || strlen($text) == 1) $HTMLOUT.= "<font class=\"small\" color=\"red\">Shout can't be empty</font>";
         elseif ($a[0] == $userid && (TIME_NOW - $a[1]) < $limit && $CURUSER['class'] < UC_STAFF) $HTMLOUT.= "<font class=\"small\" color=\"red\">$limit seconds between shouts <font class=\"small\">Seconds Remaining : (".($limit - (TIME_NOW - $a[1])).")</font></font>";
         else {
-            sql_query("INSERT INTO shoutbox (id, userid, date, text, text_parsed, staff_shout) VALUES ('id',".sqlesc($userid).", $date, ".sqlesc($text).",".sqlesc($text_parsed).", 'yes')") or sqlerr(__FILE__, __LINE__);
-            sql_query("UPDATE usersachiev SET dailyshouts=dailyshouts+1, weeklyshouts = weeklyshouts+1, monthlyshouts = monthlyshouts+1, totalshouts = totalshouts+1 WHERE id= ".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_SHOUTBOX." (id, userid, date, text, text_parsed, staff_shout) VALUES ('id',".sqlesc($userid).", $date, ".sqlesc($text).",".sqlesc($text_parsed).", 'yes')") or sqlerr(__FILE__, __LINE__);
+            sql_query("UPDATE ".TBL_USERSACHIEV." SET dailyshouts=dailyshouts+1, weeklyshouts = weeklyshouts+1, monthlyshouts = monthlyshouts+1, totalshouts = totalshouts+1 WHERE id= ".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
             $mc1->delete_value('staff_shoutbox_');
             //$mc1->delete_value('shoutbox_');
             $HTMLOUT.= "<script type=\"text/javascript\">parent.document.forms[0].staff_shbox_text.value='';</script>";
@@ -484,13 +484,13 @@ if (isset($_GET['staff_sent']) && ($_GET['staff_sent'] == "yes")) {
 }
 //== cache the data
 if (($shouts = $mc1->get_value('staff_shoutbox_')) === false) {
-    $res = sql_query("SELECT s.id, s.userid, s.date, s.text, s.to_user, s.staff_shout, u.username, u.pirate, u.king, u.class, u.donor, u.warned, u.leechwarn, u.enabled, u.chatpost, u.perms FROM shoutbox AS s LEFT JOIN users AS u ON s.userid=u.id WHERE s.staff_shout ='yes' ORDER BY s.id DESC LIMIT 30") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT s.id, s.userid, s.date, s.text, s.to_user, s.staff_shout, u.username, u.pirate, u.king, u.class, u.donor, u.warned, u.leechwarn, u.enabled, u.chatpost, u.perms FROM ".TBL_SHOUTBOX." AS s LEFT JOIN ".TBL_USERS." AS u ON s.userid=u.id WHERE s.staff_shout ='yes' ORDER BY s.id DESC LIMIT 30") or sqlerr(__FILE__, __LINE__);
     while ($shout = mysqli_fetch_assoc($res)) $shouts[] = $shout;
     $mc1->cache_value('staff_shoutbox_', $shouts, $INSTALLER09['expires']['staff_shoutbox']);
 }
 if (count($shouts) > 0) {
     $HTMLOUT.= "<table border='0' cellspacing='0' cellpadding='2' width='100%' align='left' class='small'>\n";
-    $shout_pm_alert = mysqli_fetch_assoc(sql_query(" SELECT count(id) AS pms FROM messages WHERE receiver = ".sqlesc($CURUSER['id'])." AND unread = 'yes' AND location = '1'")) or sqlerr(__FILE__, __LINE__);
+    $shout_pm_alert = mysqli_fetch_assoc(sql_query(" SELECT count(id) AS pms FROM ".TBL_MESSAGES." WHERE receiver = ".sqlesc($CURUSER['id'])." AND unread = 'yes' AND location = '1'")) or sqlerr(__FILE__, __LINE__);
     $gotpm = 0;
     if ($shout_pm_alert['pms'] > 0 && $gotpm == 0) {
         $HTMLOUT.= '<tr><td align=\'center\'><a href=\''.$INSTALLER09['baseurl'].'/pm_system.php\' target=\'_parent\'><span style=\'color:red;\'>You have '.(int)$shout_pm_alert['pms'].' new message'.((int)$shout_pm_alert['pms'] > 1 ? 's' : '').'</span></a></td></tr>';

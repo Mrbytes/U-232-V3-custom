@@ -60,38 +60,38 @@ if ($rep_locale == 'posts') {
     ///////////////////////////////////////////////
     // check the post actually exists!
     ///////////////////////////////////////////////
-    $forum = sql_query("SELECT posts.topic_id AS locale, posts.user_id, forums.min_class_read,
-users.username, users.reputation
-FROM posts
-LEFT JOIN topics ON topic_id = topics.id
-LEFT JOIN forums ON topics.forum_id = forums.id
-LEFT JOIN users ON posts.user_id = users.id
-WHERE posts.id ={$input['pid']}");
+    $forum = sql_query("SELECT ".TBL_POSTS.".topic_id AS locale, ".TBL_POSTS.".user_id, ".TBL_FORUMS.".min_class_read,
+".TBL_USERS.".username, ".TBL_USERS.".reputation
+FROM ".TBL_POSTS."
+LEFT JOIN ".TBL_TOPICS." ON topic_id = ".TBL_TOPICS.".id
+LEFT JOIN ".TBL_FORUMS." ON ".TBL_TOPICS.".forum_id = ".TBL_FORUMS.".id
+LEFT JOIN ".TBL_USERS." ON ".TBL_POSTS.".user_id = ".TBL_USERS.".id
+WHERE ".TBL_POSTS.".id ={$input['pid']}");
 } elseif ($rep_locale == 'comments') {
     ///////////////////////////////////////////////
     // check the comment actually exists!
     ///////////////////////////////////////////////
     //uncomment the following  if use comments.anonymous field
-    $forum = sql_query("SELECT comments.id, comments.user AS userid, comments.anonymous AS anon,
-     comments.torrent AS locale,
-     users.username, users.reputation
-     FROM comments
-     LEFT JOIN users ON comments.user = users.id
-     WHERE comments.id = {$input['pid']}");
+    $forum = sql_query("SELECT ".TBL_COMMENTS.".id, ".TBL_COMMENTS.".user AS userid, ".TBL_COMMENTS.".anonymous AS anon,
+     ".TBL_COMMENTS.".torrent AS locale,
+     ".TBL_USERS.".username, ".TBL_USERS.".reputation
+     FROM ".TBL_COMMENTS."
+     LEFT JOIN ".TBL_USERS." ON ".TBL_COMMENTS.".user = ".TBL_USERS.".id
+     WHERE ".TBL_COMMENTS.".id = {$input['pid']}");
 } elseif ($rep_locale == 'torrents') {
     ///////////////////////////////////////////////
     // check the uploader actually exists!
     ///////////////////////////////////////////////
-    $forum = sql_query("SELECT torrents.id as locale, torrents.owner AS userid, torrents.anonymous AS anon,
-    users.username, users.reputation
-    FROM torrents
-    LEFT JOIN users ON torrents.owner = users.id
-    WHERE torrents.id ={$input['pid']}");
+    $forum = sql_query("SELECT ".TBL_TORRENTS.".id as locale, ".TBL_TORRENTS.".owner AS userid, ".TBL_TORRENTS.".anonymous AS anon,
+    ".TBL_USERS.".username, ".TBL_USERS.".reputation
+    FROM ".TBL_TORRENTS."
+    LEFT JOIN ".TBL_USERS." ON ".TBL_TORRENTS.".owner = ".TBL_USERS.".id
+    WHERE ".TBL_TORRENTS.".id ={$input['pid']}");
 } elseif ($rep_locale == 'users') {
     ///////////////////////////////////////////////
     // check the user actually exists!
     ///////////////////////////////////////////////
-    $forum = sql_query("SELECT id AS userid, username, reputation FROM users WHERE id ={$input['pid']}");
+    $forum = sql_query("SELECT id AS userid, username, reputation FROM ".TBL_USERS." WHERE id ={$input['pid']}");
 } // end
 switch ($rep_locale) {
 case 'comments':
@@ -124,7 +124,7 @@ if ($CURUSER['class'] < $res['minclassread'])
 ///////////////////////////////////////////////
 //	Does the user have memory loss? Have they already rep'd?
 ///////////////////////////////////////////////
-$repeat = sql_query("SELECT postid FROM reputation WHERE postid ={$input['pid']} AND whoadded={$CURUSER['id']}");
+$repeat = sql_query("SELECT postid FROM ".TBL_REPUTATION." WHERE postid ={$input['pid']} AND whoadded={$CURUSER['id']}");
 //$repres = mysql_fetch_assoc( $forum ) or sqlerr(__LINE__,__FILE__);
 if (mysqli_num_rows($repeat) > 0 && $rep_locale != 'users') // blOOdy eedjit check!
 {
@@ -143,7 +143,7 @@ if (!$is_mod) {
     ///////////////////////////////////////////////
     //	Some trivial flood checking
     ///////////////////////////////////////////////
-    $flood = sql_query("SELECT dateadd, userid FROM reputation 
+    $flood = sql_query("SELECT dateadd, userid FROM ".TBL_REPUTATION." 
 									WHERE whoadded = {$CURUSER['id']} 
 									ORDER BY dateadd DESC
 									LIMIT 0 , $klimit");
@@ -166,7 +166,7 @@ if (!$is_mod) {
 ///////////////////////////////////////////////
 // Note: if you use another forum type, you may already have this GLOBAL available
 // So you can save a query here, else...
-$r = sql_query("SELECT COUNT(*) FROM posts WHERE user_id = {$CURUSER['id']}") or sqlerr();
+$r = sql_query("SELECT COUNT(*) FROM ".TBL_POSTS." WHERE user_id = {$CURUSER['id']}") or sqlerr();
 $a = mysqli_fetch_row($r) or sqlerr();
 $CURUSER['posts'] = $a[0];
 ///////////////////////////////////////////////
@@ -196,7 +196,7 @@ if (isset($input['do']) && $input['do'] == 'addrep') {
     }
     $score = fetch_reppower($CURUSER, $input['reputation']);
     $res['reputation']+= $score;
-    sql_query("UPDATE users set reputation=".intval($res['reputation'])." WHERE id=".$res['userid']);
+    sql_query("UPDATE ".TBL_USERS." set reputation=".intval($res['reputation'])." WHERE id=".$res['userid']);
     $mc1->begin_transaction('MyUser_'.$res['userid']);
     $mc1->update_row(false, array(
         'reputation' => $res['reputation']
@@ -219,7 +219,7 @@ if (isset($input['do']) && $input['do'] == 'addrep') {
     );
     //print( join( ',', $save) );
     //print( join(',', array_keys($save)));
-    sql_query("INSERT INTO reputation (".join(',', array_keys($save)).") VALUES (".join(',', $save).")");
+    sql_query("INSERT INTO ".TBL_REPUTATION." (".join(',', array_keys($save)).") VALUES (".join(',', $save).")");
     header("Location: {$INSTALLER09['baseurl']}/reputation.php?pid={$input['pid']}&done=1");
 } // Move along, nothing to see here!
 else {
@@ -227,8 +227,8 @@ else {
     {
         // check for fish!
         $query1 = sql_query("select r.*, leftby.id as leftby_id, leftby.username as leftby_name
-                                        from reputation r
-                                        left join users leftby on leftby.id=r.whoadded
+                                        from ".TBL_REPUTATION." r
+                                        LEFT JOIN ".TBL_USERS." leftby on leftby.id=r.whoadded
                                         where postid={$input['pid']}
                                         AND r.locale = ".sqlesc($input['locale'])."
                                         order by dateadd DESC");

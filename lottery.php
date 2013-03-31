@@ -50,7 +50,7 @@ case $do == 'tickets' && $CURUSER['class'] >= $valid['tickets']['minclass']:
 default:
     $html = '';
     //get config from database
-    $lconf = sql_query('SELECT * FROM lottery_config') or sqlerr(__FILE__, __LINE__);
+    $lconf = sql_query('SELECT * FROM '.TBL_LOTTERY_CONFIG.'') or sqlerr(__FILE__, __LINE__);
     while ($ac = mysqli_fetch_assoc($lconf)) $lottery_config[$ac['name']] = $ac['value'];
     if (!$lottery_config['enable']) $html.= stdmsg('Sorry', 'Lottery is closed at the moment');
     if ($lottery_config['end_date'] > TIME_NOW) $html.= stdmsg('Lottery in progress', "Lottery started on <b>".get_date($lottery_config['start_date'], 'LONG')."</b> and ends on <b>".get_date($lottery_config['end_date'], 'LONG')."</b> remaining <span style='color:#ff0000;'>".mkprettytime($lottery_config['end_date'] - TIME_NOW)."</span><br />
@@ -60,7 +60,7 @@ default:
         $html.= stdmsg('Last lottery', ''.get_date($lottery_config['lottery_winners_time'], 'LONG').'');
         $uids = (strpos($lottery_config['lottery_winners'], '|') ? explode('|', $lottery_config['lottery_winners']) : $lottery_config['lottery_winners']);
         $last_winners = array();
-        $qus = sql_query('SELECT id,username FROM users WHERE id '.(is_array($uids) ? 'IN ('.join(',', $uids).')' : '='.$uids)) or sqlerr(__FILE__, __LINE__);
+        $qus = sql_query('SELECT id,username FROM '.TBL_USERS.' WHERE id '.(is_array($uids) ? 'IN ('.join(',', $uids).')' : '='.$uids)) or sqlerr(__FILE__, __LINE__);
         while ($aus = mysqli_fetch_assoc($qus)) $last_winners[] = "<a href='userdetails.php?id=" . (int)$aus['id'] . "'>" . htmlsafechars($aus['username']) ."</a>";
         $html.= begin_main_frame();
         $html.= stdmsg("Lottery Winners Info", "<ul style='text-align:left;'><li>Last winners: ".join(', ', $last_winners)."</li><li>Amount won	(each): ".$lottery_config['lottery_winners_amount']."</li></ul><br />

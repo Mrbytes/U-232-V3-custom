@@ -35,7 +35,7 @@ if (!is_valid_id($topic_id)) {
 $upload_errors_size = (isset($_GET['se']) ? intval($_GET['se']) : 0);
 $upload_errors_type = (isset($_GET['ee']) ? intval($_GET['ee']) : 0);
 //=== Get topic info
-$res = sql_query('SELECT t.id AS topic_id, t.user_id, t.topic_name, t.locked, t.last_post, t.sticky, t.status, t.views, t.poll_id, t.num_ratings, t.rating_sum, t.topic_desc, t.forum_id, t.anonymous, f.name AS forum_name, f.min_class_read, f.min_class_write, f.parent_forum FROM topics AS t LEFT JOIN forums AS f ON t.forum_id = f.id WHERE  ' . ($CURUSER['class'] < UC_STAFF ? 't.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? ' t.status != \'deleted\'  AND' : '')) . ' t.id =' . sqlesc($topic_id));
+$res = sql_query('SELECT t.id AS topic_id, t.user_id, t.topic_name, t.locked, t.last_post, t.sticky, t.status, t.views, t.poll_id, t.num_ratings, t.rating_sum, t.topic_desc, t.forum_id, t.anonymous, f.name AS forum_name, f.min_class_read, f.min_class_write, f.parent_forum FROM '.TBL_TOPICS.' AS t LEFT JOIN '.TBL_FORUMS.' AS f ON t.forum_id = f.id WHERE  ' . ($CURUSER['class'] < UC_STAFF ? 't.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? ' t.status != \'deleted\'  AND' : '')) . ' t.id =' . sqlesc($topic_id));
 $arr = mysqli_fetch_assoc($res);
 //=== stop them, they shouldn't be here lol
 if ($CURUSER['class'] < $arr['min_class_read'] || !is_valid_id($arr['topic_id']) || $CURUSER['class'] < $min_delete_view_class && $status == 'deleted' || $CURUSER['class'] < UC_STAFF && $status == 'recycled') {
@@ -69,11 +69,11 @@ $topic_desc1 = htmlsafechars($arr['topic_desc'], ENT_QUOTES);
 $members_votes = array();
 if ($arr['poll_id'] > 0) {
     //=== get the poll info
-    $res_poll = sql_query('SELECT * FROM forum_poll WHERE id = ' . sqlesc($arr['poll_id']));
+    $res_poll = sql_query('SELECT * FROM '.TBL_FORUM_POLL.' WHERE id = ' . sqlesc($arr['poll_id']));
     $arr_poll = mysqli_fetch_assoc($res_poll);
     //=== get the stuff for just staff
     if ($CURUSER['class'] >= UC_STAFF) {
-        $res_poll_voted = sql_query('SELECT DISTINCT fpv.user_id, fpv.ip, fpv.added, u.id, u.username, u.class, u.donor, u.suspended, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king FROM forum_poll_votes AS fpv LEFT JOIN users AS u ON u.id = fpv.user_id WHERE u.id > 0 AND poll_id = ' . sqlesc($arr['poll_id']));
+        $res_poll_voted = sql_query('SELECT DISTINCT fpv.user_id, fpv.ip, fpv.added, u.id, u.username, u.class, u.donor, u.suspended, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king FROM '.TBL_FORUM_POLL_VOTES.' AS fpv LEFT JOIN '.TBL_USERS.' AS u ON u.id = fpv.user_id WHERE u.id > 0 AND poll_id = ' . sqlesc($arr['poll_id']));
         //=== let's see who's voted will add IP and time later :P
         $who_voted = (mysqli_num_rows($res_poll_voted) > 0 ? '<hr />' : 'no votes yet');
         while ($arr_poll_voted = mysqli_fetch_assoc($res_poll_voted)) {
@@ -81,7 +81,7 @@ if ($arr['poll_id'] > 0) {
         }
     }
     //=== see if they voted yet
-    $res_did_they_vote_yet = sql_query('SELECT `option` FROM `forum_poll_votes` WHERE `poll_id` = ' . sqlesc($arr['poll_id']) . ' AND `user_id` = ' . sqlesc($CURUSER['id']));
+    $res_did_they_vote_yet = sql_query('SELECT `option` FROM `'.TBL_FORUM_POLL_VOTES.'` WHERE `poll_id` = ' . sqlesc($arr['poll_id']) . ' AND `user_id` = ' . sqlesc($CURUSER['id']));
     $voted = 0;
     $members_vote = 1000;
     if (mysqli_num_rows($res_did_they_vote_yet) > 0) {
@@ -94,10 +94,10 @@ if ($arr['poll_id'] > 0) {
     $poll_open = (($arr_poll['poll_closed'] === 'yes' || $arr_poll['poll_starts'] > TIME_NOW || $arr_poll['poll_ends'] < TIME_NOW) ? 0 : 1);
     $poll_options = unserialize($arr_poll['poll_answers']);
     $multi_options = $arr_poll['multi_options'];
-    $total_votes_res = sql_query('SELECT COUNT(id) FROM forum_poll_votes WHERE `option` < 21 AND poll_id = ' . sqlesc($arr['poll_id']));
+    $total_votes_res = sql_query('SELECT COUNT(id) FROM '.TBL_FORUM_POLL_VOTES.' WHERE `option` < 21 AND poll_id = ' . sqlesc($arr['poll_id']));
     $total_votes_arr = mysqli_fetch_row($total_votes_res);
     $total_votes = $total_votes_arr[0];
-    $res_non_votes = sql_query('SELECT COUNT(id) FROM `forum_poll_votes` WHERE `option` > 20 AND `poll_id` = ' . sqlesc($arr['poll_id']));
+    $res_non_votes = sql_query('SELECT COUNT(id) FROM `'.TBL_FORUM_POLL_VOTES.'` WHERE `option` > 20 AND `poll_id` = ' . sqlesc($arr['poll_id']));
     $arr_non_votes = mysqli_fetch_row($res_non_votes);
     $num_non_votes = $arr_non_votes[0];
     $total_non_votes = ($num_non_votes > 0 ? ' [ ' . number_format($num_non_votes) . ' member' . ($num_non_votes == 1 ? '' : 's') . ' just wanted to see the results ]' : '');
@@ -130,7 +130,7 @@ if ($arr['poll_id'] > 0) {
         //=== if they have voted
         if ($voted === 1) {
             //=== do the math for the votes
-            $math_res = sql_query('SELECT COUNT(id) FROM `forum_poll_votes` WHERE poll_id = ' . sqlesc($arr['poll_id']) . ' AND `option` = ' . sqlesc($i));
+            $math_res = sql_query('SELECT COUNT(id) FROM `'.TBL_FORUM_POLL_VOTES.'` WHERE poll_id = ' . sqlesc($arr['poll_id']) . ' AND `option` = ' . sqlesc($i));
             $math_row = mysqli_fetch_row($math_res);
             $vote_count = $math_row[0];
             $math = $vote_count > 0 ? round(($vote_count / $total_votes) * 100) : 0;
@@ -180,20 +180,20 @@ if ($CURUSER['class'] >= UC_STAFF) {
 //=== rate topic \o/
 if ($arr['num_ratings'] != 0) $rating = ROUND($arr['rating_sum'] / $arr['num_ratings'], 1);
 //=== see if member is subscribed to topic
-$res_subscriptions = sql_query('SELECT id FROM subscriptions WHERE topic_id=' . sqlesc($topic_id) . ' AND user_id=' . sqlesc($CURUSER['id']));
+$res_subscriptions = sql_query('SELECT id FROM '.TBL_SUBSCRIPTIONS.' WHERE topic_id=' . sqlesc($topic_id) . ' AND user_id=' . sqlesc($CURUSER['id']));
 $row_subscriptions = mysqli_fetch_row($res_subscriptions);
 $subscriptions = ($row_subscriptions[0] > 0 ? ' <a class="altlink" href="' . $INSTALLER09['baseurl'] . '/forums.php?action=delete_subscription&amp;topic_id=' . $topic_id . '"> 
 		<img src="' . $INSTALLER09['pic_base_url'] . 'forums/unsubscribe.gif" alt="+" title="+" width="12" /> Unsubscribe from this topic</a>' : '<a class="altlink" href="' . $INSTALLER09['baseurl'] . '/forums.php?action=add_subscription&amp;forum_id=' . $forum_id . '&amp;topic_id=' . $topic_id . '">
 		<img src="' . $INSTALLER09['pic_base_url'] . 'forums/subscribe.gif" alt="+" title="+" width="12" /> Subscribe to this topic</a>');
 //=== who is here
-sql_query('DELETE FROM now_viewing WHERE user_id =' . sqlesc($CURUSER['id']));
-sql_query('INSERT INTO now_viewing (user_id, forum_id, topic_id, added) VALUES(' . sqlesc($CURUSER['id']) . ', ' . sqlesc($forum_id) . ', ' . sqlesc($topic_id) . ', ' . TIME_NOW . ')');
+sql_query('DELETE FROM ".TBL_NOW_VIEWING." WHERE user_id =' . sqlesc($CURUSER['id']));
+sql_query('INSERT INTO ".TBL_NOW_VIEWING." (user_id, forum_id, topic_id, added) VALUES(' . sqlesc($CURUSER['id']) . ', ' . sqlesc($forum_id) . ', ' . sqlesc($topic_id) . ', ' . TIME_NOW . ')');
 //=== now_viewing
 $keys['now_viewing'] = 'now_viewing_topic';
 if (($topic_users_cache = $mc1->get_value($keys['now_viewing'])) === false) {
     $topicusers = '';
     $topic_users_cache = array();
-    $res = sql_query('SELECT n_v.user_id, u.id, u.username, u.class, u.donor, u.suspended, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king, u.perms FROM now_viewing AS n_v LEFT JOIN users AS u ON n_v.user_id = u.id WHERE topic_id = ' . sqlesc($topic_id)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query('SELECT n_v.user_id, u.id, u.username, u.class, u.donor, u.suspended, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king, u.perms FROM ".TBL_NOW_VIEWING." AS n_v LEFT JOIN '.TBL_USERS.' AS u ON n_v.user_id = u.id WHERE topic_id = ' . sqlesc($topic_id)) or sqlerr(__FILE__, __LINE__);
     $actcount = mysqli_num_rows($res);
     while ($arr = mysqli_fetch_assoc($res)) {
         if ($topicusers) $topicusers.= ",\n";
@@ -210,9 +210,9 @@ if ($topic_users != '') {
     $topic_users = 'Currently viewing this topic: ' . $topic_users;
 }
 //=== Update views column
-sql_query('UPDATE topics SET views = views + 1 WHERE id=' . sqlesc($topic_id));
+sql_query('UPDATE '.TBL_TOPICS.' SET views = views + 1 WHERE id=' . sqlesc($topic_id));
 //=== must get count for pager... mini query
-$res_count = sql_query('SELECT COUNT(id) AS count FROM posts WHERE ' . ($CURUSER['class'] < UC_STAFF ? 'status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? 'status != \'deleted\' AND' : '')) . ' topic_id=' . sqlesc($topic_id));
+$res_count = sql_query('SELECT COUNT(id) AS count FROM '.TBL_POSTS.' WHERE ' . ($CURUSER['class'] < UC_STAFF ? 'status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? 'status != \'deleted\' AND' : '')) . ' topic_id=' . sqlesc($topic_id));
 $arr_count = mysqli_fetch_row($res_count);
 $count = $arr_count[0];
 //=== get stuff for the pager
@@ -220,7 +220,7 @@ $page = isset($_GET['page']) ? intval($_GET['page']) : 0;
 $perpage = isset($_GET['perpage']) ? intval($_GET['perpage']) : 15;
 $subscription_on_off = (isset($_GET['s']) ? ($_GET['s'] == 1 ? '<br /><div style="font-weight: bold;">Subscribed to topic <img src="' . $INSTALLER09['pic_base_url'] . 'forums/subscribe.gif" alt="Subscribed" title="Subscribed"  width="25" /></div>' : '<br /><div style="font-weight: bold;">Unsubscribed from topic <img src="' . $INSTALLER09['pic_base_url'] . 'forums/unsubscribe.gif" alt="Un-subscribe" title="Un-subscribe" width="25" /></div>') : '');
 list($menu, $LIMIT) = pager_new($count, $perpage, $page, 'forums.php?action=view_topic&amp;topic_id=' . $topic_id . (isset($_GET['perpage']) ? '&amp;perpage=' . $perpage : ''));
-$res = sql_query('SELECT p.id AS post_id, p.topic_id, p.user_id, p.staff_lock, p.added, p.body, p.edited_by, p.edit_date, p.icon, p.post_title, p.bbcode, p.post_history, p.edit_reason, p.ip, p.status AS post_status, p.anonymous, u.seedbonus, u.id, u.username, u.class, u.donor, u.suspended, u.warned, u.chatpost, u.leechwarn, u.pirate, u.king, u.enabled, u.email, u.website, u.icq, u.msn, u.aim, u.yahoo, u.last_access, u.show_email, u.paranoia, u.hit_and_run_total, u.avatar, u.title, u.uploaded, u.downloaded, u.signature, u.google_talk, u.icq, u.msn, u.aim, u.yahoo, u.website, u.mood, u.perms, u.reputation FROM posts AS p LEFT JOIN users AS u ON p.user_id = u.id WHERE ' . ($CURUSER['class'] < UC_STAFF ? 'p.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? 'p.status != \'deleted\' AND' : '')) . ' topic_id=' . sqlesc($topic_id) . ' ORDER BY p.id ASC ' . $LIMIT) or sqlerr(__FILE__, __LINE__);
+$res = sql_query('SELECT p.id AS post_id, p.topic_id, p.user_id, p.staff_lock, p.added, p.body, p.edited_by, p.edit_date, p.icon, p.post_title, p.bbcode, p.post_history, p.edit_reason, p.ip, p.status AS post_status, p.anonymous, u.seedbonus, u.id, u.username, u.class, u.donor, u.suspended, u.warned, u.chatpost, u.leechwarn, u.pirate, u.king, u.enabled, u.email, u.website, u.icq, u.msn, u.aim, u.yahoo, u.last_access, u.show_email, u.paranoia, u.hit_and_run_total, u.avatar, u.title, u.uploaded, u.downloaded, u.signature, u.google_talk, u.icq, u.msn, u.aim, u.yahoo, u.website, u.mood, u.perms, u.reputation FROM '.TBL_POSTS.' AS p LEFT JOIN '.TBL_USERS.' AS u ON p.user_id = u.id WHERE ' . ($CURUSER['class'] < UC_STAFF ? 'p.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? 'p.status != \'deleted\' AND' : '')) . ' topic_id=' . sqlesc($topic_id) . ' ORDER BY p.id ASC ' . $LIMIT) or sqlerr(__FILE__, __LINE__);
 //=== make sure they can reply here
 $may_post = ($CURUSER['class'] >= $arr['min_class_write'] && $CURUSER['forum_post'] == 'yes' && $CURUSER['suspended'] == 'no');
 //=== reply button
@@ -239,7 +239,7 @@ $locked_or_reply_button = ($locked === 'yes' ? '<span style="font-weight: bold; 
 */
 if ($arr['parent_forum'] > 0) {
     //=== now we need the parent forums stuff
-    $parent_forum_res = sql_query('SELECT name AS parent_forum_name FROM forums WHERE id=' . sqlesc($arr['parent_forum']));
+    $parent_forum_res = sql_query('SELECT name AS parent_forum_name FROM '.TBL_FORUMS.' WHERE id=' . sqlesc($arr['parent_forum']));
     $parent_forum_arr = mysqli_fetch_row($parent_forum_res);
     $child = ($arr['parent_forum'] > 0 ? '<span style="font-size: x-small;"> [ child-board ]</span>' : '');
     $parent_forum_name = '<img src="' . $INSTALLER09['pic_base_url'] . 'arrow_next.gif" alt="&#9658;" title="&#9658;" /> 
@@ -282,7 +282,7 @@ while ($arr = mysqli_fetch_assoc($res)) {
     $member_reputation = $arr['username'] != '' ? get_reputation($arr, 'posts') : '';
     $edited_by = '';
     if ($arr['edit_date'] > 0) {
-        $res_edited = sql_query('SELECT username FROM users WHERE id=' . sqlesc($arr['edited_by']));
+        $res_edited = sql_query('SELECT username FROM '.TBL_USERS.' WHERE id=' . sqlesc($arr['edited_by']));
         $arr_edited = mysqli_fetch_assoc($res_edited);
         //== Anonymous
         if ($arr['anonymous'] == 'yes') {
@@ -308,7 +308,7 @@ while ($arr = mysqli_fetch_assoc($res)) {
     }
     $post_id = (int)$arr['post_id'];
     //=== if there are attachments, let's get them!
-    $attachments_res = sql_query('SELECT id, file_name, extension, size FROM attachments WHERE post_id =' . sqlesc($post_id) . ' AND user_id = ' . sqlesc($arr['id']));
+    $attachments_res = sql_query('SELECT id, file_name, extension, size FROM '.TBL_ATTACHMENTS.' WHERE post_id =' . sqlesc($post_id) . ' AND user_id = ' . sqlesc($arr['id']));
     if (mysqli_num_rows($attachments_res) > 0) {
         $attachments = '<table align="center" width="100%" border="0" cellspacing="0" cellpadding="5"><tr><td class="' . $class . '" align="left"><span style="font-weight: bold;">Attachments:</span><hr />';
         while ($attachments_arr = mysqli_fetch_assoc($attachments_res)) {
@@ -394,8 +394,8 @@ while ($arr = mysqli_fetch_assoc($res)) {
     $attachments = '';
 } //=== end while loop
 //=== update the last post read by CURUSER
-sql_query('DELETE FROM `read_posts` WHERE user_id =' . sqlesc($CURUSER['id']) . ' AND `topic_id` = ' . sqlesc($topic_id));
-sql_query('INSERT INTO `read_posts` (`user_id` ,`topic_id` ,`last_post_read`) VALUES (' . sqlesc($CURUSER['id']) . ', ' . sqlesc($topic_id) . ', ' . sqlesc($post_id) . ')');
+sql_query('DELETE FROM '.TBL_READ_POSTS.' WHERE user_id =' . sqlesc($CURUSER['id']) . ' AND `topic_id` = ' . sqlesc($topic_id));
+sql_query('INSERT INTO '.TBL_READ_POSTS.' (`user_id` ,`topic_id` ,`last_post_read`) VALUES (' . sqlesc($CURUSER['id']) . ', ' . sqlesc($topic_id) . ', ' . sqlesc($post_id) . ')');
 $mc1->delete_value('last_read_post_' . $topic_id . '_' . $CURUSER['id']);
 $mc1->delete_value('sv_last_read_post_' . $topic_id . '_' . $CURUSER['id']);
 //=== set up jquery show hide here

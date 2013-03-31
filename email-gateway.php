@@ -14,7 +14,7 @@ loggedinorreturn();
 $lang = array_merge(load_language('global') , load_language('email-gateway'));
 $id = 0 + $_GET["id"];
 if (!is_valid_id($id)) stderr("{$lang['email_error']}", "{$lang['email_bad_id']}");
-$res = sql_query("SELECT username, class, email FROM users WHERE id=".sqlesc($id));
+$res = sql_query("SELECT username, class, email FROM ".TBL_USERS." WHERE id=".sqlesc($id));
 $arr = mysqli_fetch_assoc($res) or stderr("{$lang['email_error']}", "{$lang['email_no_user']}");
 $username = htmlsafechars($arr["username"]);
 if ($arr["class"] < UC_STAFF) stderr("{$lang['email_error']}", "{$lang['email_email_staff']}");

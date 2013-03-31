@@ -30,10 +30,10 @@ if (empty($_GET['id'])) {
 }
 $id = 0 + $_GET["id"];
 if (!is_valid_id($id)) stderr("Error", "It appears that you have entered an invalid id.");
-$res = sql_query("SELECT id, name FROM torrents WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT id, name FROM ".TBL_TORRENTS." WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
 $arr = mysqli_fetch_assoc($res);
 if (!$arr) stderr("Error", "It appears that there is no torrent with that id.");
-$res = sql_query("SELECT COUNT(id) FROM snatched WHERE torrentid =".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT COUNT(id) FROM ".TBL_SNATCHED." WHERE torrentid =".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
 $row = mysqli_fetch_row($res);
 $count = $row[0];
 $perpage = 15;
@@ -60,7 +60,7 @@ $HTMLOUT.= "<table width='78%'border='0' cellspacing='0' cellpadding='5'>
 <td class='colhead' align='center'>{$lang['snatches_port']}</td>
 <td class='colhead' align='center'>{$lang['snatches_announced']}</td>
 </tr>\n";
-$res = sql_query("SELECT s.*, s.userid AS su, torrents.username as username1, users.username as username2, users.paranoia, torrents.anonymous as anonymous1, users.anonymous as anonymous2, size, parked, warned, enabled, class, chatpost, leechwarn, donor, timesann, owner FROM snatched AS s INNER JOIN users ON s.userid = users.id INNER JOIN torrents ON s.torrentid = torrents.id WHERE torrentid = ".sqlesc($id)." ORDER BY complete_date DESC ".$pager['limit']) or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT s.*, s.userid AS su, ".TBL_TORRENTS.".username as username1, ".TBL_USERS.".username as username2, ".TBL_USERS.".paranoia, ".TBL_TORRENTS.".anonymous as anonymous1, ".TBL_USERS.".anonymous as anonymous2, size, parked, warned, enabled, class, chatpost, leechwarn, donor, timesann, owner FROM ".TBL_SNATCHED." AS s INNER JOIN ".TBL_USERS." ON s.userid = ".TBL_USERS.".id INNER JOIN ".TBL_TORRENTS." ON s.torrentid = ".TBL_TORRENTS.".id WHERE torrentid = ".sqlesc($id)." ORDER BY complete_date DESC ".$pager['limit']) or sqlerr(__FILE__, __LINE__);
 while ($arr = mysqli_fetch_assoc($res)) {
     $upspeed = ($arr["upspeed"] > 0 ? mksize($arr["upspeed"]) : ($arr["seedtime"] > 0 ? mksize($arr["uploaded"] / ($arr["seedtime"] + $arr["leechtime"])) : mksize(0)));
     $downspeed = ($arr["downspeed"] > 0 ? mksize($arr["downspeed"]) : ($arr["leechtime"] > 0 ? mksize($arr["downloaded"] / $arr["leechtime"]) : mksize(0)));

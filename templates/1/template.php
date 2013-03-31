@@ -376,7 +376,7 @@ function StatusBar()
     $PMCount = 0;
     $unread1 = $mc1->get_value('inbox_new_sb_' . $CURUSER['id']);
     if ($unread1 === false) {
-        $res1 = sql_query("SELECT COUNT(id) FROM messages WHERE receiver=" . sqlesc($CURUSER['id']) . " AND unread = 'yes' AND location = '1'") or sqlerr(__LINE__, __FILE__);
+        $res1 = sql_query("SELECT COUNT(id) FROM ".TBL_MESSAGES." WHERE receiver=" . sqlesc($CURUSER['id']) . " AND unread = 'yes' AND location = '1'") or sqlerr(__LINE__, __FILE__);
         list($PMCount) = mysqli_fetch_row($res1);
         $PMCount = (int)$PMCount;
         $unread1 = $mc1->cache_value('inbox_new_sb_' . $CURUSER['id'], $PMCount, $INSTALLER09['expires']['unread']);
@@ -387,7 +387,7 @@ function StatusBar()
     if ($MyPeersCache == false) {
         $seed['yes'] = $seed['no'] = 0;
         $seed['conn'] = 3;
-        $r = sql_query("SELECT COUNT(id) AS count, seeder, connectable FROM peers WHERE userid=" . sqlesc($CURUSER['id']) . " GROUP BY seeder");
+        $r = sql_query("SELECT COUNT(id) AS count, seeder, connectable FROM ".TBL_PEERS." WHERE userid=" . sqlesc($CURUSER['id']) . " GROUP BY seeder");
         while ($a = mysqli_fetch_assoc($r)) {
             $key = $a['seeder'] == 'yes' ? 'yes' : 'no';
             $seed[$key] = number_format(0 + $a['count']);
@@ -416,7 +416,7 @@ function StatusBar()
     //$INSTALLER09['expires']['achievements'] = 900;
     //$Achievement_Points = 0;
     if (($Achievement_Points = $mc1->get_value('user_achievement_points_' . $CURUSER['id'])) === false) {
-        $Sql = sql_query("SELECT users.id, users.username, usersachiev.achpoints, usersachiev.spentpoints FROM users LEFT JOIN usersachiev ON users.id = usersachiev.id WHERE users.id = " . sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+        $Sql = sql_query("SELECT ".TBL_USERS.".id, ".TBL_USERS.".username, ".TBL_USERSACHIEV.".achpoints, ".TBL_USERSACHIEV.".spentpoints FROM ".TBL_USERS." LEFT JOIN ".TBL_USERSACHIEV." ON ".TBL_USERS.".id = ".TBL_USERSACHIEV.".id WHERE ".TBL_USERS.".id = " . sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
         $Achievement_Points = mysqli_fetch_assoc($Sql);
         $Achievement_Points['id'] = (int)$Achievement_Points['id'];
         $Achievement_Points['achpoints'] = (int)$Achievement_Points['achpoints'];

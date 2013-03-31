@@ -28,7 +28,7 @@ require_once (CLASS_DIR.'class_check.php');
 class_check(UC_STAFF);
 $lang = array_merge($lang);
 $HTMLOUT = $count = '';
-$res = sql_query("SELECT COUNT(id) FROM peers") or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT COUNT(id) FROM ".TBL_PEERS."") or sqlerr(__FILE__, __LINE__);
 $row = mysqli_fetch_row($res);
 $count = $row[0];
 $peersperpage = 15;
@@ -37,7 +37,7 @@ $HTMLOUT.= "<h2 align='center'>Site peers</h2>
 $HTMLOUT.= begin_main_frame();
 $pager = pager($peersperpage, $count, "staffpanel.php?tool=view_peers&amp;action=view_peers&amp;");
 if ($count > $peersperpage) $HTMLOUT.= $pager['pagertop'];
-$sql = "SELECT p.id, p.userid, p.torrent, p.passkey, p.peer_id, p.ip, p.port, p.uploaded, p.downloaded, p.to_go, p.seeder, p.started, p.last_action, p.connectable, p.agent, p.finishedat, p.downloadoffset, p.uploadoffset, u.username, t.name "."FROM peers AS p "."LEFT JOIN users AS u ON u.id=p.userid "."LEFT JOIN torrents AS t ON t.id=p.torrent WHERE started != '0'"."ORDER BY p.started DESC {$pager['limit']}";
+$sql = "SELECT p.id, p.userid, p.torrent, p.passkey, p.peer_id, p.ip, p.port, p.uploaded, p.downloaded, p.to_go, p.seeder, p.started, p.last_action, p.connectable, p.agent, p.finishedat, p.downloadoffset, p.uploadoffset, u.username, t.name "."FROM ".TBL_PEERS." AS p "."LEFT JOIN ".TBL_USERS." AS u ON u.id=p.userid "."LEFT JOIN ".TBL_TORRENTS." AS t ON t.id=p.torrent WHERE started != '0'"."ORDER BY p.started DESC {$pager['limit']}";
 $result = sql_query($sql) or sqlerr(__FILE__, __LINE__);
 if (mysqli_num_rows($result) != 0) {
     $HTMLOUT.= "<table width='100%' border='1' cellspacing='0' cellpadding='5' align='center'>

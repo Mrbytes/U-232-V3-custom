@@ -53,20 +53,20 @@ if ($action == "add") {
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $userid = 0 + $_POST["userid"];
         if (!is_valid_id($userid)) stderr("Error", "Invalid ID.");
-        $res = sql_query("SELECT username FROM users WHERE id =".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
+        $res = sql_query("SELECT username FROM ".TBL_USERS." WHERE id =".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
         $arr = mysqli_fetch_array($res, MYSQLI_NUM);
         if (!$arr) stderr("Error", "No user with that ID.");
         $text = trim($_POST["text"]);
         if (!$text) stderr("Error", "Comment body cannot be empty!");
-        sql_query("INSERT INTO usercomments (user, userid, added, text, ori_text) VALUES (".sqlesc($CURUSER['id']).", ".sqlesc($userid).", '".TIME_NOW."', ".sqlesc($text).",".sqlesc($text).")");
+        sql_query("INSERT INTO ".TBL_USERCOMMENTS." (user, userid, added, text, ori_text) VALUES (".sqlesc($CURUSER['id']).", ".sqlesc($userid).", '".TIME_NOW."', ".sqlesc($text).",".sqlesc($text).")");
         $newid = ((is_null($___mysqli_res = mysqli_insert_id($GLOBALS["___mysqli_ston"]))) ? false : $___mysqli_res);
-        sql_query("UPDATE users SET comments = comments + 1 WHERE id =".sqlesc($userid));
+        sql_query("UPDATE ".TBL_USERS." SET comments = comments + 1 WHERE id =".sqlesc($userid));
         header("Refresh: 0; url=userdetails.php?id=$userid&viewcomm=$newid#comm$newid");
         die;
     }
     $userid = 0 + $_GET["userid"];
     if (!is_valid_id($userid)) stderr("Error", "Invalid ID.");
-    $res = sql_query("SELECT username FROM users WHERE id = ".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT username FROM ".TBL_USERS." WHERE id = ".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_assoc($res);
     if (!$arr) stderr("Error", "No user with that ID.");
     $HTMLOUT.= "<h1>Add a comment for '".htmlsafechars($arr["username"])."'</h1>
@@ -75,7 +75,7 @@ if ($action == "add") {
     <textarea name='text' rows='10' cols='60'></textarea>
     <br /><br />
     <input type='submit' class='btn' value='Do it!' /></form>\n";
-    $res = sql_query("SELECT usercomments.id, usercomments.text, usercomments.editedby, usercomments.editedat, usercomments.added, username, users.id as user, users.avatar, users.title, users.anonymous, users.class, users.donor, users.warned, users.leechwarn, users.chatpost FROM usercomments LEFT JOIN users ON usercomments.user = users.id WHERE user = ".sqlesc($userid)." ORDER BY usercomments.id DESC LIMIT 5");
+    $res = sql_query("SELECT ".TBL_USERCOMMENTS.".id, ".TBL_USERCOMMENTS.".text, ".TBL_USERCOMMENTS.".editedby, ".TBL_USERCOMMENTS.".editedat, ".TBL_USERCOMMENTS.".added, username, ".TBL_USERS.".id as user, ".TBL_USERS.".avatar, ".TBL_USERS.".title, ".TBL_USERS.".anonymous, ".TBL_USERS.".class, ".TBL_USERS.".donor, ".TBL_USERS.".warned, ".TBL_USERS.".leechwarn, ".TBL_USERS.".chatpost FROM ".TBL_USERCOMMENTS." LEFT JOIN ".TBL_USERS." ON ".TBL_USERCOMMENTS.".user = ".TBL_USERS.".id WHERE user = ".sqlesc($userid)." ORDER BY ".TBL_USERCOMMENTS.".id DESC LIMIT 5");
     $allrows = array();
     while ($row = mysqli_fetch_assoc($res)) $allrows[] = $row;
     if (count($allrows)) {
@@ -87,7 +87,7 @@ if ($action == "add") {
 } elseif ($action == "edit") {
     $commentid = 0 + $_GET["cid"];
     if (!is_valid_id($commentid)) stderr("Error", "Invalid ID.");
-    $res = sql_query("SELECT c.*, u.username, u.id FROM usercomments AS c LEFT JOIN users AS u ON c.userid = u.id WHERE c.id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT c.*, u.username, u.id FROM ".TBL_USERCOMMENTS." AS c LEFT JOIN ".TBL_USERS." AS u ON c.userid = u.id WHERE c.id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_assoc($res);
     if (!$arr) stderr("Error", "Invalid ID.");
     if ($arr["user"] != $CURUSER["id"] && $CURUSER['class'] < UC_STAFF) stderr("Error", "Permission denied.");
@@ -97,7 +97,7 @@ if ($action == "add") {
         if ($text == "") stderr("Error", "Comment body cannot be empty!");
         //$text = sqlesc($text);
         $editedat = sqlesc(TIME_NOW);
-        sql_query("UPDATE usercomments SET text=".sqlesc($text).", editedat={$editedat}, editedby=".sqlesc($CURUSER['id'])." WHERE id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_USERCOMMENTS." SET text=".sqlesc($text).", editedat={$editedat}, editedby=".sqlesc($CURUSER['id'])." WHERE id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
         if ($returnto) header("Location: $returnto");
         else header("Location: {$INSTALLER09['baseurl']}/userdetails.php?id={$userid}");
         die;
@@ -121,14 +121,14 @@ if ($action == "add") {
         //stderr("Delete comment", "You are about to delete a comment. Click\n" . "<a href='usercomment.php?action=delete&amp;cid={$commentid}&amp;sure=1&amp;returnto=".urlencode($_SERVER['PHP_SELF'])."'>here</a> if you are sure.");
         
     }
-    $res = sql_query("SELECT id, userid FROM usercomments WHERE id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT id, userid FROM ".TBL_USERCOMMENTS." WHERE id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_assoc($res);
     if ($arr['id'] != $CURUSER['id']) {
         if ($CURUSER['class'] < UC_STAFF) stderr("Error", "Permission denied.");
     }
     if ($arr) $userid = (int)$arr["userid"];
-    sql_query("DELETE FROM usercomments WHERE id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
-    if ($userid && mysqli_affected_rows($GLOBALS["___mysqli_ston"]) > 0) sql_query("UPDATE users SET comments = comments - 1 WHERE id = ".sqlesc($userid));
+    sql_query("DELETE FROM ".TBL_USERCOMMENTS." WHERE id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
+    if ($userid && mysqli_affected_rows($GLOBALS["___mysqli_ston"]) > 0) sql_query("UPDATE ".TBL_USERS." SET comments = comments - 1 WHERE id = ".sqlesc($userid));
     $returnto = htmlsafechars($_GET["returnto"]);
     if ($returnto) header("Location: $returnto");
     else header("Location: {$INSTALLER09['baseurl']}/userdetails.php?id={$userid}");
@@ -137,7 +137,7 @@ if ($action == "add") {
     if ($CURUSER['class'] < UC_STAFF) stderr("Error", "Permission denied.");
     $commentid = 0 + $_GET["cid"];
     if (!is_valid_id($commentid)) stderr("Error", "Invalid ID.");
-    $res = sql_query("SELECT c.*, u.username FROM usercomments AS c LEFT JOIN users AS u ON c.userid = u.id WHERE c.id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT c.*, u.username FROM ".TBL_USERCOMMENTS." AS c LEFT JOIN ".TBL_USERS." AS u ON c.userid = u.id WHERE c.id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_assoc($res);
     if (!$arr) stderr("Error", "Invalid ID");
     $HTMLOUT.= "<h1>Original contents of comment #{$commentid}</h1>

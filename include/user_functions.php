@@ -23,7 +23,7 @@ function autoshout($msg)
 {
     global $INSTALLER09;
     require_once (INCL_DIR.'bbcode_functions.php');
-    sql_query('INSERT INTO shoutbox(userid,date,text,text_parsed)VALUES ('.$INSTALLER09['bot_id'].','.TIME_NOW.','.sqlesc($msg).','.sqlesc(format_comment($msg)).')');
+    sql_query('INSERT INTO '.TBL_SHOUTBOX.'(userid,date,text,text_parsed)VALUES ('.$INSTALLER09['bot_id'].','.TIME_NOW.','.sqlesc($msg).','.sqlesc(format_comment($msg)).')');
 }
 function parked()
 {
@@ -132,7 +132,7 @@ function write_staffs()
     //==ids
     $t = '$INSTALLER09';
     $iconfigfile = "<"."?php\n/**\nThis file created on ".date('M d Y H:i:s').".\nSite Config staff mod by pdq/U-232.\n**/\n";
-    $ri = sql_query("SELECT id, username, class FROM users WHERE class BETWEEN ".UC_STAFF." AND ".UC_MAX." ORDER BY id ASC") or sqlerr(__file__, __line__);
+    $ri = sql_query("SELECT id, username, class FROM ".TBL_USERS." WHERE class BETWEEN ".UC_STAFF." AND ".UC_MAX." ORDER BY id ASC") or sqlerr(__file__, __line__);
     $iconfigfile.= "".$t."['allowed_staff']['id'] = array(";
     while ($ai = mysqli_fetch_assoc($ri)) {
         $ids[] = $ai['id'];

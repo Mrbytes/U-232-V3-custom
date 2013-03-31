@@ -20,7 +20,7 @@ $stdhead = array(
     )
 );
 $htmlout = $firstline = $support = '';
-$query = sql_query("SELECT u.id, u.perms, u.username, u.support, u.supportfor, u.email, u.last_access, u.class, u.title, u.country, u.status, countries.flagpic, countries.name FROM users AS u LEFT JOIN countries ON countries.id = u.country WHERE u.class >= ".UC_STAFF." OR u.support='yes' AND u.status='confirmed' ORDER BY username") or sqlerr(__FILE__, __LINE__);
+$query = sql_query("SELECT u.id, u.perms, u.username, u.support, u.supportfor, u.email, u.last_access, u.class, u.title, u.country, u.status, ".TBL_COUNTRIES.".flagpic, ".TBL_COUNTRIES.".name FROM ".TBL_USERS." AS u LEFT JOIN ".TBL_COUNTRIES." ON ".TBL_COUNTRIES.".id = u.country WHERE u.class >= ".UC_STAFF." OR u.support='yes' AND u.status='confirmed' ORDER BY username") or sqlerr(__FILE__, __LINE__);
 unset($support);
 while ($arr2 = mysqli_fetch_assoc($query)) {
     if ($arr2["support"] == 'yes') $support[] = $arr2;

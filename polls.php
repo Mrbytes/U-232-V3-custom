@@ -21,10 +21,10 @@ function parse_poll()
     if (($poll_data = $mc1->get_value('poll_data_'.$CURUSER['id'])) === false) {
         //$poll_data = array();
         //search for a poll with given ID
-        $query = sql_query("SELECT * FROM polls
-                            LEFT JOIN poll_voters ON polls.pid = poll_voters.poll_id
-                            AND poll_voters.user_id = ".sqlesc($CURUSER['id'])." 
-                            ORDER BY polls.start_date DESC
+        $query = sql_query("SELECT * FROM ".TBL_POLLS."
+                            LEFT JOIN ".TBL_POLL_VOTERS." ON ".TBL_POLLS.".pid =  ".TBL_POLL_VOTERS.".poll_id
+                            AND ".TBL_POLL_VOTERS.".user_id = ".sqlesc($CURUSER['id'])." 
+                            ORDER BY ".TBL_POLLS.".start_date DESC
                             LIMIT 1");
         //Did we find the poll?
         if (!mysqli_num_rows($query)) {

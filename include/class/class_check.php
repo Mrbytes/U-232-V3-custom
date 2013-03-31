@@ -123,20 +123,20 @@ function class_check($class = 0, $staff = true, $pin = false)
                 $topicid = (int)$INSTALLER09['staff']['forumid'];
                 $added = TIME_NOW;
                 $icon = 'topic_normal';
-                sql_query("INSERT INTO posts (topic_id, user_id, added, body, icon) "."VALUES($topicid , ".$INSTALLER09['bot_id'].", $added, $body, ".sqlesc($icon).")") or sqlerr(__file__, __line__);
+                sql_query("INSERT INTO ".TBL_POSTS." (topic_id, user_id, added, body, icon) "."VALUES($topicid , ".$INSTALLER09['bot_id'].", $added, $body, ".sqlesc($icon).")") or sqlerr(__file__, __line__);
                 /** get mysql_insert_id(); **/
-                $res = sql_query("SELECT id FROM posts WHERE topic_id = $topicid 
+                $res = sql_query("SELECT id FROM ".TBL_POSTS." WHERE topic_id = $topicid 
                                   ORDER BY id DESC LIMIT 1") or sqlerr(__file__, __line__);
                 $arr = mysqli_fetch_row($res) or die('No staff post found');
                 $postid = $arr[0];
-                sql_query("UPDATE topics SET last_post = $postid WHERE id = $topicid") or sqlerr(__file__, __line__);
+                sql_query("UPDATE ".TBL_TOPICS." SET last_post = $postid WHERE id = $topicid") or sqlerr(__file__, __line__);
                 /** PM Owner **/
                 $subject = sqlesc('Warning Class Check System!');
-                sql_query("INSERT INTO messages (sender, receiver, added, subject, msg) 
+                sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, added, subject, msg) 
                 VALUES (0, ".$INSTALLER09['site']['owner'].", $added, $subject, $body)") or sqlerr(__file__, __line__);
                 /** punishments **/
-                //sql_query("UPDATE users SET enabled = 'no', class = 1 WHERE id = {$CURUSER['id']}") or sqlerr(__file__, __line__);
-                sql_query("UPDATE users SET class = 1 WHERE id = {$CURUSER['id']}") or sqlerr(__file__, __line__);
+                //sql_query("UPDATE ".TBL_USERS." SET enabled = 'no', class = 1 WHERE id = {$CURUSER['id']}") or sqlerr(__file__, __line__);
+                sql_query("UPDATE ".TBL_USERS." SET class = 1 WHERE id = {$CURUSER['id']}") or sqlerr(__file__, __line__);
                 /** remove caches **/
                 $mc1->begin_transaction('user'.$CURUSER['id']);
                 $mc1->update_row(false, array(

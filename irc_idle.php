@@ -21,12 +21,12 @@ require_once (dirname(__FILE__).DIRECTORY_SEPARATOR.'include'.DIRECTORY_SEPARATO
 dbconn();
 switch ($vars['do']) {
 case 'check':
-    $q = sql_query('SELECT id FROM users WHERE username = '.sqlesc($vars['username']));
+    $q = sql_query('SELECT id FROM '.TBL_USERS.' WHERE username = '.sqlesc($vars['username']));
     echo (mysqli_num_rows($q));
     break;
 
 case 'idle':
-    sql_query("UPDATE users SET onirc = ".sqlesc(!$vars['ircidle'] ? 'no' : 'yes')." where username = ".sqlesc($vars['username']));
+    sql_query("UPDATE ".TBL_USERS." SET onirc = ".sqlesc(!$vars['ircidle'] ? 'no' : 'yes')." where username = ".sqlesc($vars['username']));
     echo (mysqli_affected_rows($GLOBALS["___mysqli_ston"]));
     break;
 

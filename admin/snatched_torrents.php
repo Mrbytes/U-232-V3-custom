@@ -89,17 +89,17 @@ function get_snatched_color($st)
     }
     return "<font color='red'><b>{$lang['ad_snatched_torrents_none']}<br />{$lang['ad_snatched_torrents_reported']}</b></font>";
 }
-$count = number_format(get_row_count("snatched", "WHERE complete_date != '0'"));
+$count = number_format(get_row_count(TBL_SNATCHED, "WHERE complete_date != '0'"));
 $HTMLOUT.= "<h2 align='center'>{$lang['ad_snatched_torrents_allsnatched']}</h2>
 <font class='small'>{$lang['ad_snatched_torrents_currently']}&nbsp;".htmlsafechars($count)."&nbsp;{$lang['ad_snatched_torrents_snatchedtor']}</font>";
 $HTMLOUT.= begin_main_frame();
-$res = sql_query("SELECT COUNT(id) FROM snatched") or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT COUNT(id) FROM ".TBL_SNATCHED."") or sqlerr(__FILE__, __LINE__);
 $row = mysqli_fetch_row($res);
 $count = $row[0];
 $snatchedperpage = 15;
 $pager = pager($snatchedperpage, $count, "staffpanel.php?tool=snatched_torrents&amp;action=snatched_torrents&amp;");
 if ($count > $snatchedperpage) $HTMLOUT.= $pager['pagertop'];
-$sql = "SELECT sn.userid, sn.id, sn.torrentid, sn.timesann, sn.hit_and_run, sn.mark_of_cain, sn.uploaded, sn.downloaded, sn.start_date, sn.complete_date, sn.seeder, sn.leechtime, sn.seedtime, u.username, t.name "."FROM snatched AS sn "."LEFT JOIN users AS u ON u.id=sn.userid "."LEFT JOIN torrents AS t ON t.id=sn.torrentid WHERE complete_date != '0'"."ORDER BY sn.complete_date DESC ".$pager['limit']."";
+$sql = "SELECT sn.userid, sn.id, sn.torrentid, sn.timesann, sn.hit_and_run, sn.mark_of_cain, sn.uploaded, sn.downloaded, sn.start_date, sn.complete_date, sn.seeder, sn.leechtime, sn.seedtime, u.username, t.name "."FROM ".TBL_SNATCHED." AS sn "."LEFT JOIN ".TBL_USERS." AS u ON u.id=sn.userid "."LEFT JOIN ".TBL_TORRENTS." AS t ON t.id=sn.torrentid WHERE complete_date != '0'"."ORDER BY sn.complete_date DESC ".$pager['limit']."";
 $result = sql_query($sql) or sqlerr(__FILE__, __LINE__);
 if (mysqli_num_rows($result) != 0) {
     $HTMLOUT.= "<table width='100%' border='1' cellspacing='0' cellpadding='5' align='center'>

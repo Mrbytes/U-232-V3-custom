@@ -40,7 +40,7 @@ if ($step == '1') {
         }
         if (empty($email)) stderr("{$lang['stderr_errorhead']}", "{$lang['stderr_invalidemail']}");
         if (!validemail($email)) stderr("{$lang['stderr_errorhead']}", "{$lang['stderr_invalidemail1']}");
-        $check = sql_query('SELECT id, status, passhint, hintanswer FROM users WHERE email = ' . sqlesc($email)) or sqlerr(__FILE__, __LINE__);
+        $check = sql_query('SELECT id, status, passhint, hintanswer FROM '.TBL_USERS.' WHERE email = ' . sqlesc($email)) or sqlerr(__FILE__, __LINE__);
         $assoc = mysqli_fetch_assoc($check) or stderr("{$lang['stderr_errorhead']}", "{$lang['stderr_notfound']}");
         if (empty($assoc['passhint']) || empty($assoc['hintanswer'])) {
             stderr("{$lang['stderr_errorhead']}", "{$lang['stderr_error3']}");
@@ -75,7 +75,7 @@ if ($step == '1') {
     }
 } elseif ($step == '2') {
     if (!mkglobal('id:answer')) die();
-    $select = sql_query('SELECT id, username, hintanswer FROM users WHERE id = ' . sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    $select = sql_query('SELECT id, username, hintanswer FROM '.TBL_USERS.' WHERE id = ' . sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $fetch = mysqli_fetch_assoc($select);
     if (!$fetch) stderr("{$lang['stderr_errorhead']}", "{$lang['stderr_error5']}");
     if (empty($answer)) stderr("{$lang['stderr_errorhead']}", "{$lang['stderr_error6']}");
@@ -84,7 +84,7 @@ if ($step == '1') {
         $useragent = $_SERVER['HTTP_USER_AGENT'];
         $msg = "" . htmlspecialchars($fetch['username']) . ", on " . get_date(TIME_NOW, '', 1, 0) . ", {$lang['main_message']}" . "\n\n{$lang['main_message1']} " . $ip . " (" . @gethostbyaddr($ip) . ")" . "\n {$lang['main_message2']} " . $useragent . "\n\n {$lang['main_message3']}\n {$lang['main_message4']}\n";
         $subject = "Failed password reset";
-        sql_query('INSERT INTO messages (receiver, msg, subject, added) VALUES (' . sqlesc((int)$fetch['id']) . ', ' . sqlesc($msg) . ', ' . sqlesc($subject) . ', ' . TIME_NOW . ')') or sqlerr(__FILE__, __LINE__);
+        sql_query('INSERT INTO '.TBL_MESSAGES.' (receiver, msg, subject, added) VALUES (' . sqlesc((int)$fetch['id']) . ', ' . sqlesc($msg) . ', ' . sqlesc($subject) . ', ' . TIME_NOW . ')') or sqlerr(__FILE__, __LINE__);
         stderr("{$lang['stderr_errorhead']}", "{$lang['stderr_error7']}");
     } else {
         $HTMLOUT.= "<form method='post' action='?step=3'>
@@ -98,7 +98,7 @@ if ($step == '1') {
     }
 } elseif ($step == '3') {
     if (!mkglobal('id:newpass:newpassagain')) die();
-    $select = sql_query('SELECT id, editsecret FROM users WHERE id = ' . sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    $select = sql_query('SELECT id, editsecret FROM '.TBL_USERS.' WHERE id = ' . sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $fetch = mysqli_fetch_assoc($select) or stderr("{$lang['stderr_errorhead']}", "{$lang['stderr_error8']}");
     if (empty($newpass)) stderr("{$lang['stderr_errorhead']}", "{$lang['stderr_error9']}");
     if ($newpass != $newpassagain) stderr("{$lang['stderr_errorhead']}", "{$lang['stderr_error10']}");
@@ -106,7 +106,7 @@ if ($step == '1') {
     if (strlen($newpass) > 40) stderr("{$lang['stderr_errorhead']}", "{$lang['stderr_error12']}");
     $secret = mksecret();
     $newpassword = make_passhash($secret, md5($newpass));
-    sql_query('UPDATE users SET secret = ' . sqlesc($secret) . ', editsecret = "", passhash=' . sqlesc($newpassword) . ' WHERE id = ' . sqlesc($id) . ' AND editsecret = ' . sqlesc($fetch["editsecret"]));
+    sql_query('UPDATE '.TBL_USERS.' SET secret = ' . sqlesc($secret) . ', editsecret = "", passhash=' . sqlesc($newpassword) . ' WHERE id = ' . sqlesc($id) . ' AND editsecret = ' . sqlesc($fetch["editsecret"]));
     $mc1->begin_transaction('MyUser_' . $id);
     $mc1->update_row(false, array(
         'secret' => $secret,

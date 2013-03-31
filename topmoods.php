@@ -35,7 +35,7 @@ $abba = '<h2>Top Moods</h2>
 $key = 'topmoods';
 $topmoods = $mc1->get_value($key);
 if ($topmoods === false) {
-    $res = sql_query('SELECT moods.*, users.mood, COUNT(users.mood) as moodcount '.'FROM users LEFT JOIN moods ON (users.mood = moods.id) GROUP BY users.mood '.'ORDER BY moodcount DESC, moods.id ASC') or sqlerr(__FILE__, __LINE__);
+    $res = sql_query('SELECT '.TBL_MOODS.'.*, '.TBL_USERS.'.mood, COUNT('.TBL_USERS.'.mood) as moodcount '.'FROM '.TBL_USERS.' LEFT JOIN '.TBL_MOODS.' ON ('.TBL_USERS.'.mood = '.TBL_MOODS.'.id) GROUP BY '.TBL_USERS.'.mood '.'ORDER BY moodcount DESC, '.TBL_MOODS.'.id ASC') or sqlerr(__FILE__, __LINE__);
     while ($arr = mysqli_fetch_assoc($res)) {
         $topmoods.= '<tr><td align="center">'.(int)$arr['moodcount'].'</td>
                  <td align="center">'.htmlsafechars($arr['name']).' '.($arr['bonus'] == 1 ? '<a href="/mybonus.php" style="color:lime">(bonus)</a>' : '').'</td>

@@ -20,7 +20,7 @@ function print_list()
 {
     global $uid, $tid, $ajax;
     $target = $ajax ? '_self' : '_parent';
-    $qt = sql_query("SELECT th.userid, u.username, u.seedbonus FROM thanks as th INNER JOIN users as u ON u.id=th.userid WHERE th.torrentid=".sqlesc($tid)." ORDER BY u.class DESC") or sqlerr(__FILE__, __LINE__);
+    $qt = sql_query("SELECT th.userid, u.username, u.seedbonus FROM ".TBL_THANKS." as th INNER JOIN ".TBL_USERS." as u ON u.id=th.userid WHERE th.torrentid=".sqlesc($tid)." ORDER BY u.class DESC") or sqlerr(__FILE__, __LINE__);
     $list = array();
     $hadTh = false;
     if (mysqli_num_rows($qt) > 0) {
@@ -84,11 +84,11 @@ case 'list':
 
 case 'add':
     if ($uid > 0 && $tid > 0) {
-        $c = 'SELECT count(id) FROM thanks WHERE userid = '.sqlesc($uid).' AND torrentid = '.sqlesc($tid);
+        $c = 'SELECT count(id) FROM '.TBL_THANKS.' WHERE userid = '.sqlesc($uid).' AND torrentid = '.sqlesc($tid);
         $result = sql_query($c);
         $arr = $result->fetch_row();
         if ($arr[0] == 0) {
-            if (sql_query('INSERT INTO thanks(userid,torrentid) VALUES('.sqlesc($uid).','.sqlesc($tid).')')) echo (print_list());
+            if (sql_query('INSERT INTO '.TBL_THANKS.'(userid,torrentid) VALUES('.sqlesc($uid).','.sqlesc($tid).')')) echo (print_list());
             else {
                 $msg = 'There was an error with the query,contact the staff. Mysql error '.((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false));
                 echo ($ajax ? json_encode(array(
@@ -100,8 +100,8 @@ case 'add':
     }
     if ($INSTALLER09['seedbonus_on'] == 1) {
         // ===add karma
-        sql_query("UPDATE users SET seedbonus = seedbonus+5.0 WHERE id =".sqlesc($uid)) or sqlerr(__FILE__, __LINE__);
-        $sql = sql_query('SELECT seedbonus '.'FROM users '.'WHERE id = '.sqlesc($uid)) or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_USERS." SET seedbonus = seedbonus+5.0 WHERE id =".sqlesc($uid)) or sqlerr(__FILE__, __LINE__);
+        $sql = sql_query('SELECT seedbonus '.'FROM '.TBL_USERS.' '.'WHERE id = '.sqlesc($uid)) or sqlerr(__FILE__, __LINE__);
         $User = mysqli_fetch_assoc($sql);
         $update['seedbonus'] = ($User['seedbonus'] + 5);
         $mc1->begin_transaction('userstats_'.$uid);

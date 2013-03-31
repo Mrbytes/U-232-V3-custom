@@ -21,7 +21,7 @@ if (!preg_match("/^(?:[\d\w]){32}$/", $md5)) {
     stderr("{$lang['confirm_user_error']}", "{$lang['confirm_invalid_key']}");
 }
 dbconn();
-$res = sql_query("SELECT passhash, editsecret, status FROM users WHERE id =".sqlesc($id));
+$res = sql_query("SELECT passhash, editsecret, status FROM ".TBL_USERS." WHERE id =".sqlesc($id));
 $row = mysqli_fetch_assoc($res);
 if (!$row) stderr("{$lang['confirm_user_error']}", "{$lang['confirm_invalid_id']}");
 if ($row['status'] != 'pending') {
@@ -30,7 +30,7 @@ if ($row['status'] != 'pending') {
 }
 $sec = $row['editsecret'];
 if ($md5 != $sec) stderr("{$lang['confirm_user_error']}", "{$lang['confirm_cannot_confirm']}");
-sql_query("UPDATE users SET status='confirmed', editsecret='' WHERE id=".sqlesc($id)." AND status='pending'");
+sql_query("UPDATE ".TBL_USERS." SET status='confirmed', editsecret='' WHERE id=".sqlesc($id)." AND status='pending'");
 if (!mysqli_affected_rows($GLOBALS["___mysqli_ston"])) stderr("{$lang['confirm_user_error']}", "{$lang['confirm_cannot_confirm']}");
 $passh = md5($row["passhash"].$_SERVER["REMOTE_ADDR"]);
 logincookie($id, $passh);

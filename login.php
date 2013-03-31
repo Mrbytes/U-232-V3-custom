@@ -33,7 +33,7 @@ function left()
     global $INSTALLER09;
     $total = 0;
     $ip = sqlesc(getip());
-    $fail = sql_query("SELECT SUM(attempts) FROM failedlogins WHERE ip=".sqlesc($ip)) or sqlerr(__FILE__, __LINE__);
+    $fail = sql_query("SELECT SUM(attempts) FROM ".TBL_FAILEDLOGINS." WHERE ip=".sqlesc($ip)) or sqlerr(__FILE__, __LINE__);
     list($total) = mysqli_fetch_row($fail);
     $left = $INSTALLER09['failedlogins'] - $total;
     if ($left <= 2) $left = "<span style='color:red'>{$left}</span>";

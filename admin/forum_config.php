@@ -46,7 +46,7 @@ if (isset($_POST['do_it'])) {
     $accepted_file_types = serialize($accepted_file_types);
     $max_file_size = (isset($_POST['max_file_size']) ? intval($_POST['max_file_size']) : 0);
     $upload_folder = (isset($_POST['upload_folder']) ? htmlsafechars(trim($_POST['upload_folder'])) : '');
-    sql_query('UPDATE forum_config SET delete_for_real = '.sqlesc($delete_for_real).', min_delete_view_class = '.sqlesc($min_delete_view_class).', readpost_expiry = '.sqlesc($readpost_expiry).', min_upload_class = '.sqlesc($min_upload_class).', accepted_file_extension = '.sqlesc($accepted_file_extension).',  accepted_file_types = '.sqlesc($accepted_file_types).', max_file_size = '.$max_file_size.', upload_folder = '.sqlesc($upload_folder).' WHERE id = '.sqlesc($config_id));
+    sql_query('UPDATE ".TBL_FORUM_CONFIG." SET delete_for_real = '.sqlesc($delete_for_real).', min_delete_view_class = '.sqlesc($min_delete_view_class).', readpost_expiry = '.sqlesc($readpost_expiry).', min_upload_class = '.sqlesc($min_upload_class).', accepted_file_extension = '.sqlesc($accepted_file_extension).',  accepted_file_types = '.sqlesc($accepted_file_types).', max_file_size = '.$max_file_size.', upload_folder = '.sqlesc($upload_folder).' WHERE id = '.sqlesc($config_id));
     header('Location: staffpanel.php?tool=forum_config&action=forum_config');
     die();
 }
@@ -54,7 +54,7 @@ $main_links = '<p><a class="altlink" href="staffpanel.php?tool=over_forums&amp;a
 						<a class="altlink" href="staffpanel.php?tool=forum_manage&amp;action=forum_manage">Forum Manager</a> :: 
 						<span style="font-weight: bold;">Configure Forums</span><br /></p>';
 $res = sql_query('SELECT delete_for_real, min_delete_view_class, readpost_expiry, min_upload_class, accepted_file_extension, 
-								accepted_file_types, max_file_size, upload_folder FROM forum_config WHERE id = '.sqlesc($config_id));
+								accepted_file_types, max_file_size, upload_folder FROM '.TBL_FORUM_CONFIG.' WHERE id = '.sqlesc($config_id));
 $arr = mysqli_fetch_array($res);
 $weeks = 1;
 for ($i = 7; $i <= 365; $i = $i + 7) {

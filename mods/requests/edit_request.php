@@ -8,7 +8,7 @@ if (!defined('IN_REQUESTS')) exit('No direct script access allowed');
  *   Project Leaders: Mindless, putyn.
  *
  */
-$rs = sql_query("SELECT r.*, c.id AS catid, c.name AS catname FROM requests AS r LEFT JOIN categories AS c ON (c.id=r.cat) WHERE r.id = $id") or sqlerr(__FILE__, __LINE__);
+$rs = sql_query("SELECT r.*, c.id AS catid, c.name AS catname FROM ".TBL_REQUESTS." AS r LEFT JOIN ".TBL_CATEGORIES." AS c ON (c.id=r.cat) WHERE r.id = $id") or sqlerr(__FILE__, __LINE__);
 $numz = mysqli_fetch_assoc($rs);
 if ($CURUSER['id'] != $numz['userid'] && $CURUSER['class'] < UC_MODERATOR) stderr("{$lang['error_error']}", "{$lang['error_not_yours1']}");
 $s = htmlspecialchars($numz['request']);

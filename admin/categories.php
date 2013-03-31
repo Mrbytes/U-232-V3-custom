@@ -76,12 +76,12 @@ function move_cat()
     $old_cat_id = intval($params['id']);
     $new_cat_id = intval($params['new_cat_id']);
     // make sure both categories exist
-    $q = sql_query("SELECT id FROM categories WHERE id IN($old_cat_id, $new_cat_id)");
+    $q = sql_query("SELECT id FROM ".TBL_CATEGORIES." WHERE id IN($old_cat_id, $new_cat_id)");
     if (2 != mysqli_num_rows($q)) {
         stderr('MOD ERROR', 'That category does not exist or has been deleted');
     }
     //all go
-    sql_query("UPDATE torrents SET category = $new_cat_id WHERE category = $old_cat_id");
+    sql_query("UPDATE ".TBL_TORRENTS." SET category = $new_cat_id WHERE category = $old_cat_id");
     $mc1->delete_value('genrelist');
     $mc1->delete_value('categories');
     if (-1 != mysqli_affected_rows($GLOBALS["___mysqli_ston"])) {
@@ -96,7 +96,7 @@ function move_cat_form()
     if (!isset($params['id']) OR !is_valid_id($params['id'])) {
         stderr('MOD ERROR', 'No category ID selected');
     }
-    $q = sql_query("SELECT * FROM categories WHERE id = ".intval($params['id']));
+    $q = sql_query("SELECT * FROM ".TBL_CATEGORIES." WHERE id = ".intval($params['id']));
     if (false == mysqli_num_rows($q)) {
         stderr('MOD ERROR', 'That category does not exist or has been deleted');
     }
@@ -157,7 +157,7 @@ function add_cat()
     $cat_image = sqlesc($params['new_cat_image']);
     $cat_parent = sqlesc($params['new_cat_parent_id']);
     $cat_tabletype = sqlesc($params['new_cat_tabletype']);
-    sql_query("INSERT INTO categories (name, cat_desc, image, parent_id, tabletype)
+    sql_query("INSERT INTO ".TBL_CATEGORIES." (name, cat_desc, image, parent_id, tabletype)
                   VALUES($cat_name, $cat_desc, $cat_image, $cat_parent, $cat_tabletype)");
     $mc1->delete_value('genrelist');
     $mc1->delete_value('categories');
@@ -173,7 +173,7 @@ function delete_cat()
     if (!isset($params['id']) OR !is_valid_id($params['id'])) {
         stderr('MOD ERROR', 'No category ID selected');
     }
-    $q = @mysqli_query($GLOBALS["___mysqli_ston"], "SELECT * FROM categories WHERE id = ".intval($params['id']));
+    $q = @mysqli_query($GLOBALS["___mysqli_ston"], "SELECT * FROM ".TBL_CATEGORIES." WHERE id = ".intval($params['id']));
     if (false == mysqli_num_rows($q)) {
         stderr('MOD ERROR', 'That category does not exist or has been deleted');
     }
@@ -185,15 +185,15 @@ function delete_cat()
         }
         $new_cat_id = intval($params['new_cat_id']);
         //make sure category isn't out of range before moving torrents! else orphans!
-        $q = sql_query("SELECT COUNT(*) FROM categories WHERE id = $new_cat_id");
+        $q = sql_query("SELECT COUNT(*) FROM ".TBL_CATEGORIES." WHERE id = $new_cat_id");
         $count = mysqli_fetch_array($q, MYSQLI_NUM);
         if (!$count[0]) {
             stderr('MOD ERROR', 'That category does not exist or has been deleted');
         }
         //all go
-        sql_query("UPDATE torrents SET category = $new_cat_id WHERE category = $old_cat_id");
+        sql_query("UPDATE ".TBL_TORRENTS." SET category = $new_cat_id WHERE category = $old_cat_id");
     }
-    sql_query("DELETE FROM categories WHERE id = $old_cat_id");
+    sql_query("DELETE FROM ".TBL_CATEGORIES." WHERE id = $old_cat_id");
     $mc1->delete_value('genrelist');
     $mc1->delete_value('categories');
     if (mysqli_affected_rows($GLOBALS["___mysqli_ston"])) {
@@ -208,12 +208,12 @@ function delete_cat_form()
     if (!isset($params['id']) OR !is_valid_id($params['id'])) {
         stderr('MOD ERROR', 'No category ID selected');
     }
-    $q = @mysqli_query($GLOBALS["___mysqli_ston"], "SELECT * FROM categories WHERE id = ".intval($params['id']));
+    $q = @mysqli_query($GLOBALS["___mysqli_ston"], "SELECT * FROM ".TBL_CATEGORIES." WHERE id = ".intval($params['id']));
     if (false == mysqli_num_rows($q)) {
         stderr('MOD ERROR', 'That category does not exist or has been deleted');
     }
     $r = mysqli_fetch_assoc($q);
-    $q = sql_query("SELECT COUNT(*) FROM torrents WHERE category = ".intval($r['id']));
+    $q = sql_query("SELECT COUNT(*) FROM ".TBL_TORRENTS." WHERE category = ".intval($r['id']));
     $count = mysqli_fetch_array($q, MYSQLI_NUM);
     $check = '';
     if ($count[0]) {
@@ -290,7 +290,7 @@ function edit_cat()
     $cat_desc = sqlesc($params['cat_desc']);
     $cat_image = sqlesc($params['cat_image']);
     $cat_id = intval($params['id']);
-    sql_query("UPDATE categories SET parent_id = $cat_parent, tabletype = $cat_tabletype, name = $cat_name, cat_desc = $cat_desc, image = $cat_image WHERE id = $cat_id");
+    sql_query("UPDATE ".TBL_CATEGORIES." SET parent_id = $cat_parent, tabletype = $cat_tabletype, name = $cat_name, cat_desc = $cat_desc, image = $cat_image WHERE id = $cat_id");
     $mc1->delete_value('genrelist');
     $mc1->delete_value('categories');
     if (-1 == mysqli_affected_rows($GLOBALS["___mysqli_ston"])) {
@@ -306,7 +306,7 @@ function edit_cat_form()
         stderr('MOD ERROR', 'No category ID selected');
     }
     $htmlout = '';
-    $q = sql_query("SELECT * FROM categories WHERE id = ".intval($params['id']));
+    $q = sql_query("SELECT * FROM ".TBL_CATEGORIES." WHERE id = ".intval($params['id']));
     if (false == mysqli_num_rows($q)) {
         stderr('MOD ERROR', 'That category does not exist or has been deleted');
     }
@@ -453,7 +453,7 @@ function show_categories()
       <td class='colhead' width='40'>Delete</td>
       <td class='colhead' width='40'>Move</td>
     </tr>";
-    $query = sql_query("SELECT * FROM categories");
+    $query = sql_query("SELECT * FROM ".TBL_CATEGORIES."");
     if (false == mysqli_num_rows($query)) {
         $htmlout = '<h1>Ooops!!</h1>';
     } else {

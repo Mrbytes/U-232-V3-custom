@@ -40,7 +40,7 @@ if (isset($_GET['act'])) {
         if (!isset($_GET['id'])) stderr("{$lang['themes_error']}", "{$lang['themes_inv_id']}");
         $ID = (int)$_GET['id'];
         if (!is_valid_id($ID)) stderr("{$lang['themes_error']}", "{$lang['themes_inv_id']}");
-        $TEMPLATE = sql_query("SELECT * FROM stylesheets WHERE id=".sqlesc($ID)." LIMIT 1");
+        $TEMPLATE = sql_query("SELECT * FROM ".TBL_STYLESHEETS." WHERE id=".sqlesc($ID)." LIMIT 1");
         $TEM = mysqli_fetch_array($TEMPLATE);
         $HTML.= "
 			<form action='{$INSTALLER09['baseurl']}/staffpanel.php?tool=themes&amp;action=themes&amp;act=4' method='post'>
@@ -67,7 +67,7 @@ if (isset($_GET['act'])) {
 			{$lang['themes_delete_sure_q2']}</a> {$lang['themes_delete_sure_q3']}");
     }
     if ($ACT == 3) { //--ADD NEW
-        $IDS = sql_query("SELECT id FROM stylesheets");
+        $IDS = sql_query("SELECT id FROM ".TBL_STYLESHEETS."");
         while ($ID = mysqli_fetch_array($IDS)) {
             if (file_exists("templates/".(int)$ID['id']."/template.php")) $TAKEN[] = "<font color='green'>$ID[id]</font>";
             else $TAKEN[] = "<font color='red'>$ID[id]</font>";
@@ -94,12 +94,12 @@ if (isset($_GET['act'])) {
         $URI = (int)$_POST['uri'];
         $NAME = htmlsafechars($_POST['title']);
         if (!is_valid_id($ID)) stderr("{$lang['themes_error']}", "{$lang['themes_inv_id']}");
-        $CURRENT = sql_query("SELECT * FROM stylesheets WHERE id=".sqlesc($URI));
+        $CURRENT = sql_query("SELECT * FROM ".TBL_STYLESHEETS." WHERE id=".sqlesc($URI));
         $CUR = mysqli_fetch_array($CURRENT);
         if ($ID != $CUR['id']) $EDIT[] = "id=".sqlesc($ID);
         if ($URI != $CUR['uri']) $EDIT[] = "uri=".sqlesc($URI);
         if ($NAME != $CUR['name']) $EDIT[] = "name=".sqlesc($NAME);
-        if (!@sql_query("UPDATE stylesheets SET ".implode(", ", $EDIT)." WHERE id=".sqlesc($URI))) stderr("{$lang['themes_error']}", "{$lang['themes_some_wrong']}");
+        if (!@sql_query("UPDATE ".TBL_STYLESHEETS." SET ".implode(", ", $EDIT)." WHERE id=".sqlesc($URI))) stderr("{$lang['themes_error']}", "{$lang['themes_some_wrong']}");
         header("Location: {$INSTALLER09['baseurl']}/staffpanel.php?tool=themes&action=themes&msg=1");
     }
     if ($ACT == 5) { //--DELETE FINAL
@@ -108,9 +108,9 @@ if (isset($_GET['act'])) {
         if (!is_valid_id($ID)) stderr("{$lang['themes_error']}", "{$lang['themes_inv_id']}");
         if (!isset($_POST['sure'])) header("Location: staffpanel.php?tool=themes");
         if (isset($_POST['sure']) && $_POST['sure'] != 1) header("Location: staffpanel.php?tool=themes");
-        sql_query("DELETE FROM stylesheets WHERE id=".sqlesc($ID));
-        $RANDSTYLE = mysqli_fetch_array(sql_query("SELECT id FROM stylesheets ORDER BY RAND() LIMIT 1"));
-        sql_query("UPDATE users SET stylesheet=".sqlesc($RANDSTYLE['id'])." WHERE stylesheet=".sqlesc($ID));
+        sql_query("DELETE FROM ".TBL_STYLESHEETS." WHERE id=".sqlesc($ID));
+        $RANDSTYLE = mysqli_fetch_array(sql_query("SELECT id FROM ".TBL_STYLESHEETS." ORDER BY RAND() LIMIT 1"));
+        sql_query("UPDATE ".TBL_USERS." SET stylesheet=".sqlesc($RANDSTYLE['id'])." WHERE stylesheet=".sqlesc($ID));
         header("Location: {$INSTALLER09['baseurl']}/staffpanel.php?tool=themes&action=themes&msg=2");
     }
     if ($ACT == 6) { //--ADD NEW SAVE
@@ -119,7 +119,7 @@ if (isset($_GET['act'])) {
         if (!isset($_POST['name'])) stderr("{$lang['themes_error']}", "{$lang['themes_inv_name']}");
         if (!file_exists("templates/".$_POST['id']."/template.php")) stderr("{$lang['themes_nofile']}", "{$lang['themes_inv_file']}<a href='{$INSTALLER09['baseurl']}/staffpanel.php?tool=themes&amp;action=themes&amp;act=7&amp;id=".(int)$_POST['id']."&amp;uri=".(int)$_POST['uri']."&amp;name=".htmlsafechars($_POST['name'])."'>{$lang['themes_file_exists']}</a>/
 			<a href='{$INSTALLER09['baseurl']}/staffpanel.php?tool=themes'>{$lang['themes_not_exists']}</a>");
-        sql_query("INSERT INTO stylesheets(id, uri, name)VALUES(".sqlesc($_POST['id']).", ".sqlesc($_POST['uri']).", ".sqlesc($_POST['name']).")");
+        sql_query("INSERT INTO ".TBL_STYLESHEETS."(id, uri, name)VALUES(".sqlesc($_POST['id']).", ".sqlesc($_POST['uri']).", ".sqlesc($_POST['name']).")");
         header("Location: {$INSTALLER09['baseurl']}/staffpanel.php?tool=themes&action=themes&msg=3");
     }
     if ($ACT == 7) { //--ADD NEW IF FOLDER NO EXISTS
@@ -129,7 +129,7 @@ if (isset($_GET['act'])) {
         $ID = (int)$_GET['id'];
         $URI = (int)$_GET['uri'];
         $NAME = htmlsafechars($_GET['name']);
-        sql_query("INSERT INTO stylesheets(id, uri, name)VALUES(".sqlesc($ID).", ".sqlesc($URI).",  ".sqlesc($NAME).")");
+        sql_query("INSERT INTO ".TBL_STYLESHEETS."(id, uri, name)VALUES(".sqlesc($ID).", ".sqlesc($URI).",  ".sqlesc($NAME).")");
         header("Location: staffpanel.php?tool=themes&action=themes&msg=3");
     }
 }
@@ -147,7 +147,7 @@ if (!isset($_GET['act'])) {
 		<td class='colhead'>{$lang['themes_is_folder']}</td>
 		<td class='colhead'>{$lang['themes_e_d']}</td>
 		</tr>";
-    $TEMPLATES = sql_query("SELECT * FROM stylesheets");
+    $TEMPLATES = sql_query("SELECT * FROM ".TBL_STYLESHEETS."");
     while ($TE = mysqli_fetch_array($TEMPLATES)) {
         $HTML.= "
 			<tr>

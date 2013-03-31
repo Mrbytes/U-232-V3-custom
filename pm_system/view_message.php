@@ -17,16 +17,16 @@ if (!defined('BUNNY_PM_SYSTEM')) {
 }
 //=== Get the message
 $res = sql_query('SELECT m.*, f.id AS friend, b.id AS blocked
-                            FROM messages AS m LEFT JOIN friends AS f ON f.userid = '.sqlesc($CURUSER['id']).' AND f.friendid = m.sender
-                            LEFT JOIN blocks AS b ON b.userid = '.sqlesc($CURUSER['id']).' AND b.blockid = m.sender WHERE m.id = '.sqlesc($pm_id).' AND (receiver='.sqlesc($CURUSER['id']).' OR (sender='.sqlesc($CURUSER['id']).' AND (saved = \'yes\' || unread= \'yes\'))) LIMIT 1') or sqlerr(__FILE__, __LINE__);
+                            FROM '.TBL_MESSAGES.' AS m LEFT JOIN '.TBL_FRIENDS.' AS f ON f.userid = '.sqlesc($CURUSER['id']).' AND f.friendid = m.sender
+                            LEFT JOIN '.TBL_BLOCKS.' AS b ON b.userid = '.sqlesc($CURUSER['id']).' AND b.blockid = m.sender WHERE m.id = '.sqlesc($pm_id).' AND (receiver='.sqlesc($CURUSER['id']).' OR (sender='.sqlesc($CURUSER['id']).' AND (saved = \'yes\' || unread= \'yes\'))) LIMIT 1') or sqlerr(__FILE__, __LINE__);
 $message = mysqli_fetch_assoc($res);
 if (!$res) stderr('Error', 'You do not have permission to view this message.');
 //=== get user stuff
-$res_user_stuff = sql_query('SELECT id, username, uploaded, warned, suspended, enabled, donor, class, avatar, leechwarn, chatpost, pirate, king, offensive_avatar, view_offensive_avatar FROM users WHERE id='.($message['sender'] === $CURUSER['id'] ? sqlesc($message['receiver']) : sqlesc($message['sender']))) or sqlerr(__FILE__, __LINE__);
+$res_user_stuff = sql_query('SELECT id, username, uploaded, warned, suspended, enabled, donor, class, avatar, leechwarn, chatpost, pirate, king, offensive_avatar, view_offensive_avatar FROM '.TBL_USERS.' WHERE id='.($message['sender'] === $CURUSER['id'] ? sqlesc($message['receiver']) : sqlesc($message['sender']))) or sqlerr(__FILE__, __LINE__);
 $arr_user_stuff = mysqli_fetch_assoc($res_user_stuff);
 $id = (int)$arr_user_stuff['id'];
 //=== Mark message read
-sql_query('UPDATE messages SET unread=\'no\' WHERE id='.sqlesc($pm_id).' AND receiver='.sqlesc($CURUSER['id']).' LIMIT 1') or sqlerr(__FILE__, __LINE__);
+sql_query('UPDATE '.TBL_MESSAGES.' SET unread=\'no\' WHERE id='.sqlesc($pm_id).' AND receiver='.sqlesc($CURUSER['id']).' LIMIT 1') or sqlerr(__FILE__, __LINE__);
 $mc1->delete_value('inbox_new_'.$CURUSER['id']);
 $mc1->delete_value('inbox_new_sb_'.$CURUSER['id']);
 if ($message['friend'] > 0) $friends = ' [ <span class="font_size_1"><a href="friends.php?action=delete&amp;type=friend&amp;targetid='.$id.'">remove from friends</a></span> ]';
@@ -45,7 +45,7 @@ $the_buttons = '<input type="submit" class="button_tiny" value="move" onmouseove
 //=== get mailbox name
 if ($message['location'] > 1) {
     //== get name of PM box if not in or out
-    $res_box_name = sql_query('SELECT name FROM pmboxes WHERE userid = '.sqlesc($CURUSER['id']).' AND boxnumber='.sqlesc($mailbox).' LIMIT 1') or sqlerr(__FILE__, __LINE__);
+    $res_box_name = sql_query('SELECT name FROM '.TBL_PMBOXES.' WHERE userid = '.sqlesc($CURUSER['id']).' AND boxnumber='.sqlesc($mailbox).' LIMIT 1') or sqlerr(__FILE__, __LINE__);
     $arr_box_name = mysqli_fetch_row($res_box_name);
     if (mysqli_num_rows($res) === 0) stderr('Error', 'Invalid Mailbox');
     $mailbox_name = htmlsafechars($arr_box_name[0]);

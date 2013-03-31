@@ -28,10 +28,10 @@ $descr = "$pic";
 $descr.= "$descrmain";
 $request2 = sqlesc($request);
 $descr = sqlesc($descr);
-sql_query("INSERT INTO requests (hits, userid, cat, request, descr, added) VALUES(1,$CURUSER[id], $cat, $request2, $descr, ".TIME_NOW.")") or sqlerr(__FILE__, __LINE__);
+sql_query("INSERT INTO ".TBL_REQUESTS." (hits, userid, cat, request, descr, added) VALUES(1,$CURUSER[id], $cat, $request2, $descr, ".TIME_NOW.")") or sqlerr(__FILE__, __LINE__);
 $id = ((is_null($___mysqli_res = mysqli_insert_id($GLOBALS["___mysqli_ston"]))) ? false : $___mysqli_res);
-sql_query("INSERT INTO voted_requests VALUES(0, $id, $CURUSER[id])") or sqlerr();
-if ($INSTALLER09['karma'] && isset($CURUSER['seedbonus'])) sql_query("UPDATE users SET seedbonus = seedbonus-".$INSTALLER09['req_cost_bonus']." WHERE id = $CURUSER[id]") or sqlerr(__FILE__, __LINE__);
+sql_query("INSERT INTO ".TBL_REQUEST_VOTES." VALUES(0, $id, $CURUSER[id])") or sqlerr();
+if ($INSTALLER09['karma'] && isset($CURUSER['seedbonus'])) sql_query("UPDATE ".TBL_USERS." SET seedbonus = seedbonus-".$INSTALLER09['req_cost_bonus']." WHERE id = $CURUSER[id]") or sqlerr(__FILE__, __LINE__);
 write_log("Request (".$request.") was added to the Request section by $CURUSER[username]");
 if ($INSTALLER09['autoshout_on'] == 1) {
     /** Shout announce **/

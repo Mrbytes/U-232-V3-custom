@@ -63,7 +63,7 @@ if ($mode == 'delete') {
     function deletenewsid($newsid)
     {
         global $CURUSER, $mc1;
-        sql_query("DELETE FROM news WHERE id = ".sqlesc($newsid)." AND userid = ".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+        sql_query("DELETE FROM ".TBL_NEWS." WHERE id = ".sqlesc($newsid)." AND userid = ".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('latest_news_');
     }
     $HTMLOUT.= deletenewsid($newsid);
@@ -81,7 +81,7 @@ if ($mode == 'add') {
     if (!$title) stderr("Error", "The news title cannot be empty!");
     $added = isset($_POST["added"]) ? $_POST["added"] : '';
     if (!$added) $added = TIME_NOW;
-    sql_query("INSERT INTO news (userid, added, body, title, sticky) VALUES (".sqlesc($CURUSER['id']).",".sqlesc($added).", ".sqlesc($body).", ".sqlesc($title).", ".sqlesc($sticky).")") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_NEWS." (userid, added, body, title, sticky) VALUES (".sqlesc($CURUSER['id']).",".sqlesc($added).", ".sqlesc($body).", ".sqlesc($title).", ".sqlesc($sticky).")") or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('latest_news_');
     header("Refresh: 3; url=staffpanel.php?tool=news&mode=news");
     mysqli_affected_rows($GLOBALS["___mysqli_ston"]) == 1 ? stderr("Success", "News entry was added successfully.") : stderr("oopss", "Something's wrong !! .");
@@ -90,7 +90,7 @@ if ($mode == 'add') {
 if ($mode == 'edit') {
     $newsid = (int)$_GET["newsid"];
     if (!is_valid_id($newsid)) stderr("Error", "Invalid news item ID.");
-    $res = sql_query("SELECT id, body, title, userid, added, sticky FROM news WHERE id=".sqlesc($newsid)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT id, body, title, userid, added, sticky FROM ".TBL_NEWS." WHERE id=".sqlesc($newsid)) or sqlerr(__FILE__, __LINE__);
     if (mysqli_num_rows($res) != 1) stderr("Error", "No news item with that ID .");
     $arr = mysqli_fetch_assoc($res);
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -99,7 +99,7 @@ if ($mode == 'edit') {
         if ($body == "") stderr("Error", "Body cannot be empty!");
         $title = htmlsafechars($_POST['title']);
         if ($title == "") stderr("Error", "Title cannot be empty!");
-        sql_query("UPDATE news SET body=".sqlesc($body).", sticky=".sqlesc($sticky).", title=".sqlesc($title)." WHERE id=".sqlesc($newsid)) or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_NEWS." SET body=".sqlesc($body).", sticky=".sqlesc($sticky).", title=".sqlesc($title)." WHERE id=".sqlesc($newsid)) or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('latest_news_');
         header("Refresh: 3; url=staffpanel.php?tool=news&mode=news");
         stderr("Success", "News item was edited successfully - Please wait while you are redirected!");
@@ -121,7 +121,7 @@ if ($mode == 'edit') {
 }
 //==Final Actions
 if ($mode == 'news') {
-    $res = sql_query("SELECT n.id AS newsid, n.body, n.title, n.userid, n.added, u.id, u.username, u.class, u.warned, u.chatpost, u.pirate, u.king, u.leechwarn, u.enabled, u.donor FROM news AS n LEFT JOIN users AS u ON u.id=n.userid ORDER BY sticky, added DESC") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT n.id AS ".TBL_NEWS."id, n.body, n.title, n.userid, n.added, u.id, u.username, u.class, u.warned, u.chatpost, u.pirate, u.king, u.leechwarn, u.enabled, u.donor FROM ".TBL_NEWS." AS n LEFT JOIN ".TBL_USERS." AS u ON u.id=n.userid ORDER BY sticky, added DESC") or sqlerr(__FILE__, __LINE__);
     $HTMLOUT.= begin_main_frame();
     $HTMLOUT.= begin_frame();
     $HTMLOUT.= "<form method='post' name='compose' action='staffpanel.php?tool=news&amp;mode=add'>

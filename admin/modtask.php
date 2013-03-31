@@ -34,7 +34,7 @@ function write_info($text)
 {
     $text = sqlesc($text);
     $added = TIME_NOW;
-    sql_query("INSERT INTO infolog (added, txt) VALUES($added, $text)") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_INFOLOG." (added, txt) VALUES($added, $text)") or sqlerr(__FILE__, __LINE__);
 }
 function resize_image($in)
 {
@@ -65,7 +65,7 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
     require_once (CLASS_DIR.'validator.php');
     if (!validate($_POST['validator'], "ModTask_$userid")) die("Invalid");
     //== Fetch current user data...
-    $res = sql_query("SELECT * FROM users WHERE id=".sqlesc($userid));
+    $res = sql_query("SELECT * FROM ".TBL_USERS." WHERE id=".sqlesc($userid));
     $user = mysqli_fetch_assoc($res) or sqlerr(__FILE__, __LINE__);
     if ($CURUSER['class'] <= $user['class'] && ($CURUSER['id'] != $userid && $CURUSER['class'] < UC_ADMINISTRATOR)) stderr('Error', 'You cannot edit someone of the same or higher class.. injecting stuff arent we? Action logged');
     if (($user['immunity'] >= 1) && ($CURUSER['class'] < UC_MAX)) stderr("Error", "This user is immune to your commands !");
@@ -80,7 +80,7 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
         $what = ($class > $user['class'] ? "{$lang['modtask_promoted']}" : "{$lang['modtask_demoted']}");
         $msg = sqlesc(sprintf($lang['modtask_have_been'], $what)." '".get_user_class_name($class)."' {$lang['modtask_by']} ".$username);
         $added = TIME_NOW;
-        sql_query("INSERT INTO messages (sender, receiver, msg, added) VALUES(0, $userid, $msg, $added)") or sqlerr(__FILE__, __LINE__);
+        sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, msg, added) VALUES(0, $userid, $msg, $added)") or sqlerr(__FILE__, __LINE__);
         $updateset[] = "class = ".sqlesc($class);
         $useredit['update'][] = ''.$what.' to '.get_user_class_name($class).'';
         $curuser_cache['class'] = $class;
@@ -90,7 +90,7 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
     // === add donated amount to user and to funds table
     if ((isset($_POST['donated'])) && (($donated = $_POST['donated']) != $user['donated'])) {
         $added = TIME_NOW;
-        sql_query("INSERT INTO funds (cash, user, added) VALUES ($donated, $userid, $added)") or sqlerr(__file__, __line__);
+        sql_query("INSERT INTO ".TBL_FUNDS." (cash, user, added) VALUES ($donated, $userid, $added)") or sqlerr(__file__, __line__);
         $updateset[] = "donated = ".sqlesc($donated);
         $updateset[] = "total_donated = ".$user['total_donated']." + ".sqlesc($donated);
         $mc1->delete_value('totalfunds_');
@@ -133,12 +133,12 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
             $user_cache['vipclass_before'] = $user["class"];
         }
         $added = TIME_NOW;
-        sql_query("INSERT INTO messages (sender, subject, receiver, msg, added) VALUES (0, $subject, $userid, $msg, $added)") or sqlerr(__file__, __line__);
+        sql_query("INSERT INTO ".TBL_MESSAGES." (sender, subject, receiver, msg, added) VALUES (0, $subject, $userid, $msg, $added)") or sqlerr(__file__, __line__);
         $updateset[] = "donor = 'yes'";
         $useredit['update'][] = 'Donor = Yes';
         $curuser_cache['donor'] = 'yes';
         $user_cache['donor'] = 'yes';
-        $res = sql_query("SELECT class FROM users WHERE id = $userid") or sqlerr(__file__, __line__);
+        $res = sql_query("SELECT class FROM ".TBL_USERS." WHERE id = $userid") or sqlerr(__file__, __line__);
         $arr = mysqli_fetch_array($res);
         if ($user['class'] < UC_UPLOADER) $updateset[] = "class = ".UC_VIP."";
         $curuser_cache['class'] = UC_VIP;
@@ -162,9 +162,9 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
         $subject = sqlesc("Thank You for Your Donation... Again!");
         $modcomment = get_date(TIME_NOW, 'DATE', 1)." - Donator status set for another $dur by ".$CURUSER['username'].".\n".$modcomment;
         $donorlengthadd = $donorlengthadd * 7;
-        sql_query("UPDATE users SET vipclass_before=".$user["class"].", donoruntil = IF(donoruntil=0, ".TIME_NOW." + 86400 * $donorlengthadd, donoruntil + 86400 * $donorlengthadd) WHERE id = $userid") or sqlerr(__file__, __line__);
+        sql_query("UPDATE ".TBL_USERS." SET vipclass_before=".$user["class"].", donoruntil = IF(donoruntil=0, ".TIME_NOW." + 86400 * $donorlengthadd, donoruntil + 86400 * $donorlengthadd) WHERE id = $userid") or sqlerr(__file__, __line__);
         $added = TIME_NOW;
-        sql_query("INSERT INTO messages (sender, subject, receiver, msg, added) VALUES (0, $subject, $userid, $msg, $added)") or sqlerr(__file__, __line__);
+        sql_query("INSERT INTO ".TBL_MESSAGES." (sender, subject, receiver, msg, added) VALUES (0, $subject, $userid, $msg, $added)") or sqlerr(__file__, __line__);
         $updateset[] = "donated = ".$user['donated']." + ".sqlesc($_POST['donated']);
         $updateset[] = "total_donated = ".$user['total_donated']." + ".sqlesc($_POST['donated']);
         $curuser_cache['donated'] = ($user['donated'] + $_POST['donated']);
@@ -193,7 +193,7 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
             $msg = sqlesc(sprintf($lang['modtask_donor_removed']).$username);
             $added = TIME_NOW;
             $subject = sqlesc("Donator status expired.");
-            sql_query("INSERT INTO messages (sender, subject, receiver, msg, added) VALUES (0, $subject, $userid, $msg, $added)") or sqlerr(__file__, __line__);
+            sql_query("INSERT INTO ".TBL_MESSAGES." (sender, subject, receiver, msg, added) VALUES (0, $subject, $userid, $msg, $added)") or sqlerr(__file__, __line__);
         }
     }
     // ===end
@@ -236,7 +236,7 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
             $curuser_cache['downloadpos'] = $downloadpos_until;
             $user_cache['downloadpos'] = $downloadpos_until;
         }
-        sql_query("INSERT INTO messages (sender, receiver, subject, msg, added) 
+        sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, subject, msg, added) 
 	             VALUES (0, $userid, $subject, $msg, $added)") or sqlerr(__file__, __line__);
     }
     //== Set upload posssible Time based
@@ -269,7 +269,7 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
             $curuser_cache['uploadpos'] = $uploadpos_until;
             $user_cache['uploadpos'] = $uploadpos_until;
         }
-        sql_query("INSERT INTO messages (sender, receiver, subject, msg, added) 
+        sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, subject, msg, added) 
 	          VALUES (0, $userid, $subject, $msg, $added)") or sqlerr(__file__, __line__);
     }
     //== Set Pm posssible Time based
@@ -302,7 +302,7 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
             $curuser_cache['sendpmpos'] = $sendpmpos_until;
             $user_cache['sendpmpos'] = $sendpmpos_until;
         }
-        sql_query("INSERT INTO messages (sender, receiver, subject, msg, added) 
+        sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, subject, msg, added) 
 	             VALUES (0, $userid, $subject, $msg, $added)") or sqlerr(__file__, __line__);
     }
     //== Set shoutbox posssible Time based
@@ -335,7 +335,7 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
             $curuser_cache['chatpost'] = $chatpost_until;
             $user_cache['chatpost'] = $chatpost_until;
         }
-        sql_query("INSERT INTO messages (sender, receiver, subject, msg, added) 
+        sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, subject, msg, added) 
 	             VALUES (0, $userid, $subject, $msg, $added)") or sqlerr(__file__, __line__);
     }
     //== Set Immunity Status Time based
@@ -365,7 +365,7 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
             $curuser_cache['immunity'] = $immunity_until;
             $user_cache['immunity'] = $immunity_until;
         }
-        sql_query("INSERT INTO messages (sender, receiver, subject, msg, added) 
+        sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, subject, msg, added) 
 	             VALUES (0, $userid, $subject, $msg, $added)") or sqlerr(__file__, __line__);
     }
     //== Set leechwarn Status Time based
@@ -395,7 +395,7 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
             $curuser_cache['leechwarn'] = $leechwarn_until;
             $user_cache['leechwarn'] = $leechwarn_until;
         }
-        sql_query("INSERT INTO messages (sender, receiver, subject, msg, added) 
+        sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, subject, msg, added) 
 	             VALUES (0, $userid, $subject, $msg, $added)") or sqlerr(__file__, __line__);
     }
     //= Set warn Status Time based
@@ -425,7 +425,7 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
             $curuser_cache['warned'] = $warned_until;
             $user_cache['warned'] = $warned_until;
         }
-        sql_query("INSERT INTO messages (sender, receiver, subject, msg, added) 
+        sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, subject, msg, added) 
 	             VALUES (0, $userid, $subject, $msg, $added)") or sqlerr(__file__, __line__);
     }
     //== Add remove uploaded
@@ -640,7 +640,7 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
             $curuser_cache['free_switch'] = $free_until;
             $user_cache['free_switch'] = $free_until;
         }
-        sql_query("INSERT INTO messages (sender, receiver, subject, msg, added) 
+        sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, subject, msg, added) 
 	             VALUES (0, $userid, $subject, $msg, $added)") or sqlerr(__file__, __line__);
     }
     //== Set gaming posssible Time based
@@ -673,7 +673,7 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
             $curuser_cache['game_access'] = $game_access_until;
             $user_cache['game_access'] = $game_access_until;
         }
-        sql_query("INSERT INTO messages (sender, receiver, subject, msg, added)
+        sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, subject, msg, added)
                  VALUES (0, $userid, $subject, $msg, $added)") or sqlerr(__file__, __line__);
     }
     /// Set avatar posssible Time based
@@ -706,7 +706,7 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
             $curuser_cache['avatarpos'] = $avatarpos_until;
             $user_cache['avatarpos'] = $avatarpos_until;
         }
-        sql_query("INSERT INTO messages (sender, receiver, subject, msg, added) 
+        sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, subject, msg, added) 
                 VALUES (0, $userid, $subject, $msg, $added)") or sqlerr(__file__, __line__);
     }
     //== Set higspeed Upload Enable / Disable
@@ -716,13 +716,13 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
             $subject = sqlesc("Highspeed uploader status.");
             $msg = sqlesc("You  have been set as a high speed uploader by  ".$username.". You can now upload torrents using highspeeds without being flagged as a cheater  .");
             $added = TIME_NOW;
-            sql_query("INSERT INTO messages (sender, receiver, msg, subject, added) VALUES (0, $userid, $msg, $subject, $added)") or sqlerr(__file__, __line__);
+            sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, msg, subject, added) VALUES (0, $userid, $msg, $subject, $added)") or sqlerr(__file__, __line__);
         } elseif ($highspeed == 'no') {
             $modcomment = get_date(TIME_NOW, 'DATE', 1)." - Highspeed Upload disabled by ".$CURUSER['username'].".\n".$modcomment;
             $subject = sqlesc("Highspeed uploader status.");
             $msg = sqlesc("Your highspeed upload setting has been disabled by ".$username.". Please PM ".$username." for the reason why.");
             $added = TIME_NOW;
-            sql_query("INSERT INTO messages (sender, receiver, msg, subject, added) VALUES (0, $userid, $msg, $subject, $added)") or sqlerr(__file__, __line__);
+            sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, msg, subject, added) VALUES (0, $userid, $msg, $subject, $added)") or sqlerr(__file__, __line__);
         } else die(); //== Error
         $updateset[] = "highspeed = ".sqlesc($highspeed);
         $useredit['update'][] = 'Highspeed uploader enabled = '.$highspeed.'';
@@ -791,7 +791,7 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
         $curuser_cache['invite_on'] = 'yes';
         $user_cache['invite_on'] = 'yes';
         $added = TIME_NOW;
-        sql_query("INSERT INTO messages (sender, subject, receiver, added, msg) VALUES(0, $subject, $user[id], $added, $msg)");
+        sql_query("INSERT INTO ".TBL_MESSAGES." (sender, subject, receiver, added, msg) VALUES(0, $subject, $user[id], $added, $msg)");
     }
     //=== hit and runs
     if ((isset($_POST['hit_and_run_total'])) && (($hit_and_run_total = $_POST['hit_and_run_total']) != $user['hit_and_run_total'])) {
@@ -810,7 +810,7 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
             $modcomment = get_date(TIME_NOW, 'DATE', 1)." - Posting disabled by ".$CURUSER['username'].".\n".$modcomment;
             $msg = sqlesc('Your Posting rights have been removed by '.$username.', Please PM '.$username.' for the reason why.');
         }
-        sql_query('INSERT INTO messages (sender, receiver, msg, subject, added) VALUES (0, '.$user['id'].', '.$msg.', \'Posting rights\', '.TIME_NOW.')');
+        sql_query('INSERT INTO ".TBL_MESSAGES." (sender, receiver, msg, subject, added) VALUES (0, '.$user['id'].', '.$msg.', \'Posting rights\', '.TIME_NOW.')');
         $updateset[] = 'forum_post = '.sqlesc($forum_post);
         $useredit['update'][] = 'Forum post enabled = '.$forum_post.'';
         $curuser_cache['forum_post'] = $forum_post;
@@ -825,7 +825,7 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
             $modcomment = get_date(TIME_NOW, 'DATE', 1)." - Signature rights turned on by ".$CURUSER['username'].".\n".$modcomment;
             $msg = sqlesc('Your Signature rights turned back on by '.$username.'.');
         }
-        sql_query('INSERT INTO messages (sender, receiver, msg, subject, added) VALUES (0, '.$user['id'].', '.$msg.', \'Signature rights\', '.TIME_NOW.')');
+        sql_query('INSERT INTO ".TBL_MESSAGES." (sender, receiver, msg, subject, added) VALUES (0, '.$user['id'].', '.$msg.', \'Signature rights\', '.TIME_NOW.')');
         $updateset[] = 'signature_post = '.sqlesc($signature_post);
         $useredit['update'][] = 'Signature post enabled = '.$signature_post.'';
         $curuser_cache['signature_post'] = $signature_post;
@@ -852,7 +852,7 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
             $modcomment = get_date(TIME_NOW, 'DATE', 1)." - Offensive avatar set to yes by ".$CURUSER['username'].".\n".$modcomment;
             $msg = sqlesc('Your avatar has been set to offensive by '.$username.' PM them to ask why.');
         }
-        sql_query('INSERT INTO messages (sender, receiver, msg, subject, added) VALUES (0, '.$user['id'].', '.$msg.', \'Offensive avatar\', '.TIME_NOW.')');
+        sql_query('INSERT INTO ".TBL_MESSAGES." (sender, receiver, msg, subject, added) VALUES (0, '.$user['id'].', '.$msg.', \'Offensive avatar\', '.TIME_NOW.')');
         $updateset[] = 'offensive_avatar = '.sqlesc($offensive_avatar);
         $useredit['update'][] = 'Offensive avatar enabled = '.$offensive_avatar.'';
         $curuser_cache['offensive_avatar'] = $offensive_avatar;
@@ -952,7 +952,7 @@ if ((isset($_POST['action'])) && ($_POST['action'] == "edituser")) {
         $mc1->update_row(false, $user_stats_cache);
         $mc1->commit_transaction($INSTALLER09['expires']['user_stats']);
     }
-    if (sizeof($updateset) > 0) sql_query("UPDATE users SET ".implode(", ", $updateset)." WHERE id=".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
+    if (sizeof($updateset) > 0) sql_query("UPDATE ".TBL_USERS." SET ".implode(", ", $updateset)." WHERE id=".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
     status_change($userid);
     if ((isset($_POST['class'])) && (($class = $_POST['class']) != $user['class'])) {
         write_staffs();

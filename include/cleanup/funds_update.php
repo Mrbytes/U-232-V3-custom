@@ -13,7 +13,7 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 function docleanup($data)
 {
@@ -23,12 +23,12 @@ function docleanup($data)
     // ===Clear funds after one month
     $secs = 30 * 86400;
     $dt = sqlesc(TIME_NOW - $secs);
-    sql_query("DELETE FROM funds WHERE added < $dt");
+    sql_query("DELETE FROM ".TBL_FUNDS." WHERE added < $dt");
     //if (mysqli_affected_rows() > 0)
     $mc1->delete_value('totalfunds_');
     // ===End
     //== Donation Progress Mod Updated For Tbdev 2009/2010 by Bigjoos/pdq
-    $res = sql_query("SELECT id, modcomment, vipclass_before FROM users WHERE donor='yes' AND donoruntil < ".TIME_NOW." AND donoruntil <> '0'") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT id, modcomment, vipclass_before FROM ".TBL_USERS." WHERE donor='yes' AND donoruntil < ".TIME_NOW." AND donoruntil <> '0'") or sqlerr(__FILE__, __LINE__);
     $msgs_buffer = $users_buffer = array();
     if (mysqli_num_rows($res) > 0) {
         $subject = "Donor status removed by system.";
@@ -64,8 +64,8 @@ function docleanup($data)
         }
         $count = count($users_buffer);
         if ($count > 0) {
-            sql_query("INSERT INTO messages (sender,receiver,added,msg,subject) VALUES ".implode(', ', $msgs_buffer)) or sqlerr(__FILE__, __LINE__);
-            sql_query("INSERT INTO users (id, class, donor, donoruntil, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE class=values(class),
+            sql_query("INSERT INTO ".TBL_MESSAGES." (sender,receiver,added,msg,subject) VALUES ".implode(', ', $msgs_buffer)) or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_USERS." (id, class, donor, donoruntil, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE class=values(class),
             donor=values(donor),donoruntil=values(donoruntil),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
             write_log("Cleanup: Donation status expired - ".$count." Member(s)");
         }

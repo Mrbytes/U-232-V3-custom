@@ -19,7 +19,7 @@ $HTMLOUT.= "<table class='main' width='750' border='0' cellspacing='0' cellpaddi
 <tr>
 <td class='embedded'>
 <h2 align='center'><font size='6'>Announcement History</font></h2>";
-$query1 = sprintf('SELECT m.main_id, m.subject, m.body FROM announcement_main AS m '.'LEFT JOIN announcement_process AS p '.'ON m.main_id = p.main_id AND p.user_id = %s '.'WHERE p.status = 2', sqlesc($CURUSER['id']));
+$query1 = sprintf('SELECT m.main_id, m.subject, m.body FROM '.TBL_ANNOUNCEMENT_MAIN.' AS m '.'LEFT JOIN '.TBL_ANNOUNCEMENT_PROCESS.' AS p '.'ON m.main_id = p.main_id AND p.user_id = %s '.'WHERE p.status = 2', sqlesc($CURUSER['id']));
 $result = sql_query($query1);
 $ann_list = array();
 while ($x = mysqli_fetch_array($result)) $ann_list[] = $x;

@@ -77,7 +77,7 @@ function sharetable($res, $variant = "index")
         if ($variant == "index") $htmlout.= "&amp;hit=1";
         $htmlout.= "'><b>$dispname</b></a>&nbsp;</td>";
         $htmlout.= ($variant == "index" ? "<td align='center'><a href=\"download.php?torrent={$id}\"><img src='{$INSTALLER09['pic_base_url']}zip.gif' border='0' alt='Download Bookmark!' title='Download Bookmark!' /></a></td>" : "");
-        $bm = sql_query("SELECT * FROM bookmarks WHERE torrentid=".sqlesc($id)." AND userid=".sqlesc($CURUSER['id']));
+        $bm = sql_query("SELECT * FROM ".TBL_BOOKMARKS." WHERE torrentid=".sqlesc($id)." AND userid=".sqlesc($CURUSER['id']));
         $bms = mysqli_fetch_assoc($bm);
         $bookmarked = (empty($bms) ? '<a href=\'bookmark.php?torrent='.$id.'&amp;action=add\'><img src=\''.$INSTALLER09['pic_base_url'].'bookmark.gif\' border=\'0\' alt=\'Bookmark it!\' title=\'Bookmark it!\'></a>' : '<a href="bookmark.php?torrent='.$id.'&amp;action=delete"><img src=\''.$INSTALLER09['pic_base_url'].'aff_cross.gif\' border=\'0\' alt=\'Delete Bookmark!\' title=\'Delete Bookmark!\' /></a>');
         $htmlout.= ($variant == "index" ? "<td align='center'>{$bookmarked}</td>" : "");
@@ -137,18 +137,18 @@ function sharetable($res, $variant = "index")
 //==Sharemarks
 $userid = isset($_GET['id']) ? (int)$_GET['id'] : '';
 if (!is_valid_id($userid)) stderr("Error", "Invalid ID.");
-$res = sql_query("SELECT id, username FROM users WHERE id = ".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT id, username FROM ".TBL_USERS." WHERE id = ".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
 $arr = mysqli_fetch_array($res);
 $htmlout.= "<h1>Sharemarks for <a href=\"userdetails.php?id=".$userid."\">".htmlsafechars($arr['username'])."</a></h1>";
 $htmlout.= "<b><a href=\"bookmarks.php\">My Bookmarks</a></b>";
-$res = sql_query("SELECT COUNT(id) FROM bookmarks WHERE userid = ".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT COUNT(id) FROM ".TBL_BOOKMARKS." WHERE userid = ".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
 $row = mysqli_fetch_array($res);
 $count = $row[0];
 $torrentsperpage = $CURUSER["torrentsperpage"];
 if (!$torrentsperpage) $torrentsperpage = 25;
 if ($count) {
     $pager = pager($torrentsperpage, $count, "sharemarks.php?&amp;");
-    $query1 = "SELECT bookmarks.id as bookmarkid, torrents.username, torrents.owner, torrents.id, torrents.name, torrents.type, torrents.comments, torrents.leechers, torrents.seeders, torrents.save_as, torrents.numfiles, torrents.added, torrents.filename, torrents.size, torrents.views, torrents.visible, torrents.hits, torrents.times_completed, torrents.category FROM bookmarks LEFT JOIN torrents ON bookmarks.torrentid = torrents.id WHERE bookmarks.userid = ".sqlesc($userid)." AND bookmarks.private = 'no' ORDER BY id DESC {$pager['limit']}";
+    $query1 = "SELECT ".TBL_BOOKMARKS.".id as bookmarkid, ".TBL_TORRENTS.".username, ".TBL_TORRENTS.".owner, ".TBL_TORRENTS.".id, ".TBL_TORRENTS.".name, ".TBL_TORRENTS.".type, ".TBL_TORRENTS.".comments, ".TBL_TORRENTS.".leechers, ".TBL_TORRENTS.".seeders, ".TBL_TORRENTS.".save_as, ".TBL_TORRENTS.".numfiles, ".TBL_TORRENTS.".added, ".TBL_TORRENTS.".filename, ".TBL_TORRENTS.".size, ".TBL_TORRENTS."views, ".TBL_TORRENTS.".visible, ".TBL_TORRENTS.".hits, ".TBL_TORRENTS.".times_completed, ".TBL_TORRENTS.".category FROM ".TBL_BOOKMARKS." LEFT JOIN ".TBL_TORRENTS." ON ".TBL_BOOKMARKS.".torrentid = ".TBL_TORRENTS.".id WHERE ".TBL_BOOKMARKS.".userid = ".sqlesc($userid)." AND ".TBL_BOOKMARKS.".private = 'no' ORDER BY id DESC {$pager['limit']}";
     $res = sql_query($query1) or sqlerr(__FILE__, __LINE__);
 }
 if ($count) {

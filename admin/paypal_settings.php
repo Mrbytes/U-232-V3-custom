@@ -25,7 +25,7 @@ require_once (CLASS_DIR.'class_check.php');
 class_check(UC_SYSOP);
 $lang = array_merge($lang);
 //get the config from db
-$pconf = sql_query('SELECT name, value FROM paypal_config') or sqlerr(__FILE__, __LINE__);
+$pconf = sql_query('SELECT name, value FROM '.TBL_PAYPAL_CONFIG.'') or sqlerr(__FILE__, __LINE__);
 while ($ac = mysqli_fetch_assoc($pconf)) $paypal_config[$ac['name']] = $ac['value'];
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     /*
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     */
     foreach ($paypal_config as $c_name => $c_value) if (isset($_POST[$c_name]) && $_POST[$c_name] != $c_value) $update[] = '('.sqlesc($c_name).','.sqlesc(is_array($_POST[$c_name]) ? join('|', $_POST[$c_name]) : $_POST[$c_name]).')';
-    if (sql_query('INSERT INTO paypal_config(name,value) VALUES '.join(',', $update).' ON DUPLICATE KEY update value=values(value)')) stderr('Success', 'Paypal configuration was saved! Click <a href=\'staffpanel.php?tool=paypal_settings\'>here to get back</a>');
+    if (sql_query('INSERT INTO '.TBL_PAYPAL_CONFIG.'(name,value) VALUES '.join(',', $update).' ON DUPLICATE KEY update value=values(value)')) stderr('Success', 'Paypal configuration was saved! Click <a href=\'staffpanel.php?tool=paypal_settings\'>here to get back</a>');
     else stderr('Error', 'There was an error while executing the update query. Mysql error: '.((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
     exit;
 }

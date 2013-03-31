@@ -5,8 +5,8 @@ if (($last24_cache = $mc1->get_value($keys['last24'])) === false) {
     $last24_cache = array();
     $time24 = $_SERVER['REQUEST_TIME'] - 86400;
     $activeusers24 = '';
-    $arr = mysqli_fetch_assoc(sql_query('SELECT * FROM avps WHERE arg = "last24"'));
-    $res = sql_query('SELECT id, username, class, donor, title, warned, enabled, chatpost, leechwarn, pirate, king '.'FROM users WHERE last_access >= '.$time24.' '.'AND perms < '.bt_options::PERMS_STEALTH.' ORDER BY username ASC') or sqlerr(__FILE__, __LINE__);
+    $arr = mysqli_fetch_assoc(sql_query('SELECT * FROM '.TBL_AVPS.' WHERE arg = "last24"'));
+    $res = sql_query('SELECT id, username, class, donor, title, warned, enabled, chatpost, leechwarn, pirate, king '.'FROM '.TBL_USERS.' WHERE last_access >= '.$time24.' '.'AND perms < '.bt_options::PERMS_STEALTH.' ORDER BY username ASC') or sqlerr(__FILE__, __LINE__);
     $totalonline24 = mysqli_num_rows($res);
     $_ss24 = ($totalonline24 != 1 ? 's' : '');
     $last24record = get_date($arr['value_u'], '');
@@ -14,7 +14,7 @@ if (($last24_cache = $mc1->get_value($keys['last24'])) === false) {
     if ($totalonline24 > $last24) {
         $last24 = $totalonline24;
         $period = $_SERVER['REQUEST_TIME'];
-        sql_query('UPDATE avps SET value_s = 0, '.'value_i = '.sqlesc($last24).', '.'value_u = '.sqlesc($period).' '.'WHERE arg = "last24"') or sqlerr(__FILE__, __LINE__);
+        sql_query('UPDATE '.TBL_AVPS.' SET value_s = 0, '.'value_i = '.sqlesc($last24).', '.'value_u = '.sqlesc($period).' '.'WHERE arg = "last24"') or sqlerr(__FILE__, __LINE__);
     }
     while ($arr = mysqli_fetch_assoc($res)) {
         if ($activeusers24) $activeusers24.= ",\n";

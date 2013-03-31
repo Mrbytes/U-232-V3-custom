@@ -15,21 +15,21 @@ if (!defined('BUNNY_PM_SYSTEM')) {
     exit();
 }
 //=== Delete a single message first make sure it's not an unread urgent staff message
-$res = sql_query('SELECT receiver, sender, urgent, unread, saved, location FROM messages WHERE id='.sqlesc($pm_id)) or sqlerr(__FILE__, __LINE__);
+$res = sql_query('SELECT receiver, sender, urgent, unread, saved, location FROM '.TBL_MESSAGES.' WHERE id='.sqlesc($pm_id)) or sqlerr(__FILE__, __LINE__);
 $message = mysqli_fetch_assoc($res);
 //=== make sure they aren't deleting a staff message...
 if ($message['receiver'] == $CURUSER['id'] && $message['urgent'] == 'yes' && $message['unread'] == 'yes') stderr('Error', 'You MUST read this message before you delete it!!!  <a class="altlink" href="pm_system.php?action=view_message&id='.$pm_id.'">BACK</a> to message.');
 //=== make sure message isn't saved before deleting it, or just update location
 if ($message['receiver'] == $CURUSER['id'] /* && $message['saved'] == 'no'*/ || $message['sender'] == $CURUSER['id'] && $message['location'] == PM_DELETED) {
-    sql_query('DELETE FROM messages WHERE id='.sqlesc($pm_id)) or sqlerr(__FILE__, __LINE__);
+    sql_query('DELETE FROM '.TBL_MESSAGES.' WHERE id='.sqlesc($pm_id)) or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('inbox_new_'.$pm_id);
     $mc1->delete_value('inbox_new_sb_'.$pm_id);
 } elseif ($message['receiver'] == $CURUSER['id'] /* && $message['saved'] == 'yes'*/) {
-    sql_query('UPDATE messages SET location=0, unread=\'no\' WHERE id='.sqlesc($pm_id)) or sqlerr(__FILE__, __LINE__);
+    sql_query('UPDATE '.TBL_MESSAGES.' SET location=0, unread=\'no\' WHERE id='.sqlesc($pm_id)) or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('inbox_new_'.$pm_id);
     $mc1->delete_value('inbox_new_sb_'.$pm_id);
 } elseif ($message['sender'] == $CURUSER['id'] && $message['location'] != PM_DELETED) {
-    sql_query('UPDATE messages SET saved=\'no\' WHERE id='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    sql_query('UPDATE '.TBL_MESSAGES.' SET saved=\'no\' WHERE id='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('inbox_new_'.$id);
     $mc1->delete_value('inbox_new_sb_'.$id);
 }

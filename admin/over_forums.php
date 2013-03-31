@@ -53,7 +53,7 @@ case 'delete':
     if (!$id) {
         stderr('ERROR', 'Bad ID');
     }
-    sql_query('DELETE FROM over_forums where id = '.sqlesc($id));
+    sql_query('DELETE FROM '.TBL_OVER_FORUMS.' where id = '.sqlesc($id));
     header('Location: staffpanel.php?tool=over_forums');
     die();
     break;
@@ -63,11 +63,11 @@ case 'edit_forum':
     if (!$name && !$desc && !$id) {
         stderr('ERROR', 'Missing form data!');
     }
-    $res = sql_query('SELECT sort FROM over_forums WHERE sort = '.sqlesc($sort));
+    $res = sql_query('SELECT sort FROM '.TBL_OVER_FORUMS.' WHERE sort = '.sqlesc($sort));
     if (mysqli_num_rows($res) > 0) {
         stderr('ERROR', 'Over forum Sort number in use. Please select another Over forum Sort number!');
     }
-    sql_query('UPDATE over_forums SET sort = '.sqlesc($sort).', name = '.sqlesc($name).', description = '.sqlesc($desc).', min_class_view = '.sqlesc($min_class_view).' WHERE id = '.sqlesc($id));
+    sql_query('UPDATE '.TBL_OVER_FORUMS.' SET sort = '.sqlesc($sort).', name = '.sqlesc($name).', description = '.sqlesc($desc).', min_class_view = '.sqlesc($min_class_view).' WHERE id = '.sqlesc($id));
     header('Location: staffpanel.php?tool=over_forums');
     die();
     break;
@@ -77,18 +77,18 @@ case 'add_forum':
     if (!$name && !$desc) {
         stderr('ERROR', 'Missing form data');
     }
-    $res = sql_query('SELECT sort FROM over_forums WHERE sort = '.sqlesc($sort));
+    $res = sql_query('SELECT sort FROM '.TBL_OVER_FORUMS.' WHERE sort = '.sqlesc($sort));
     if (mysqli_num_rows($res) > 0) {
         stderr('ERROR', 'Over forum Sort number in use. Please select another Over forum Sort number!');
     }
-    sql_query('INSERT INTO over_forums (sort, name,  description,  min_class_view) VALUES ('.sqlesc($sort).', '.sqlesc($name).', '.sqlesc($desc).', '.sqlesc($min_class_view).')');
+    sql_query('INSERT INTO '.TBL_OVER_FORUMS.' (sort, name,  description,  min_class_view) VALUES ('.sqlesc($sort).', '.sqlesc($name).', '.sqlesc($desc).', '.sqlesc($min_class_view).')');
     header('Location: staffpanel.php?tool=over_forums');
     die();
     break;
     //=== edit over forum stuff
     
 case 'edit_forum_page':
-    $res = sql_query('SELECT * FROM over_forums where id ='.sqlesc($id));
+    $res = sql_query('SELECT * FROM '.TBL_OVER_FORUMS.' where id ='.sqlesc($id));
     if (mysqli_num_rows($res) > 0) {
         $row = mysqli_fetch_array($res);
         $HTMLOUT.= $main_links.'<form method="post" action="staffpanel.php?tool=over_forums&amp;action=over_forums">
@@ -116,7 +116,7 @@ case 'edit_forum_page':
 		    <td align="right" class="three"><span style="font-weight: bold;">Over forum Sort:</span></td>
 		    <td align="left" class="three">
 		    <select name="sort">';
-        $res = mysqli_query($GLOBALS["___mysqli_ston"], 'SELECT sort FROM over_forums');
+        $res = mysqli_query($GLOBALS["___mysqli_ston"], 'SELECT sort FROM '.TBL_OVER_FORUMS.'');
         $nr = mysqli_num_rows($res);
         $maxclass = $nr + 1;
         for ($i = 0; $i <= $maxclass; ++$i) {
@@ -140,7 +140,7 @@ case 'forum':
 			<td class="forum_head_dark" align="center">Minimun Class View</td>
 			<td class="forum_head_dark" align="center">Modify</td>
 		</tr>';
-    $res = sql_query('SELECT * FROM over_forums ORDER BY sort ASC');
+    $res = sql_query('SELECT * FROM '.TBL_OVER_FORUMS.' ORDER BY sort ASC');
     if (mysqli_num_rows($res) > 0) {
         while ($row = mysqli_fetch_array($res)) {
             //=== change colors
@@ -188,7 +188,7 @@ case 'forum':
 			<td align="right" class="three"><span style="font-weight: bold;">Overforum sort:</span> </td>
 			<td align="left" class="three">
 			<select name="sort">';
-    $res = sql_query('SELECT sort FROM over_forums');
+    $res = sql_query('SELECT sort FROM '.TBL_OVER_FORUMS.'');
     $nr = mysqli_num_rows($res);
     $maxclass = $nr + 1;
     for ($i = 0; $i <= $maxclass; ++$i) {

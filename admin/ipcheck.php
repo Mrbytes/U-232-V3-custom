@@ -29,7 +29,7 @@ $lang = array_merge($lang, load_language('ad_ipcheck'));
 $HTMLOUT = "";
 $HTMLOUT.= begin_frame("", true);
 $HTMLOUT.= begin_table();
-$res = sql_query("SELECT count(*) AS dupl, ip FROM users WHERE enabled = 'yes' AND ip <> '' AND ip <> '127.0.0.0' GROUP BY ip ORDER BY dupl DESC, ip") or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT count(*) AS dupl, ip FROM ".TBL_USERS." WHERE enabled = 'yes' AND ip <> '' AND ip <> '127.0.0.0' GROUP BY ip ORDER BY dupl DESC, ip") or sqlerr(__FILE__, __LINE__);
 $HTMLOUT.= "<tr align='center'>
  <td class='colhead' width='90'>{$lang['ipcheck_user']}</td>
  <td class='colhead' width='70'>{$lang['ipcheck_email']}</td>
@@ -45,7 +45,7 @@ while ($ras = mysqli_fetch_assoc($res)) {
     if ($ras["dupl"] <= 1) break;
 
     if ($ip <> $ras['ip']) {
-        $ros = sql_query("SELECT id, username, class, email, chatpost, pirate, king, leechwarn, added, last_access, downloaded, uploaded, ip, warned, donor, enabled FROM users WHERE ip='".$ras['ip']."' ORDER BY id") or sqlerr(__FILE__, __LINE__);
+        $ros = sql_query("SELECT id, username, class, email, chatpost, pirate, king, leechwarn, added, last_access, downloaded, uploaded, ip, warned, donor, enabled FROM ".TBL_USERS." WHERE ip='".$ras['ip']."' ORDER BY id") or sqlerr(__FILE__, __LINE__);
         $num2 = mysqli_num_rows($ros);
         if ($num2 > 1) {
             $uc++;

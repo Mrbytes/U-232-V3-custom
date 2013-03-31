@@ -51,7 +51,7 @@ if (isset($_GET["avatar"]) && $_GET["avatar"] != '' && (($_GET["avatar"]) != $CU
     $type = ((isset($_GET["type"]) && $_GET["type"] == '1') ? 1 : 2);
     if (!preg_match("/^http:\/\/[^\s'\"<>]+\.(jpg|gif|png)$/i", $_GET["avatar"])) stderr($lang['userimages_error'], "{$lang['userimages_mustbe']}");
     $avatar = sqlesc($_GET['avatar']);
-    sql_query("UPDATE users SET avatar = $avatar WHERE id = {$CURUSER['id']}") or sqlerr(__FILE__, __LINE__);
+    sql_query("UPDATE ".TBL_USERS." SET avatar = $avatar WHERE id = {$CURUSER['id']}") or sqlerr(__FILE__, __LINE__);
     header("Refresh: 0; url={$INSTALLER09['baseurl']}/userimages.php?images=$type&updated=avatar&user=$_SESSION[picname]");
 }
 if (isset($_GET["updated"]) && $_GET["updated"] == 'avatar') {

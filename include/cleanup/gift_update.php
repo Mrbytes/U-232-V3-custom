@@ -13,7 +13,7 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 function docleanup($data)
 {
@@ -21,7 +21,7 @@ function docleanup($data)
     set_time_limit(0);
     ignore_user_abort(1);
     //===Reset Xmas gifts Bigjoos/pdq:)
-    $res = sql_query("SELECT id, modcomment FROM users WHERE gotgift='yes'") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT id, modcomment FROM ".TBL_USERS." WHERE gotgift='yes'") or sqlerr(__FILE__, __LINE__);
     $users_buffer = array();
     if (mysqli_num_rows($res) > 0) {
         while ($arr = mysqli_fetch_assoc($res)) {
@@ -39,7 +39,7 @@ function docleanup($data)
         }
         $count = count($users_buffer);
         if ($count > 0) {
-            sql_query("INSERT INTO users (id, gotgift) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE gotgift=values(gotgift)") or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_USERS." (id, gotgift) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE gotgift=values(gotgift)") or sqlerr(__FILE__, __LINE__);
             write_log("Cleanup - Reset ".$count." members Xmas gift");
         }
         unset($users_buffer, $count);

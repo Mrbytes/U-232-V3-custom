@@ -32,14 +32,14 @@ if (!in_array($CURUSER['id'], $allowed_ids))
 $lang = array_merge($lang);
 //$update = '';
 //get the config from db
-$pconf = sql_query('SELECT * FROM site_config') or sqlerr(__FILE__, __LINE__);
+$pconf = sql_query('SELECT * FROM '.TBL_SITE_CONFIG.'') or sqlerr(__FILE__, __LINE__);
 while ($ac = mysqli_fetch_assoc($pconf)) $site_settings[$ac['name']] = $ac['value'];
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     foreach ($site_settings as $c_name => $c_value) if (isset($_POST[$c_name]) && $_POST[$c_name] != $c_value) $update[] = '('.sqlesc($c_name).','.sqlesc(is_array($_POST[$c_name]) ? join('|', $_POST[$c_name]) : $_POST[$c_name]).')';
-    if (sql_query('INSERT INTO site_config(name,value) VALUES '.join(',', $update).' ON DUPLICATE KEY update value=values(value)')) {
+    if (sql_query('INSERT INTO '.TBL_SITE_CONFIG.'(name,value) VALUES '.join(',', $update).' ON DUPLICATE KEY update value=values(value)')) {
         $t = '$INSTALLER09';
         $configfile = "<"."?php\n/**\nThis file created on ".date('M d Y H:i:s').".\nSite Config mod by stoner with a little help from pdq for U-232.\n**/\n";
-        $res = sql_query("SELECT * from site_config ");
+        $res = sql_query("SELECT * from ".TBL_SITE_CONFIG."");
         while ($arr = mysqli_fetch_assoc($res)) {
             $configfile.= "".$t."['$arr[name]'] = $arr[value];\n";
         }

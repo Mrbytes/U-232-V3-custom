@@ -13,7 +13,7 @@ function docleanup($data)
     set_time_limit(0);
     ignore_user_abort(1);
     do {
-        $res = sql_query("SELECT id FROM torrents");
+        $res = sql_query("SELECT id FROM ".TBL_TORRENTS."");
         $ar = array();
         while ($row = mysqli_fetch_array($res, MYSQLI_NUM)) {
             $id = $row[0];
@@ -44,9 +44,9 @@ function docleanup($data)
         }
         if (count($delids)) {
             $ids = join(",", $delids);
-            sql_query("DELETE torrents t, peers p, files f FROM torrents t
-                  left join files f on f.torrent=t.id
-                  left join peers p on p.torrent=t.id
+            sql_query("DELETE ".TBL_TORRENTS." t, ".TBL_PEERS." p, ".TBL_FILES." f FROM  ".TBL_TORRENTS." t
+                  LEFT JOIN ".TBL_FILES." f on f.torrent=t.id
+                  LEFT JOIN ".TBL_PEERS." p on p.torrent=t.id
                   WHERE f.torrent IN ($ids) 
                   OR p.torrent IN ($ids) 
                   OR t.id IN ($ids)");
@@ -67,6 +67,6 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 ?>

@@ -70,7 +70,7 @@ if ((isset($_GET["deal_with_report"])) || (isset($_POST["deal_with_report"]))) {
     if (!is_valid_id($_POST['id'])) stderr("{$lang['reports_error']}", "{$lang['reports_error3']}");
     $how_delt_with = "how_delt_with = ".sqlesc($_POST["how_delt_with"]);
     $when_delt_with = "when_delt_with = ".sqlesc(TIME_NOW);
-    sql_query("UPDATE reports SET delt_with = 1, $how_delt_with, $when_delt_with , who_delt_with_it =".sqlesc($CURUSER['id'])." WHERE delt_with!=1 AND id =".sqlesc($_POST['id'])) or sqlerr(__FILE__, __LINE__);
+    sql_query("UPDATE ".TBL_REPORTS." SET delt_with = 1, $how_delt_with, $when_delt_with , who_delt_with_it =".sqlesc($CURUSER['id'])." WHERE delt_with!=1 AND id =".sqlesc($_POST['id'])) or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('new_report_');
 }
 // === end deal_with_report
@@ -78,12 +78,12 @@ if ((isset($_GET["deal_with_report"])) || (isset($_POST["deal_with_report"]))) {
 $HTMLOUT.= "<table width='600'><tr><td class='colhead'><h1>{$lang['reports_active']}</h1></td></tr><tr><td class='clearalt6' align='center'>";
 // === if get delete
 if ((isset($_GET["delete"])) && ($CURUSER["class"] == UC_MAX)) {
-    $res = sql_query("DELETE FROM reports WHERE id =".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("DELETE FROM ".TBL_REPORTS." WHERE id =".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('new_report_');
     $HTMLOUT.= "<h1>{$lang['reports_deleted']}</h1>\n";
 }
 // === get the count make the page
-$res = sql_query("SELECT count(id) FROM reports") or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT count(id) FROM ".TBL_REPORTS."") or sqlerr(__FILE__, __LINE__);
 $row = mysqli_fetch_array($res);
 $count = $row[0];
 $perpage = 15;
@@ -99,7 +99,7 @@ else {
    <td class='colhead' align='center' valign='top'>{$lang['reports_dealt']}</td><td class='colhead' align='center' valign='top'>{$lang['reports_deal']}</td>"."
    ".($CURUSER["class"] == UC_MAX ? "<td class='colhead' align='center' valign='top'>{$lang['reports_delete']}</td>" : "")."</tr>";
     // === get the info
-    $res_info = sql_query("SELECT reports.id, reports.reported_by, reports.reporting_what, reports.reporting_type, reports.reason, reports.who_delt_with_it, reports.delt_with, reports.added, reports.how_delt_with, reports.when_delt_with, reports.2nd_value, users.username FROM reports INNER JOIN users on reports.reported_by = users.id ORDER BY id DESC {$pager['limit']}");
+    $res_info = sql_query("SELECT ".TBL_REPORTS.".id, ".TBL_REPORTS.".reported_by, ".TBL_REPORTS.".reporting_what, ".TBL_REPORTS.".reporting_type, ".TBL_REPORTS.".reason, ".TBL_REPORTS.".who_delt_with_it, ".TBL_REPORTS.".delt_with, ".TBL_REPORTS.".added, ".TBL_REPORTS.".how_delt_with, ".TBL_REPORTS.".when_delt_with, ".TBL_REPORTS.".2nd_value, ".TBL_USERS.".username FROM ".TBL_REPORTS." INNER JOIN ".TBL_USERS." on ".TBL_REPORTS.".reported_by = ".TBL_USERS.".id ORDER BY id DESC {$pager['limit']}");
     while ($arr_info = mysqli_fetch_assoc($res_info)) {
         // =======change colors thanks Jaits
         $count2 = (++$count2) % 2;
@@ -120,7 +120,7 @@ else {
         }
         // === has it been delt with yet?
         if ($arr_info["delt_with"]) {
-            $res_who = sql_query("SELECT username FROM users WHERE id=".sqlesc($arr_info['who_delt_with_it']));
+            $res_who = sql_query("SELECT username FROM ".TBL_USERS." WHERE id=".sqlesc($arr_info['who_delt_with_it']));
             $arr_who = mysqli_fetch_assoc($res_who);
             $dealtwith = "<font color='{$solved_color}'><b>{$lang['reports_yes']}</b> </font> {$lang['reports_by']} <a class='altlink' href='userdetails.php?id=".(int)$arr_info['who_delt_with_it']."'><b>".htmlsafechars($arr_who['username'])."</b></a><br /> {$lang['reports_in']} <font color='{$solved_color}'>{$solved_in}</font>";
             $checkbox = "<input type='radio' name='id' value='".(int)$arr_info['id']."' disabled='disabled' />";
@@ -132,55 +132,55 @@ else {
         if ($arr_info["reporting_type"] != "") {
             switch ($arr_info["reporting_type"]) {
             case "User":
-                $res_who2 = sql_query("SELECT username FROM users WHERE id=".sqlesc($arr_info['reporting_what']));
+                $res_who2 = sql_query("SELECT username FROM ".TBL_USERS." WHERE id=".sqlesc($arr_info['reporting_what']));
                 $arr_who2 = mysqli_fetch_assoc($res_who2);
                 $link_to_thing = "<a class='altlink' href='userdetails.php?id=".(int)$arr_info['reporting_what']."'><b>".htmlsafechars($arr_who2['username'])."</b></a>";
                 break;
 
             case "Comment":
-                $res_who2 = sql_query("SELECT comments.user, users.username, torrents.id FROM comments, users, torrents WHERE comments.user = users.id AND comments.id=".sqlesc($arr_info['reporting_what']));
+                $res_who2 = sql_query("SELECT ".TBL_COMMENTS.".user, ".TBL_USERS.".username, ".TBL_TORRENTS.".id FROM ".TBL_COMMENTS.", ".TBL_USERS.", ".TBL_TORRENTS." WHERE ".TBL_COMMENTS.".user = ".TBL_USERS.".id AND ".TBL_COMMENTS.".id=".sqlesc($arr_info['reporting_what']));
                 $arr_who2 = mysqli_fetch_assoc($res_who2);
                 $link_to_thing = "<a class='altlink' href='details.php?id=".(int)$arr_who2['id']."&amp;viewcomm=".(int)$arr_info['reporting_what']."#comm".(int)$arr_info['reporting_what']."'><b>".htmlsafechars($arr_who2['username'])."</b></a>";
                 break;
 
             case "Request_Comment":
-                $res_who2 = sql_query("SELECT comments.request, comments.user, users.username FROM comments, users WHERE comments.user = users.id AND comments.id=".sqlesc($arr_info['reporting_what']));
+                $res_who2 = sql_query("SELECT ".TBL_COMMENTS.".request, ".TBL_COMMENTS.".user, ".TBL_USERS.".username FROM ".TBL_COMMENTS.", ".TBL_USERS." WHERE ".TBL_COMMENTS.".user = ".TBL_USERS.".id AND ".TBL_COMMENTS.".id=".sqlesc($arr_info['reporting_what']));
                 $arr_who2 = mysqli_fetch_assoc($res_who2);
                 $link_to_thing = "<a class='altlink' href='requests.php?id=".(int)$arr_who2['request']."&amp;req_details=1&amp;viewcomm=".(int)$arr_info['reporting_what']."#comm".(int)$arr_info['reporting_what']."'><b>".htmlsafechars($arr_who2['username'])."</b></a>";
                 break;
 
             case "Offer_Comment":
-                $res_who2 = sql_query("SELECT comments.offer, comments.user, users.username FROM comments, users WHERE comments.user = users.id AND comments.id=".sqlesc($arr_info['reporting_what']));
+                $res_who2 = sql_query("SELECT ".TBL_COMMENTS.".offer, ".TBL_COMMENTS.".user, ".TBL_USERS.".username FROM ".TBL_COMMENTS.", ".TBL_USERS."WHERE ".TBL_COMMENTS.".user = ".TBL_USERS.".id AND ".TBL_COMMENTS.".id=".sqlesc($arr_info['reporting_what']));
                 $arr_who2 = mysqli_fetch_assoc($res_who2);
                 $link_to_thing = "<a class='altlink' href='offers.php?id=".(int)$arr_who2['offer']."&amp;off_details=1&amp;viewcomm=".(int)$arr_info['reporting_what']."#comm".(int)$arr_info['reporting_what']."'><b>".htmlsafechars($arr_who2['username'])."</b></a>";
                 break;
 
             case "Request":
-                $res_who2 = sql_query("SELECT request_name FROM requests WHERE id=".sqlesc($arr_info['reporting_what']));
+                $res_who2 = sql_query("SELECT request_name FROM ".TBL_REQUESTS." WHERE id=".sqlesc($arr_info['reporting_what']));
                 $arr_who2 = mysqli_fetch_assoc($res_who2);
                 $link_to_thing = "<a class='altlink' href='requests.php?id=".(int)$arr_info['reporting_what']."&amp;req_details=1'><b>".htmlsafechars($arr_who2['request_name'])."</b></a>";
                 break;
 
             case "Offer":
-                $res_who2 = sql_query("SELECT offer_name FROM offers WHERE id=".sqlesc($arr_info['reporting_what']));
+                $res_who2 = sql_query("SELECT offer_name FROM ".TBL_OFFERS." WHERE id=".sqlesc($arr_info['reporting_what']));
                 $arr_who2 = mysqli_fetch_assoc($res_who2);
                 $link_to_thing = "<a class='altlink' href='offers.php?id=".(int)$arr_info['reporting_what']."&amp;off_details=1'><b>".htmlsafechars($arr_who2['offer_name'])."</b></a>";
                 break;
 
             case "Torrent":
-                $res_who2 = sql_query("SELECT name FROM torrents WHERE id =".sqlesc($arr_info['reporting_what']));
+                $res_who2 = sql_query("SELECT name FROM ".TBL_TORRENTS." WHERE id =".sqlesc($arr_info['reporting_what']));
                 $arr_who2 = mysqli_fetch_assoc($res_who2);
                 $link_to_thing = "<a class='altlink' href='details.php?id=".(int)$arr_info['reporting_what']."'><b>".htmlsafechars($arr_who2['name'])."</b></a>";
                 break;
 
             case "Hit_And_Run":
-                $res_who2 = sql_query("SELECT users.username, torrents.name, r.2nd_value FROM users, torrents LEFT JOIN reports AS r ON r.2nd_value = torrents.id WHERE users.id=".sqlesc($arr_info['reporting_what']));
+                $res_who2 = sql_query("SELECT ".TBL_USERS.".username, ".TBL_TORRENTS.".name, r.2nd_value FROM ".TBL_USERS.", ".TBL_TORRENTS." LEFT JOIN ".TBL_REPORTS." AS r ON r.2nd_value = ".TBL_TORRENTS.".id WHERE ".TBL_USERS.".id=".sqlesc($arr_info['reporting_what']));
                 $arr_who2 = mysqli_fetch_assoc($res_who2);
                 $link_to_thing = "<b>{$lang['reports_user']}</b> <a class='altlink' href='userdetails.php?id=".(int)$arr_info['reporting_what']."&amp;completed=1'><b>{$arr_who2['username']}</b></a><br />{$lang['reports_hit']}<br /> <a class='altlink' href='details.php?id=".(int)$arr_info['2nd_value']."&amp;page=0#snatched'><b>".htmlsafechars($arr_who2['name'])."</b></a>";
                 break;
 
             case "Post":
-                $res_who2 = sql_query("SELECT topic_name FROM topics WHERE id =".sqlesc($arr_info['2nd_value']));
+                $res_who2 = sql_query("SELECT topic_name FROM ".TBL_TOPICS." WHERE id =".sqlesc($arr_info['2nd_value']));
                 $arr_who2 = mysqli_fetch_assoc($res_who2);
                 $link_to_thing = "<b>{$lang['reports_post']}</b> <a class='altlink' href='forums.php?action=view_topic&amp;topic_id=".(int)$arr_info['2nd_value']."&amp;page=last#".(int)$arr_info['reporting_what']."'><b>".htmlsafechars($arr_who2['topic_name'])."</b></a>";
                 break;

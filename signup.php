@@ -41,7 +41,7 @@ $HTMLOUT.= "
 $lang = array_merge(load_language('global') , load_language('signup'));
 $newpage = new page_verify();
 $newpage->create('tesu');
-if (get_row_count('users') >= $INSTALLER09['maxusers']) stderr($lang['stderr_errorhead'], sprintf($lang['stderr_ulimit'], $INSTALLER09['maxusers']));
+if (get_row_count(TBL_USERS) >= $INSTALLER09['maxusers']) stderr($lang['stderr_errorhead'], sprintf($lang['stderr_ulimit'], $INSTALLER09['maxusers']));
 //==timezone select
 $offset = (string)$INSTALLER09['time_offset'];
 $time_select = "<select name='user_timezone'>";
@@ -56,7 +56,7 @@ function countries()
 {
     global $mc1, $INSTALLER09;
     if (($ret = $mc1->get_value('countries::arr')) === false) {
-        $res = sql_query("SELECT id, name, flagpic FROM countries ORDER BY name ASC") or sqlerr(__FILE__, __LINE__);
+        $res = sql_query("SELECT id, name, flagpic FROM ".TBL_COUNTRIES." ORDER BY name ASC") or sqlerr(__FILE__, __LINE__);
         while ($row = mysqli_fetch_assoc($res)) $ret[] = $row;
         $mc1->cache_value('countries::arr', $ret, $INSTALLER09['expires']['user_flag']);
     }

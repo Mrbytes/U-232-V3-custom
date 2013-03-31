@@ -26,24 +26,24 @@ if (isset($_POST['buttonval']) && $_POST['buttonval'] == $save_or_edit) {
     $subject = sqlesc(strip_tags(trim($_POST['subject'])));
     $urgent = sqlesc((isset($_POST['urgent']) && $_POST['urgent'] == 'yes' && $CURUSER['class'] >= UC_STAFF) ? 'yes' : 'no');
     if ($save_or_edit === 'save') {
-        sql_query('INSERT INTO messages (sender, receiver, added, msg, subject, location, draft, unread, saved) VALUES  
+        sql_query('INSERT INTO '.TBL_MESSAGES.' (sender, receiver, added, msg, subject, location, draft, unread, saved) VALUES  
                                                                         ('.sqlesc($CURUSER['id']).', '.sqlesc($CURUSER['id']).','.TIME_NOW.', '.$body.', '.$subject.', \'-2\', \'yes\',\'no\',\'yes\')') or sqlerr(__FILE__, __LINE__);
     } elseif ($save_or_edit === 'edit') {
-        sql_query('UPDATE messages SET msg = '.$body.', subject = '.$subject.' WHERE id = '.sqlesc($pm_id)) or sqlerr(__FILE__, __LINE__);
+        sql_query('UPDATE '.TBL_MESSAGES.' SET msg = '.$body.', subject = '.$subject.' WHERE id = '.sqlesc($pm_id)) or sqlerr(__FILE__, __LINE__);
     } elseif ($save_or_edit === 'send') {
         //=== Try finding a user with specified name
-        $res_receiver = sql_query('SELECT id, class, acceptpms, notifs, email, class, username FROM users WHERE LOWER(username)=LOWER('.sqlesc(htmlsafechars($_POST['to'])).') LIMIT 1');
+        $res_receiver = sql_query('SELECT id, class, acceptpms, notifs, email, class, username FROM '.TBL_USERS.' WHERE LOWER(username)=LOWER('.sqlesc(htmlsafechars($_POST['to'])).') LIMIT 1');
         $arr_receiver = mysqli_fetch_assoc($res_receiver);
         if (!is_valid_id($arr_receiver['id'])) stderr('Error', 'Sorry, there is no member with that username.');
         $receiver = intval($arr_receiver['id']);
         //=== allow suspended users to PM / forward to staff only
         if ($CURUSER['suspended'] === 'yes') {
-            $res = sql_query('SELECT class FROM users WHERE id = '.sqlesc($receiver)) or sqlerr(__FILE__, __LINE__);
+            $res = sql_query('SELECT class FROM '.TBL_USERS.' WHERE id = '.sqlesc($receiver)) or sqlerr(__FILE__, __LINE__);
             $row = mysqli_fetch_assoc($res);
             if ($row['class'] < UC_STAFF) stderr('Error', 'Your account is suspended, you may only contact staff members!');
         }
         //=== make sure they have space
-        $res_count = sql_query('SELECT COUNT(id) FROM messages WHERE receiver = '.sqlesc($receiver).' AND location = 1') or sqlerr(__FILE__, __LINE__);
+        $res_count = sql_query('SELECT COUNT(id) FROM '.TBL_MESSAGES.' WHERE receiver = '.sqlesc($receiver).' AND location = 1') or sqlerr(__FILE__, __LINE__);
         $arr_count = mysqli_fetch_row($res_count);
         if ($arr_count[0] >= $maxbox && $CURUSER['class'] < UC_STAFF) stderr('Sorry', 'Members PM box is full.');
         //=== Make sure recipient wants this message
@@ -51,13 +51,13 @@ if (isset($_POST['buttonval']) && $_POST['buttonval'] == $save_or_edit) {
             $should_i_send_this = ($arr_receiver['acceptpms'] == 'yes' ? 'yes' : ($arr_receiver['acceptpms'] == 'no' ? 'no' : ($arr_receiver['acceptpms'] == 'friends' ? 'friends' : '')));
             switch ($should_i_send_this) {
             case 'yes':
-                $r = sql_query('SELECT id FROM blocks WHERE userid = '.sqlesc($receiver).' AND blockid = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+                $r = sql_query('SELECT id FROM '.TBL_BLOCKS.' WHERE userid = '.sqlesc($receiver).' AND blockid = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
                 $block = mysqli_fetch_row($r);
                 if ($block[0] > 0) stderr('Refused', htmlsafechars($arr_receiver['username']).' has blocked PMs from you.');
                 break;
 
             case 'friends':
-                $r = sql_query('SELECT id FROM friends WHERE userid = '.sqlesc($receiver).' AND friendid = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+                $r = sql_query('SELECT id FROM '.TBL_FRIENDS.' WHERE userid = '.sqlesc($receiver).' AND friendid = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
                 $friend = mysqli_fetch_row($r);
                 if ($friend[0] > 0) stderr('Refused', htmlsafechars($arr_receiver['username']).' only accepts PMs from members in their friends list.');
                 break;
@@ -68,7 +68,7 @@ if (isset($_POST['buttonval']) && $_POST['buttonval'] == $save_or_edit) {
             }
         }
         //=== ok all is well... post the message :D
-        sql_query('INSERT INTO messages (poster, sender, receiver, added, msg, subject, saved, unread, location, urgent) VALUES 
+        sql_query('INSERT INTO '.TBL_MESSAGES.' (poster, sender, receiver, added, msg, subject, saved, unread, location, urgent) VALUES 
                             ('.sqlesc($CURUSER['id']).', '.sqlesc($CURUSER['id']).', '.$receiver.', '.TIME_NOW.', '.$body.', '.$subject.', \'yes\', \'yes\', 1,'.$urgent.')') or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('inbox_new_'.$receiver);
         $mc1->delete_value('inbox_new_sb_'.$receiver);
@@ -115,7 +115,7 @@ if (isset($_POST['buttonval']) && $_POST['buttonval'] == 'preview') {
     </table><br />';
 } else {
     //=== Get the info
-    $res = sql_query('SELECT * FROM messages WHERE id='.sqlesc($pm_id)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query('SELECT * FROM '.TBL_MESSAGES.' WHERE id='.sqlesc($pm_id)) or sqlerr(__FILE__, __LINE__);
     $message = mysqli_fetch_assoc($res);
     $subject = htmlsafechars($message['subject']);
     $draft = $message['msg'];

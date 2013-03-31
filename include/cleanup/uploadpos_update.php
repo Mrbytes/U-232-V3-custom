@@ -13,7 +13,7 @@ function docleanup($data)
     set_time_limit(0);
     ignore_user_abort(1);
     //=== Upload ban removal by Bigjoos/pdq:)
-    $res = sql_query("SELECT id, modcomment FROM users WHERE uploadpos > 1 AND uploadpos < ".TIME_NOW) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT id, modcomment FROM ".TBL_USERS." WHERE uploadpos > 1 AND uploadpos < ".TIME_NOW) or sqlerr(__FILE__, __LINE__);
     $msgs_buffer = $users_buffer = array();
     if (mysqli_num_rows($res) > 0) {
         $subject = "Upload ban expired.";
@@ -44,8 +44,8 @@ function docleanup($data)
         }
         $count = count($users_buffer);
         if ($count > 0) {
-            sql_query("INSERT INTO messages (sender,receiver,added,msg,subject) VALUES ".implode(', ', $msgs_buffer)) or sqlerr(__FILE__, __LINE__);
-            sql_query("INSERT INTO users (id, uploadpos, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE uploadpos=values(uploadpos), modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_MESSAGES." (sender,receiver,added,msg,subject) VALUES ".implode(', ', $msgs_buffer)) or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_USERS." (id, uploadpos, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE uploadpos=values(uploadpos), modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
             write_log("Cleanup - Removed Upload ban from ".$count." members");
         }
         unset($users_buffer, $msgs_buffer, $count);
@@ -65,6 +65,6 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 ?>

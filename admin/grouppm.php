@@ -80,7 +80,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     break;
 
                 case "all_friends":
-                    {$fq = sql_query("SELECT friendid FROM friends WHERE userid=".sqlesc($CURUSER["id"])) or sqlerr(__FILE__, __LINE__);
+                    {$fq = sql_query("SELECT friendid FROM ".TBL_FRIENDS." WHERE userid=".sqlesc($CURUSER["id"])) or sqlerr(__FILE__, __LINE__);
                         if (mysqli_num_rows($fq)) while ($fa = mysqli_fetch_row($fq)) $ids[] = $fa[0];
                     }
                     break;
@@ -93,7 +93,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         if (sizeof($classes) > 0) $where[] = "u.class IN (".join(",", $classes).")";
         if (sizeof($where) > 0) {
-            $q1 = sql_query("SELECT u.id FROM users AS u WHERE ".join(" OR ", $where)) or sqlerr(__FILE__, __LINE__);
+            $q1 = sql_query("SELECT u.id FROM ".TBL_USERS." AS u WHERE ".join(" OR ", $where)) or sqlerr(__FILE__, __LINE__);
             if (mysqli_num_rows($q1) > 0) while ($a = mysqli_fetch_row($q1)) $ids[] = $a[0];
         }
         $ids = array_unique($ids);
@@ -101,7 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $pms = array();
             $msg.= "\nThis message was set to the following class(es) ".join(', ', $sent2classes);
             foreach ($ids as $rid) $pms[] = "(".$sender.",".$rid.",".TIME_NOW.",".sqlesc($msg).",".sqlesc($subject).")";
-            if (sizeof($pms) > 0) $r = sql_query("INSERT INTO messages(sender,receiver,added,msg,subject) VALUES ".join(",", $pms)) or sqlerr(__FILE__, __LINE__);
+            if (sizeof($pms) > 0) $r = sql_query("INSERT INTO ".TBL_MESSAGES."(sender,receiver,added,msg,subject) VALUES ".join(",", $pms)) or sqlerr(__FILE__, __LINE__);
             $mc1->delete_value('inbox_new_'.$rid);
             $mc1->delete_value('inbox_new_sb_'.$rid);
             $err[] = ($r ? "Message sent!" : "Unable to send the message try again!");

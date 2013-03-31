@@ -345,7 +345,7 @@ function code($ibm_437, $swedishmagic = false)
 }
 $id = 0 + $_GET["id"];
 if ($CURUSER["class"] < UC_POWER_USER || !is_valid_id($id)) die;
-$r = mysqli_query($GLOBALS["___mysqli_ston"], "SELECT name,nfo FROM torrents WHERE id=".sqlesc($id)."") or sqlerr();
+$r = mysqli_query($GLOBALS["___mysqli_ston"], "SELECT name,nfo FROM ".TBL_TORRENTS." WHERE id=".sqlesc($id)."") or sqlerr();
 $a = mysqli_fetch_assoc($r) or die("Puke");
 // view might be one of: "magic", "latin-1", "strict" or "fonthack"
 $view = "";

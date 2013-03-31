@@ -29,11 +29,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim(htmlsafechars($_POST["username"]));
     $password = trim(htmlsafechars($_POST["password"]));
     if (!$username || !$password) stderr("{$lang['text_error']}", "{$lang['text_please']}");
-    $res = sql_query("SELECT * FROM users WHERE username=".sqlesc($username)."AND passhash=md5(concat(secret,concat(".sqlesc($password).",secret)))") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT * FROM ".TBL_USERS." WHERE username=".sqlesc($username)."AND passhash=md5(concat(secret,concat(".sqlesc($password).",secret)))") or sqlerr(__FILE__, __LINE__);
     if (mysqli_num_rows($res) != 1) stderr("{$lang['text_error']}", "{$lang['text_bad']}");
     $arr = mysqli_fetch_assoc($res);
     $id = (int)$arr['id'];
-    $res = sql_query("DELETE FROM users WHERE id=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("DELETE FROM ".TBL_USERS." WHERE id=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('MyUser_'.$id);
     $mc1->delete_value('user'.$id);
     if (mysqli_affected_rows($GLOBALS["___mysqli_ston"]) != 1) stderr("{$lang['text_error']}", "{$lang['text_unable']}");

@@ -9,17 +9,17 @@
  */
 if (!defined('IN_LOTTERY')) die('You can\'t access this file directly!');
 //get config from database
-$lconf = sql_query('SELECT * FROM lottery_config') or sqlerr(__FILE__, __LINE__);
+$lconf = sql_query('SELECT * FROM '.TBL_LOTTERY_CONFIG.'') or sqlerr(__FILE__, __LINE__);
 while ($ac = mysqli_fetch_assoc($lconf)) $lottery_config[$ac['name']] = $ac['value'];
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $tickets = isset($_POST['tickets']) ? 0 + $_POST['tickets'] : '';
     if (!$tickets) stderr('Hmm', 'How many tickets you wanna buy?');
-    $user_tickets = get_row_count('tickets', 'where user='.$CURUSER['id']);
+    $user_tickets = get_row_count(TBL_TICKETS, 'where user='.$CURUSER['id']);
     if ($user_tickets + $tickets > $lottery_config['user_tickets']) stderr('Hmmm', 'You reached your limit max is '.$lottery_config['user_tickets'].' ticket(s)');
     if ($CURUSER['seedbonus'] < $tickets * $lottery_config['ticket_amount']) stderr('Hmmmm', 'You need more points to buy the amount of tickets you want');
     for ($i = 1; $i <= $tickets; $i++) $t[] = '('.$CURUSER['id'].')';
-    if (sql_query('INSERT INTO tickets(user) VALUES '.join(', ', $t))) {
-        sql_query('UPDATE users SET seedbonus = seedbonus - '.($tickets * $lottery_config['ticket_amount']).' WHERE id = '.$CURUSER['id']);
+    if (sql_query('INSERT INTO '.TBL_TICKETS.'(user) VALUES '.join(', ', $t))) {
+        sql_query('UPDATE '.TBL_USERS.' SET seedbonus = seedbonus - '.($tickets * $lottery_config['ticket_amount']).' WHERE id = '.$CURUSER['id']);
         $mc1->delete_value('MyUser_'.$CURUSER['id']);
         stderr('Success', 'You bought <b>'.$tickets.'</b>, your new amount is <b>'.($tickets + $user_tickets).'</b>');
     } else stderr('Errr', 'There was an error with the update query, mysql error: '.((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
@@ -33,7 +33,7 @@ $lottery['current_user'] = array();
 $lottery['current_user']['tickets'] = array();
 $lottery['total_tickets'] = 0;
 //select the total amount of tickets
-$qt = sql_query('SELECT id,user FROM tickets ORDER BY id ASC ') or sqlerr(__FILE__, __LINE__);
+$qt = sql_query('SELECT id,user FROM '.TBL_TICKETS.' ORDER BY id ASC ') or sqlerr(__FILE__, __LINE__);
 while ($at = mysqli_fetch_assoc($qt)) {
     $lottery['total_tickets']+= 1;
     if ($at['user'] == $CURUSER['id']) $lottery['current_user']['tickets'][] = $at['id'];

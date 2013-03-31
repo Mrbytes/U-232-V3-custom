@@ -45,7 +45,7 @@ $ss = isset($_POST['ss']) && !empty($_POST['ss']) ? $_POST['ss'] : '';
 switch ($do) {
 case 'edit':
     if (!empty($ss)) {
-        if (sql_query('UPDATE ustatus SET last_status = '.sqlesc(url2short($ss)).', last_update = '.TIME_NOW.' WHERE userid ='.sqlesc($CURUSER['id']))) $return = jsonmsg(array(
+        if (sql_query('UPDATE '.TBL_USTATUS.' SET last_status = '.sqlesc(url2short($ss)).', last_update = '.TIME_NOW.' WHERE userid ='.sqlesc($CURUSER['id']))) $return = jsonmsg(array(
             $ss,
             true
         ));
@@ -63,7 +63,7 @@ case 'delete':
     $status_history = unserialize($CURUSER['archive']);
     if (isset($status_history[$id])) {
         unset($status_history[$id]);
-        if (sql_query('UPDATE ustatus SET archive = '.sqlesc(serialize($status_history)).' WHERE userid = '.sqlesc($CURUSER['id']))) $return = jsonmsg(array(
+        if (sql_query('UPDATE '.TBL_USTATUS.' SET archive = '.sqlesc(serialize($status_history)).' WHERE userid = '.sqlesc($CURUSER['id']))) $return = jsonmsg(array(
             'ok',
             true
         ));
@@ -83,7 +83,7 @@ case 'new':
         'status' => $CURUSER['last_status'],
         'date' => $CURUSER['last_update']
     );
-    if (sql_query('INSERT INTO ustatus(userid,last_status,last_update,archive) VALUES('.sqlesc($CURUSER['id']).','.sqlesc(url2short($ss)).','.TIME_NOW.','.sqlesc(serialize($status_archive)).') ON DUPLICATE KEY UPDATE last_status=values(last_status),last_update=values(last_update),archive=values(archive)')) $return = jsonmsg(array(
+    if (sql_query('INSERT INTO '.TBL_USTATUS.'(userid,last_status,last_update,archive) VALUES('.sqlesc($CURUSER['id']).','.sqlesc(url2short($ss)).','.TIME_NOW.','.sqlesc(serialize($status_archive)).') ON DUPLICATE KEY UPDATE last_status=values(last_status),last_update=values(last_update),archive=values(archive)')) $return = jsonmsg(array(
         '<h2>Status update successful</h2>',
         true
     ));

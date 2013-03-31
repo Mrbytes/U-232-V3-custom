@@ -29,7 +29,7 @@ $HTMLOUT = '';
 $remove = (isset($_GET['remove']) ? 0 + $_GET['remove'] : 0);
 if ($remove) {
     if (empty($remove)) die('WTF!');
-    $res = sql_query("SELECT id, username, class FROM users WHERE free_switch != 0 AND id = ".sqlesc($remove)) or sqlerr(__file__, __line__);
+    $res = sql_query("SELECT id, username, class FROM ".TBL_USERS." WHERE free_switch != 0 AND id = ".sqlesc($remove)) or sqlerr(__file__, __line__);
     $msgs_buffer = $users_buffer = array();
     if (mysqli_num_rows($res) > 0) {
         $msg = sqlesc('Freeleech On All Torrents have been removed by '.$CURUSER['username'].'.');
@@ -40,8 +40,8 @@ if ($remove) {
             $username = $arr['username'];
         }
         if (sizeof($msgs_buffer) > 0) {
-            sql_query("INSERT INTO messages (sender,receiver,added,msg,subject) VALUES ".implode(', ', $msgs_buffer)) or sqlerr(__file__, __line__);
-            sql_query("INSERT INTO users (id, free_switch, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key 
+            sql_query("INSERT INTO ".TBL_MESSAGES." (sender,receiver,added,msg,subject) VALUES ".implode(', ', $msgs_buffer)) or sqlerr(__file__, __line__);
+            sql_query("INSERT INTO ".TBL_USERS." (id, free_switch, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key 
 			UPDATE free_switch=values(free_switch), 
 			modcomment=concat(values(modcomment),modcomment)") or sqlerr(__file__, __line__);
             write_log("User account $remove ($username) 
@@ -53,7 +53,7 @@ if ($remove) {
         }
     } else die('That User has No Freeleech Status!');
 }
-$res2 = sql_query("SELECT id, username, class, free_switch FROM users WHERE free_switch != 0 ORDER BY username ASC") or sqlerr(__file__, __line__);
+$res2 = sql_query("SELECT id, username, class, free_switch FROM ".TBL_USERS." WHERE free_switch != 0 ORDER BY username ASC") or sqlerr(__file__, __line__);
 $count = mysqli_num_rows($res2);
 $HTMLOUT.= "<h1>Freeleech Peeps ($count)</h1>";
 if ($count == 0) $HTMLOUT.= '<p align="center"><b>Nothing here</b></p>';

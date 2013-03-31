@@ -29,7 +29,7 @@ if (!is_valid_id($forum_id)) {
     stderr('Error', 'Bad ID.');
 }
 //=== stupid query just to get overforum name :'(
-$over_forums_res = sql_query('SELECT name, min_class_view FROM over_forums WHERE id =' . sqlesc($forum_id));
+$over_forums_res = sql_query('SELECT name, min_class_view FROM '.TBL_OVER_FORUMS.' WHERE id =' . sqlesc($forum_id));
 $over_forums_arr = mysqli_fetch_assoc($over_forums_res);
 //=== make sure they can be here
 if ($CURUSER['class'] < $over_forums_arr['min_class_view']) {
@@ -45,7 +45,7 @@ $HTMLOUT.= '<br /><table border="0" cellspacing="0" cellpadding="5" width="90%">
 	<td class="forum_head_dark" align="left" colspan="4"><span style="color: white;">Section View for ' . htmlsafechars($over_forums_arr['name'], ENT_QUOTES) . '</span></td>
    </tr>';
 //=== basic query
-$forums_res = sql_query('SELECT name AS forum_name, description AS forum_description, id AS forum_id, post_count, topic_count FROM forums WHERE min_class_read < ' . sqlesc($CURUSER['class']) . ' AND forum_id=' . sqlesc($forum_id) . ' AND parent_forum = 0 ORDER BY sort');
+$forums_res = sql_query('SELECT name AS forum_name, description AS forum_description, id AS forum_id, post_count, topic_count FROM '.TBL_FORUMS.' WHERE min_class_read < ' . sqlesc($CURUSER['class']) . ' AND forum_id=' . sqlesc($forum_id) . ' AND parent_forum = 0 ORDER BY sort');
 //=== lets start the loop \o/
 while ($forums_arr = mysqli_fetch_assoc($forums_res)) {
     //=== change colors
@@ -53,14 +53,14 @@ while ($forums_arr = mysqli_fetch_assoc($forums_res)) {
     $class = ($colour == 0 ? 'one' : 'two');
     //=== Get last post info
     if (($last_post_arr = $mc1->get_value('sv_last_post_' . $forums_arr['forum_id'] . '_' . $CURUSER['class'])) === false) {
-        $last_post_arr = mysqli_fetch_assoc(sql_query('SELECT t.last_post, t.topic_name, t.id AS topic_id, t.anonymous AS tan, p.user_id, p.added, p.anonymous AS pan, u.id, u.username, u.class, u.donor, u.suspended, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king, u.perms FROM topics AS t LEFT JOIN posts AS p ON t.last_post = p.id LEFT JOIN users AS u ON p.user_id = u.id WHERE ' . ($CURUSER['class'] < UC_STAFF ? 'p.status = \'ok\' AND t.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? 'p.status != \'deleted\' AND t.status != \'deleted\' AND' : '')) . ' forum_id=' . sqlesc($forums_arr['forum_id']) . ' ORDER BY last_post DESC LIMIT 1'));
+        $last_post_arr = mysqli_fetch_assoc(sql_query('SELECT t.last_post, t.topic_name, t.id AS topic_id, t.anonymous AS tan, p.user_id, p.added, p.anonymous AS pan, u.id, u.username, u.class, u.donor, u.suspended, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king, u.perms FROM '.TBL_TOPICS.' AS t LEFT JOIN '.TBL_POSTS.' AS p ON t.last_post = p.id LEFT JOIN '.TBL_USERS.' AS u ON p.user_id = u.id WHERE ' . ($CURUSER['class'] < UC_STAFF ? 'p.status = \'ok\' AND t.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? 'p.status != \'deleted\' AND t.status != \'deleted\' AND' : '')) . ' forum_id=' . sqlesc($forums_arr['forum_id']) . ' ORDER BY last_post DESC LIMIT 1'));
         $mc1->cache_value('sv_last_post_' . $forums_arr['forum_id'] . '_' . $CURUSER['class'], $last_post_arr, $INSTALLER09['expires']['sv_last_post']);
     }
     //=== only do more if there is a stuff here...
     if ($last_post_arr['last_post'] > 0) {
         //=== get the last post read by CURUSER
         if (($last_read_post_arr = $mc1->get_value('sv_last_read_post_' . $last_post_arr['topic_id'] . '_' . $CURUSER['id'])) === false) {
-            $last_read_post_arr = mysqli_fetch_row(sql_query('SELECT last_post_read FROM read_posts WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($last_post_arr['topic_id'])));
+            $last_read_post_arr = mysqli_fetch_row(sql_query('SELECT last_post_read FROM '.TBL_READ_POSTS.' WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($last_post_arr['topic_id'])));
             $mc1->cache_value('sv_last_read_post_' . $last_post_arr['topic_id'] . '_' . $CURUSER['id'], $last_read_post_arr, $INSTALLER09['expires']['sv_last_read_post']);
         }
         $image_and_link = ($last_post_arr['added'] > (TIME_NOW - $readpost_expiry)) ? (!$last_read_post_arr || $last_post_arr['last_post'] > $last_read_post_arr[0]) : 0;
@@ -70,7 +70,7 @@ while ($forums_arr = mysqli_fetch_assoc($forums_res)) {
         if (($child_boards_cache = $mc1->get_value($keys['child_boards'])) === false) {
             $child_boards = '';
             $child_boards_cache = array();
-            $res = sql_query('SELECT name, id FROM forums WHERE parent_forum = ' . sqlesc($forums_arr['forum_id']) . ' ORDER BY sort ASC') or sqlerr(__FILE__, __LINE__);
+            $res = sql_query('SELECT name, id FROM '.TBL_FORUMS.' WHERE parent_forum = ' . sqlesc($forums_arr['forum_id']) . ' ORDER BY sort ASC') or sqlerr(__FILE__, __LINE__);
             while ($arr = mysqli_fetch_assoc($res)) {
                 if ($child_boards) $child_boards.= ', ';
                 $child_boards.= '<a href="' . $INSTALLER09['baseurl'] . '/forums.php?action=view_forum&amp;forum_id=' . (int)$arr['id'] . '" title="click to view!" class="altlink">' . htmlsafechars($arr['name'], ENT_QUOTES) . '</a>';
@@ -87,7 +87,7 @@ while ($forums_arr = mysqli_fetch_assoc($forums_res)) {
         if (($now_viewing_cache = $mc1->get_value($keys['now_viewing'])) === false) {
             $nowviewing = '';
             $now_viewing_cache = array();
-            $res = sql_query('SELECT n_v.user_id, u.id, u.username, u.class, u.donor, u.suspended, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king, u.perms FROM now_viewing AS n_v LEFT JOIN users AS u ON n_v.user_id = u.id WHERE forum_id = ' . sqlesc($forums_arr['forum_id'])) or sqlerr(__FILE__, __LINE__);
+            $res = sql_query('SELECT n_v.user_id, u.id, u.username, u.class, u.donor, u.suspended, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king, u.perms FROM '.TBL_NOW_VIEWING.' AS n_v LEFT JOIN '.TBL_USERS.' AS u ON n_v.user_id = u.id WHERE forum_id = ' . sqlesc($forums_arr['forum_id'])) or sqlerr(__FILE__, __LINE__);
             while ($arr = mysqli_fetch_assoc($res)) {
                 if ($nowviewing) $nowviewing.= ",\n";
                 $nowviewing.= ($arr['perms'] & bt_options::PERMS_STEALTH ? '<i>UnKn0wn</i>' : format_username($arr));

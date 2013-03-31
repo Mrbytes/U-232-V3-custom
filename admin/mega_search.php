@@ -122,7 +122,7 @@ if (isset($_POST['user_names'])) {
     );
     foreach ($searched_users[0] as $search_users) {
         $search_users = trim($search_users);
-        $res_search_usernames = sql_query('SELECT id, username, class, donor, suspended, leechwarn, chatpost, pirate, king, warned, enabled, uploaded, downloaded, invitedby, email, ip, added, last_access FROM users WHERE username LIKE \'%'.$search_users.'%\'');
+        $res_search_usernames = sql_query('SELECT id, username, class, donor, suspended, leechwarn, chatpost, pirate, king, warned, enabled, uploaded, downloaded, invitedby, email, ip, added, last_access FROM '.TBL_USERS.' WHERE username LIKE \'%'.$search_users.'%\'');
         if (mysqli_num_rows($res_search_usernames) == 0) {
             $not_found.= '<span style="color: blue;">'.$search_users.'</span><br />';
         } else {
@@ -177,7 +177,7 @@ if (isset($_POST['msg_to_analyze'])) {
     $number_of_matches = preg_match_all($regex, $email_search, $email_to_test);
     $matches_for_email.= '<h1>Searched Emails</h1>';
     foreach ($email_to_test[0] as $tested_email) {
-        $res_search_others = sql_query('SELECT id, username, class, donor, suspended, leechwarn, chatpost, pirate, king, warned, enabled, uploaded, downloaded, invitedby, email, ip, added, last_access FROM users WHERE email LIKE \''.$tested_email.'\'');
+        $res_search_others = sql_query('SELECT id, username, class, donor, suspended, leechwarn, chatpost, pirate, king, warned, enabled, uploaded, downloaded, invitedby, email, ip, added, last_access FROM '.TBL_USERS.' WHERE email LIKE \''.$tested_email.'\'');
         if (mysqli_num_rows($res_search_others) == 0) {
             $no_matches_for_this_email.= '<span style="color: blue;">No exact match for email: <span style="color: blue;">'.$tested_email.'</span><br />';
         } else {
@@ -189,7 +189,7 @@ if (isset($_POST['msg_to_analyze'])) {
                     $class2 = ($count == 0 ? 'one' : 'two');
                     //=== get inviter
                     if ($arr['invitedby'] > 0) {
-                        $res_inviter = sql_query('SELECT id, username, class, donor, suspended, leechwarn, chatpost, pirate, king, warned, enabled FROM users WHERE id = '.sqlesc($arr['invitedby']));
+                        $res_inviter = sql_query('SELECT id, username, class, donor, suspended, leechwarn, chatpost, pirate, king, warned, enabled FROM '.TBL_USERS.' WHERE id = '.sqlesc($arr['invitedby']));
                         $arr_inviter = mysqli_fetch_array($res_inviter);
                         $inviter = ($arr_inviter['username'] !== '' ? print_user_stuff($arr_inviter) : 'open signups');
                     } else {
@@ -236,7 +236,7 @@ if (isset($_POST['msg_to_analyze'])) {
     $number = 0;
     $similar_emails = 0;
     foreach ($email_to_test_like[0] as $tested_email_like) {
-        $res_search_others_like = sql_query('SELECT id, username, class, donor, suspended, leechwarn, chatpost, pirate, king, warned, enabled, email FROM users WHERE email LIKE \'%'.$tested_email_like.'%\'');
+        $res_search_others_like = sql_query('SELECT id, username, class, donor, suspended, leechwarn, chatpost, pirate, king, warned, enabled, email FROM '.TBL_USERS.' WHERE email LIKE \'%'.$tested_email_like.'%\'');
         if (mysqli_num_rows($res_search_others_like) > 0) {
             $email = preg_replace('/[^a-zA-Z0-9_-\s]/', '', $tested_email_like);
             $similar_emails.= '<h1>Search for emails using "'.$email.'" </h1>';
@@ -255,7 +255,7 @@ if (isset($_POST['msg_to_analyze'])) {
     $ip_to_test = array();
     $number_of_matches = preg_match_all($regex, $ip_history, $ip_to_test);
     foreach ($ip_to_test[0] as $tested_ip) {
-        $res_search_others = sql_query('SELECT id, username, class, donor, suspended, leechwarn, chatpost, pirate, king, warned, enabled, uploaded, downloaded, invitedby, email, ip, added, last_access FROM users WHERE ip LIKE \'%'.$tested_ip.'%\'');
+        $res_search_others = sql_query('SELECT id, username, class, donor, suspended, leechwarn, chatpost, pirate, king, warned, enabled, uploaded, downloaded, invitedby, email, ip, added, last_access FROM '.TBL_USERS.' WHERE ip LIKE \'%'.$tested_ip.'%\'');
         if (mysqli_num_rows($res_search_others) == 0) {
             $no_matches_for_this_ip.= '<span style="color: blue;">No matches for IP: '.$tested_ip.'</span><br />';
         } else {
@@ -278,7 +278,7 @@ if (isset($_POST['msg_to_analyze'])) {
                     $class2 = ($count == 0 ? 'one' : 'two');
                     //=== get inviter
                     if ($arr['invitedby'] > 0) {
-                        $res_inviter = sql_query('SELECT id, username, class, donor, suspended, leechwarn, chatpost, pirate, king, warned, enabled FROM users WHERE id = '.sqlesc($arr['invitedby']));
+                        $res_inviter = sql_query('SELECT id, username, class, donor, suspended, leechwarn, chatpost, pirate, king, warned, enabled FROM '.TBL_USERS.' WHERE id = '.sqlesc($arr['invitedby']));
                         $arr_inviter = mysqli_fetch_array($res_inviter);
                         $inviter = ($arr_inviter['username'] !== '' ? print_user_stuff($arr_inviter) : 'open signups');
                     } else {
@@ -319,12 +319,12 @@ if (isset($_POST['invite_code'])) {
     if (strlen($invite_code) != 32) {
         stderr('Error', 'bad invite code.');
     } else {
-        $inviter = sql_query('SELECT u.id, u.username, u.ip, u.last_access, u.email, u.added, u.class, u.leechwarn, u.chatpost, u.pirate, u.king, u.uploaded, u.downloaded, u.donor, u.enabled, u.warned, u.suspended, u.invitedby, i.id AS invite_id, i.added AS invite_added FROM users AS u LEFT JOIN invites AS i ON u.id = i.sender WHERE  i.code = '.sqlesc($invite_code));
+        $inviter = sql_query('SELECT u.id, u.username, u.ip, u.last_access, u.email, u.added, u.class, u.leechwarn, u.chatpost, u.pirate, u.king, u.uploaded, u.downloaded, u.donor, u.enabled, u.warned, u.suspended, u.invitedby, i.id AS invite_id, i.added AS invite_added FROM '.TBL_USERS.' AS u LEFT JOIN invites AS i ON u.id = i.sender WHERE  i.code = '.sqlesc($invite_code));
         $user = mysqli_fetch_array($inviter);
         if ($user['username'] == '') {
             $HTMLOUT.= stdmsg('Error', 'No user was found! Whoever made this invite is no longer with us.');
         } else {
-            $u1 = sql_query('SELECT id, username, donor, class, enabled, leechwarn, chatpost, pirate, king, warned, suspended FROM users WHERE  id='.sqlesc($user['invitedby']));
+            $u1 = sql_query('SELECT id, username, donor, class, enabled, leechwarn, chatpost, pirate, king, warned, suspended FROM '.TBL_USERS.' WHERE  id='.sqlesc($user['invitedby']));
             $user1 = mysqli_fetch_array($u1);
             $HTMLOUT.= '<h1>'.print_user_stuff($user).' made the invite code: '.$invite_code.'  ('.get_date($user['invite_added'], '').')</h1>
                 <table width="90%">
@@ -353,12 +353,12 @@ if (isset($_POST['invite_code'])) {
                 </tr>
                 </table>';
         }
-        $invited = sql_query('SELECT u.id, u.username, u.ip, u.last_access, u.email, u.added, u.leechwarn, u.chatpost, u.pirate, u.king, u.class, u.uploaded, u.downloaded, u.donor, u.enabled, u.warned, u.suspended, u.invitedby, i.id AS invite_id FROM users AS u LEFT JOIN invites AS i ON u.id = i.receiver WHERE  i.code = '.sqlesc($invite_code));
+        $invited = sql_query('SELECT u.id, u.username, u.ip, u.last_access, u.email, u.added, u.leechwarn, u.chatpost, u.pirate, u.king, u.class, u.uploaded, u.downloaded, u.donor, u.enabled, u.warned, u.suspended, u.invitedby, i.id AS invite_id FROM '.TBL_USERS.' AS u LEFT JOIN invites AS i ON u.id = i.receiver WHERE  i.code = '.sqlesc($invite_code));
         $user_invited = mysqli_fetch_array($invited);
         if ($user_invited['username'] == '') {
             $HTMLOUT.= stdmsg('Error', 'This invite code was either not used, or the member who used it is not longer with us.');
         } else {
-            $u2 = sql_query('SELECT id, username, donor, class, enabled, warned, leechwarn, chatpost, pirate, king, suspended FROM users WHERE id='.sqlesc($user_invited['invitedby']));
+            $u2 = sql_query('SELECT id, username, donor, class, enabled, warned, leechwarn, chatpost, pirate, king, suspended FROM '.TBL_USERS.' WHERE id='.sqlesc($user_invited['invitedby']));
             $user2 = mysqli_fetch_array($u2);
             $HTMLOUT.= '<h1>'.print_user_stuff($user_invited).' used the Invite from '.print_user_stuff($user).'</h1>
                 <table width="90%">

@@ -24,7 +24,7 @@ $ids[] = 0 + $_GET["id5"];
 if (array_key_exists('uploaded', $_GET) && htmlentities($_GET["uploaded"])) {
     $HTMLOUT.= "<tr><td colspan='2'>Successfully uploaded!
     You can start downloading them now and start seeding. <b>Note</b> that the torrent won't be visible until you do that!</td></tr>\n";
-    $res = sql_query("SELECT torrents.filename FROM torrents WHERE torrents.id=$ids[0] OR torrents.id=$ids[1] OR torrents.id=$ids[2] OR torrents.id=$ids[3] OR torrents.id=$ids[4];") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT ".TBL_TORRENTS.".filename FROM ".TBL_TORRENTS." WHERE ".TBL_TORRENTS.".id=$ids[0] OR ".TBL_TORRENTS.".id=$ids[1] OR ".TBL_TORRENTS.".id=$ids[2] OR ".TBL_TORRENTS.".id=$ids[3] OR ".TBL_TORRENTS.".id=$ids[4];") or sqlerr(__FILE__, __LINE__);
     $HTMLOUT.= "<tr><td class='colhead'><b>Torrent Description</b></td><td class='colhead'><img src=\"{$INSTALLER09['pic_base_url']}download.gif\" alt=\"Download\" title=\"Download\" border=\"0\" /></td></tr>";
     $i = 0;
     while ($row = mysqli_fetch_array($res)) {
@@ -38,7 +38,7 @@ if (array_key_exists('uploaded', $_GET) && htmlentities($_GET["uploaded"])) {
 } else {
     $HTMLOUT.= "<tr><td colspan='2'>New Torrents have been Uploaded!
     Click on the Torrents below to see the full description or alternatively click the 'Download' Button to Download..now</td></tr>\n";
-    $res = sql_query("SELECT * FROM torrents WHERE torrents.id=$ids[0] OR torrents.id=$ids[1] OR torrents.id=$ids[2] OR torrents.id=$ids[3] OR torrents.id=$ids[4];") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT * FROM ".TBL_TORRENTS." WHERE ".TBL_TORRENTS.".id=$ids[0] OR ".TBL_TORRENTS.".id=$ids[1] OR ".TBL_TORRENTS.".id=$ids[2] OR ".TBL_TORRENTS.".id=$ids[3] OR ".TBL_TORRENTS.".id=$ids[4];") or sqlerr(__FILE__, __LINE__);
     $HTMLOUT.= "<tr><td class='colhead'><b>Torrent Description</b></td><td class='colhead'><img src=\"{$INSTALLER09['pic_base_url']}download.gif\" alt=\"Download\" title=\"Download\" border=\"0\" /></td></tr>";
     $i = 0;
     while ($row = mysqli_fetch_array($res)) {

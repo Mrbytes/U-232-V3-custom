@@ -13,7 +13,7 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 function docleanup($data)
 {
@@ -21,9 +21,9 @@ function docleanup($data)
     set_time_limit(1200);
     ignore_user_abort(1);
     //== Delete expired announcements and processors
-    sql_query("DELETE announcement_process FROM announcement_process LEFT JOIN users ON announcement_process.user_id = users.id WHERE users.id IS NULL");
-    sql_query("DELETE FROM announcement_main WHERE expires < ".TIME_NOW);
-    sql_query("DELETE announcement_process FROM announcement_process LEFT JOIN announcement_main ON announcement_process.main_id = announcement_main.main_id WHERE announcement_main.main_id IS NULL");
+    sql_query("DELETE ".TBL_ANNOUNCEMENT_PROCESS." FROM ".TBL_ANNOUNCEMENT_PROCESS." LEFT JOIN ".TBL_USERS." ON ".TBL_ANNOUNCEMENT_PROCESS.".user_id = ".TBL_USERS.".id WHERE ".TBL_USERS.".id IS NULL");
+    sql_query("DELETE FROM ".TBL_ANNOUNCEMENT_MAIN." WHERE expires < ".TIME_NOW);
+    sql_query("DELETE ".TBL_ANNOUNCEMENT_PROCESS." FROM ".TBL_ANNOUNCEMENT_PROCESS." LEFT JOIN ".TBL_ANNOUNCEMENT_MAIN." ON ".TBL_ANNOUNCEMENT_PROCESS.".main_id = ".TBL_ANNOUNCEMENT_MAIN.".main_id WHERE ".TBL_ANNOUNCEMENT_MAIN.".main_id IS NULL");
     if ($queries > 0) write_log("Announcement Clean -------------------- Announcement cleanup Complete using $queries queries --------------------");
     if (false !== mysqli_affected_rows($GLOBALS["___mysqli_ston"])) {
         $data['clean_desc'] = mysqli_affected_rows($GLOBALS["___mysqli_ston"])." items deleted/updated";

@@ -13,7 +13,7 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 function docleanup($data)
 {
@@ -24,12 +24,12 @@ function docleanup($data)
     $secs = 350 * 86400;
     $dt = (TIME_NOW - $secs);
     $maxclass = UC_MAX;
-    sql_query("DELETE FROM users WHERE parked='no' AND status='confirmed' AND class <= $maxclass AND last_access < $dt");
+    sql_query("DELETE FROM ".TBL_USERS." WHERE parked='no' AND status='confirmed' AND class <= $maxclass AND last_access < $dt");
     //== Delete parked user accounts
     $secs = 675 * 86400; // change the time to fit your needs
     $dt = (TIME_NOW - $secs);
     $maxclass = UC_MAX;
-    sql_query("DELETE FROM users WHERE parked='yes' AND status='confirmed' AND class <= $maxclass AND last_access < $dt");
+    sql_query("DELETE FROM ".TBL_USERS." WHERE parked='yes' AND status='confirmed' AND class <= $maxclass AND last_access < $dt");
     if ($queries > 0) write_log("Inactive Clean -------------------- Inactive Clean Complete using $queries queries--------------------");
     if (false !== mysqli_affected_rows($GLOBALS["___mysqli_ston"])) {
         $data['clean_desc'] = mysqli_affected_rows($GLOBALS["___mysqli_ston"])." items deleted/updated";

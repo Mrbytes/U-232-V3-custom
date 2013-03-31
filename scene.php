@@ -17,15 +17,15 @@ $newpage = new page_verify();
 $newpage->check('paysys'); //== change this \0/
 $HTMLOUT = $curuser_cache = $user_cache = $stats_cache = $user_stats_cache = '';
 //get the config from db
-$pconf = sql_query('SELECT name, value FROM paypal_config') or sqlerr(__FILE__, __LINE__);
+$pconf = sql_query('SELECT name, value FROM '.TBL_PAYPAL_CONFIG.'') or sqlerr(__FILE__, __LINE__);
 while ($ac = mysqli_fetch_assoc($pconf)) $paypal_config[$ac['name']] = $ac['value'];
-//GB TO GIVE PER £//
+//GB TO GIVE PER ï¿½//
 $givegb = $paypal_config['gb'] * 1024 * 1024 * 1024;
-//$givegb = 1*1024*1024; //1GB per £1 donated
-//TIME TO GIVE PER £5//
+//$givegb = 1*1024*1024; //1GB per ï¿½1 donated
+//TIME TO GIVE PER ï¿½5//
 $givetime = $paypal_config['weeks'] * 604800;
-//$givetime = 0.5*108000; //108000 = 30 days  //set for 15 days per £5 donated
-//INVITES TO GIVE PER £5//
+//$givetime = 0.5*108000; //108000 = 30 days  //set for 15 days per ï¿½5 donated
+//INVITES TO GIVE PER ï¿½5//
 $giveinvites = $paypal_config['invites'];
 //$giveinvites = 1;
 $email = $paypal_config['email'];
@@ -57,7 +57,7 @@ if (!$fp) stderr("Error", "Please contact Sysop.");
 //MAKE A REPORT IF PENDING//
 if ($payment_status == "pending") {
     $dt = TIME_NOW;
-    sql_query("INSERT into reports (reported_by,reporting_what,reporting_type,reason,added) VALUES ('2',".sqlesc($id).",'User', 'Pending donation', $dt)") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT into ".TBL_REPORTS." (reported_by,reporting_what,reporting_type,reason,added) VALUES ('2',".sqlesc($id).",'User', 'Pending donation', $dt)") or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('new_report_');
 }
 //IF PENDING SEND THEM TO THE ECHECK PAGE TO TELL THEM THEY WONT BE UPDATED TILL STAFF SORT THERE SHIT OUT
@@ -73,14 +73,14 @@ if ($payment_type == 'instant' && $payment_status == 'Completed' && $payment_amo
     stderr("Error", "Please contact Sysop.");
     settype($payment_amount, "float");
     if ($payment_amount > 1) settype($payment_amount, "string");
-    $res = sql_query("SELECT * FROM users WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT * FROM ".TBL_USERS." WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $user = mysqli_fetch_array($res) or stderr("Error", "No user with that ID!");
     $modcomment = htmlsafechars($user['modcomment']);
     //=== add donated amount  to user and to funds table /  Set donor status
     if (isset($_POST['mc_gross'])) {
         $donated = 0 + $_POST['mc_gross'];
         $added = TIME_NOW;
-        sql_query("INSERT INTO funds (cash, user, added) VALUES (".sqlesc($donated).", ".sqlesc($user['id']).", $added)") or sqlerr(__FILE__, __LINE__);
+        sql_query("INSERT INTO ".TBL_FUNDS." (cash, user, added) VALUES (".sqlesc($donated).", ".sqlesc($user['id']).", $added)") or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('totalfunds_');
         $updateset[] = "donated = ".sqlesc($donated);
         $updateset[] = "total_donated = ".sqlesc($user['total_donated'] + $donated);
@@ -110,8 +110,8 @@ if ($payment_type == 'instant' && $payment_status == 'Completed' && $payment_amo
     //=== check to see if they are a donor yet
     $donorlength = $donated / 5;
     if ($user['donor'] == 'no') {
-        $donoruntil = TIME_NOW + $donorlength * $givetime; //===> 2419200 = 2 weeks for 5£ --- 1209600 = 1 week for 5£ donation
-        $donoruntil_val = TIME_NOW + $donorlength * $givetime; //===> 1209600 = 2 weeks for 5$ --- 604800 = 1 week for 5£ donation
+        $donoruntil = TIME_NOW + $donorlength * $givetime; //===> 2419200 = 2 weeks for 5ï¿½ --- 1209600 = 1 week for 5ï¿½ donation
+        $donoruntil_val = TIME_NOW + $donorlength * $givetime; //===> 1209600 = 2 weeks for 5$ --- 604800 = 1 week for 5ï¿½ donation
         $dur = $donorlength." week".($donorlength > 1 ? "s" : ""); //=== I left the 1 ? "s" in case you want to have only one week...
         $subject = sqlesc("Thank You for Your Donation!");
         $msg = sqlesc("Dear ".htmlsafechars($user['username'])."
@@ -159,7 +159,7 @@ cheers,
 PS. Your donator status will last for an extra ".$dur." on top of your current donation status, and can be found on your user details page. It can only be seen by you.");
         $modcomment = get_date(TIME_NOW, 'DATE', 1)." - Donator status set for another $dur -- $upadded GB bonus added -- $invites_added new invites. added by system.\n".$modcomment;
         $donorlengthadds = $donoruntil_val;
-        sql_query("UPDATE users SET donoruntil = donoruntil + ".sqlesc($donorlengthadds).", vipclass_before = ".sqlesc($vipbefore)." WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_USERS." SET donoruntil = donoruntil + ".sqlesc($donorlengthadds).", vipclass_before = ".sqlesc($vipbefore)." WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
         $curuser_cache['donoruntil'] = ($user['donoruntil'] + $donorlengthadds);
         $user_cache['donoruntil'] = ($user['donoruntil'] + $donorlengthadds);
         $curuser_cache['vipclass_before'] = $vipbefore;
@@ -169,7 +169,7 @@ PS. Your donator status will last for an extra ".$dur." on top of your current d
     }
     //=== end if adding to donor time...
     $added = TIME_NOW;
-    sql_query("INSERT INTO messages (sender, subject, receiver, msg, added) VALUES (0, $subject, ".sqlesc($id).", $msg, $added)") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_MESSAGES." (sender, subject, receiver, msg, added) VALUES (0, $subject, ".sqlesc($id).", $msg, $added)") or sqlerr(__FILE__, __LINE__);
     if ($CURUSER['class'] < UC_UPLOADER) //=== set this to the lowest class you don't want changed to VIP
     $updateset[] = "class = '".UC_VIP."'";
     $curuser_cache['class'] = UC_VIP;
@@ -177,7 +177,7 @@ PS. Your donator status will last for an extra ".$dur." on top of your current d
     //=== Add ModComment to the update set...
     $updateset[] = "modcomment = ".sqlesc($modcomment);
     $user_stats_cache['modcomment'] = $modcomment;
-    sql_query("UPDATE users SET ".implode(", ", $updateset)." WHERE id=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    sql_query("UPDATE ".TBL_USERS." SET ".implode(", ", $updateset)." WHERE id=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('inbox_new_'.$id);
     $mc1->delete_value('inbox_new_sb_'.$id);
     if ($curuser_cache) {

@@ -42,13 +42,13 @@ if ($action == "app" || $action == "show") {
     if ($action == "show") {
         $hide = "[<a href='{$INSTALLER09['baseurl']}/staffpanel.php?tool=uploadapps&amp;action=app'>{$lang['uploadapps_hide']}</a>]";
         $where = "WHERE status = 'accepted' OR status = 'rejected'";
-        $where1 = "WHERE uploadapp.status = 'accepted' OR uploadapp.status = 'rejected'";
+        $where1 = "WHERE ".TBL_UPLOADAPP.".status = 'accepted' OR ".TBL_UPLOADAPP.".status = 'rejected'";
     } else {
         $hide = "[<a href='{$INSTALLER09['baseurl']}/staffpanel.php?tool=uploadapps&amp;action=show'>{$lang['uploadapps_show']}</a>]";
         $where = "WHERE status = 'pending'";
-        $where1 = "WHERE uploadapp.status = 'pending'";
+        $where1 = "WHERE ".TBL_UPLOADAPP.".status = 'pending'";
     }
-    $res = sql_query("SELECT COUNT(id) FROM uploadapp $where") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT COUNT(id) FROM ".TBL_UPLOADAPP." $where") or sqlerr(__FILE__, __LINE__);
     $row = mysqli_fetch_row($res);
     $count = $row[0];
     $perpage = 15;
@@ -77,7 +77,7 @@ if ($action == "app" || $action == "show") {
         <td class='colhead' align='left'>{$lang['uploadapps_status']}</td>
         <td class='colhead' align='left'>{$lang['uploadapps_delete']}</td>
         </tr>\n";
-        $res = sql_query("SELECT uploadapp.*, users.id AS uid, users.username, users.class, users.added, users.uploaded, users.downloaded FROM uploadapp INNER JOIN users on uploadapp.userid = users.id $where1 ".$pager['limit']) or sqlerr(__FILE__, __LINE__);
+        $res = sql_query("SELECT ".TBL_UPLOADAPP.".*, ".TBL_USERS.".id AS uid, ".TBL_USERS.".username, ".TBL_USERS.".class, ".TBL_USERS.".added, ".TBL_USERS.".uploaded, ".TBL_USERS.".downloaded FROM ".TBL_UPLOADAPP." INNER JOIN ".TBL_USERS." on ".TBL_UPLOADAPP.".userid = ".TBL_USERS.".id $where1 ".$pager['limit']) or sqlerr(__FILE__, __LINE__);
         while ($arr = mysqli_fetch_assoc($res)) {
             if ($arr["status"] == "accepted") $status = "<font color='green'>{$lang['uploadapps_accepted']}</font>";
             elseif ($arr["status"] == "rejected") $status = "<font color='red'>{$lang['uploadapps_rejected']}</font>";
@@ -105,7 +105,7 @@ if ($action == "app" || $action == "show") {
 //== View application
 if ($action == "viewapp") {
     $id = (int)$_GET["id"];
-    $res = sql_query("SELECT uploadapp.*, users.id AS uid, users.username, users.class, users.added, users.uploaded, users.downloaded FROM uploadapp INNER JOIN users on uploadapp.userid = users.id WHERE uploadapp.id=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT ".TBL_UPLOADAPP.".*, ".TBL_USERS.".id AS uid, ".TBL_USERS.".username, ".TBL_USERS.".class, ".TBL_USERS.".added, ".TBL_USERS.".uploaded, ".TBL_USERS.".downloaded FROM ".TBL_UPLOADAPP." INNER JOIN ".TBL_USERS." on ".TBL_UPLOADAPP.".userid = ".TBL_USERS.".id WHERE ".TBL_UPLOADAPP.".id=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_assoc($res);
     $membertime = get_date($arr['added'], '', 0, 1);
     $elapsed = get_date($arr['applied'], '', 0, 1);
@@ -158,7 +158,7 @@ if ($action == "viewapp") {
 if ($action == "acceptapp") {
     $id = 0 + $_POST["id"];
     if (!is_valid_id($id)) stderr($lang['uploadapps_error'], $lang['uploadapps_noid']);
-    $res = sql_query("SELECT uploadapp.id, users.username, users.modcomment, users.id AS uid FROM uploadapp INNER JOIN users on uploadapp.userid = users.id WHERE uploadapp.id = $id") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT ".TBL_UPLOADAPP.".id, ".TBL_USERS.".username, ".TBL_USERS.".modcomment, ".TBL_USERS.".id AS uid FROM ".TBL_UPLOADAPP." INNER JOIN ".TBL_USERS." on ".TBL_UPLOADAPP.".userid = ".TBL_USERS.".id WHERE ".TBL_UPLOADAPP.".id = $id") or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_assoc($res);
     $note = htmlsafechars($_POST["note"]);
     $subject = sqlesc("Uploader Promotion");
@@ -166,8 +166,8 @@ if ($action == "acceptapp") {
     $msg1 = sqlesc("User [url={$INSTALLER09['baseurl']}/userdetails.php?id=".(int)$arr['uid']."][b]{$arr['username']}[/b][/url] has been promoted to Uploader by {$CURUSER['username']}.");
     $modcomment = get_date(TIME_NOW, 'DATE', 1)." - Promoted to 'Uploader' by ".$CURUSER["username"].".".($arr["modcomment"] != "" ? "\n" : "")."{$arr['modcomment']}";
     $dt = TIME_NOW;
-    sql_query("UPDATE uploadapp SET status = 'accepted', comment = ".sqlesc($note).", moderator = ".sqlesc($CURUSER["username"])." WHERE id=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
-    sql_query("UPDATE users SET class = ".UC_UPLOADER.", modcomment = ".sqlesc($modcomment)." WHERE id=".sqlesc($arr['uid'])." AND class < ".UC_STAFF) or sqlerr(__FILE__, __LINE__);
+    sql_query("UPDATE ".TBL_UPLOADAPP." SET status = 'accepted', comment = ".sqlesc($note).", moderator = ".sqlesc($CURUSER["username"])." WHERE id=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    sql_query("UPDATE ".TBL_USERS." SET class = ".UC_UPLOADER.", modcomment = ".sqlesc($modcomment)." WHERE id=".sqlesc($arr['uid'])." AND class < ".UC_STAFF) or sqlerr(__FILE__, __LINE__);
     $mc1->begin_transaction('MyUser_'.$arr['uid']);
     $mc1->update_row(false, array(
         'class' => 3
@@ -183,11 +183,11 @@ if ($action == "acceptapp") {
         'class' => 3
     ));
     $mc1->commit_transaction($INSTALLER09['expires']['user_cache']);
-    sql_query("INSERT INTO messages(sender, receiver, added, msg, subject, poster) VALUES(0, ".sqlesc($arr['uid']).", $dt, $msg, $subject, 0)") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_MESSAGES."(sender, receiver, added, msg, subject, poster) VALUES(0, ".sqlesc($arr['uid']).", $dt, $msg, $subject, 0)") or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('inbox_new_'.$arr['uid']);
     $mc1->delete_value('inbox_new_sb_'.$arr['uid']);
-    $subres = sql_query("SELECT id FROM users WHERE class >= ".UC_STAFF) or sqlerr(__FILE__, __LINE__);
-    while ($subarr = mysqli_fetch_assoc($subres)) sql_query("INSERT INTO messages(sender, receiver, added, msg, subject, poster) VALUES(0, ".sqlesc($subarr['id']).", $dt, $msg1, $subject, 0)") or sqlerr(__FILE__, __LINE__);
+    $subres = sql_query("SELECT id FROM ".TBL_USERS." WHERE class >= ".UC_STAFF) or sqlerr(__FILE__, __LINE__);
+    while ($subarr = mysqli_fetch_assoc($subres)) sql_query("INSERT INTO ".TBL_MESSAGES."(sender, receiver, added, msg, subject, poster) VALUES(0, ".sqlesc($subarr['id']).", $dt, $msg1, $subject, 0)") or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('inbox_new_'.$subarr['id']);
     $mc1->delete_value('inbox_new_sb_'.$subarr['id']);
     $mc1->delete_value('new_uploadapp_');
@@ -197,14 +197,14 @@ if ($action == "acceptapp") {
 if ($action == "rejectapp") {
     $id = 0 + $_POST["id"];
     if (!is_valid_id($id)) stderr("Error", "It appears that there is no uploader application with that ID.");
-    $res = sql_query("SELECT uploadapp.id, users.id AS uid FROM uploadapp INNER JOIN users on uploadapp.userid = users.id WHERE uploadapp.id=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT ".TBL_UPLOADAPP.".id, ".TBL_USERS.".id AS uid FROM ".TBL_UPLOADAPP." INNER JOIN ".TBL_USERS." on ".TBL_UPLOADAPP.".userid = ".TBL_USERS.".id WHERE ".TBL_UPLOADAPP.".id=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_assoc($res);
     $reason = htmlsafechars($_POST["reason"]);
     $subject = sqlesc("Uploader Promotion");
     $msg = sqlesc("Sorry, your uploader application has been rejected. It appears that you are not qualified enough to become uploader.\n\nReason: $reason");
     $dt = TIME_NOW;
-    sql_query("UPDATE uploadapp SET status = 'rejected', comment = ".sqlesc($reason).", moderator = ".sqlesc($CURUSER["username"])." WHERE id=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
-    sql_query("INSERT INTO messages(sender, receiver, added, msg, subject, poster) VALUES(0, {$arr['uid']}, $dt, $msg, $subject, 0)") or sqlerr(__FILE__, __LINE__);
+    sql_query("UPDATE ".TBL_UPLOADAPP." SET status = 'rejected', comment = ".sqlesc($reason).", moderator = ".sqlesc($CURUSER["username"])." WHERE id=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_MESSAGES."(sender, receiver, added, msg, subject, poster) VALUES(0, {$arr['uid']}, $dt, $msg, $subject, 0)") or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('new_uploadapp_');
     stderr("Application rejected", "The application was succesfully rejected. The user has been sent a PM notification. Click <a href='{$INSTALLER09['baseurl']}/staffpanel.php?tool=uploadapps&amp;action=app'><b>Here</b></a> to return to the upload applications page.");
 }
@@ -212,7 +212,7 @@ if ($action == "rejectapp") {
 if ($action == "takeappdelete") {
     if (empty($_POST['deleteapp'])) stderr('Silly Rabbit', 'Twix are for kids.. Check at least one application stupid...You cant delete nothing !');
     else {
-        sql_query("DELETE FROM uploadapp WHERE id IN (".join(",", $_POST['deleteapp']).") ") or sqlerr(__FILE__, __LINE__);
+        sql_query("DELETE FROM ".TBL_UPLOADAPP." WHERE id IN (".join(",", $_POST['deleteapp']).") ") or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('new_uploadapp_');
         stderr("Deleted", "The upload applications were succesfully deleted. Click <a href='{$INSTALLER09['baseurl']}/staffpanel.php?tool=uploadapps&amp;action=app'><b>Here</b></a> to return to the upload applications page.");
     }

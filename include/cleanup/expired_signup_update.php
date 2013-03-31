@@ -13,7 +13,7 @@ function docleanup($data)
     set_time_limit(0);
     ignore_user_abort(1);
     $deadtime = TIME_NOW - $INSTALLER09['signup_timeout'];
-    sql_query("DELETE FROM users WHERE status = 'pending' AND added < $deadtime AND last_login < $deadtime AND last_access < $deadtime");
+    sql_query("DELETE FROM ".TBL_USERS." WHERE status = 'pending' AND added < $deadtime AND last_login < $deadtime AND last_access < $deadtime");
     if ($queries > 0) write_log("Expired Signup clean-------------------- Expired Signup cleanup Complete using $queries queries --------------------");
     if (false !== mysqli_affected_rows($GLOBALS["___mysqli_ston"])) {
         $data['clean_desc'] = mysqli_affected_rows($GLOBALS["___mysqli_ston"])." items deleted/updated";
@@ -28,6 +28,6 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 ?>

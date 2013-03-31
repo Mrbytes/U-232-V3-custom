@@ -63,7 +63,7 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $perpage = 25;
 $browsemenu = '';
 $pagemenu = '';
-$res = sql_query("SELECT COUNT(*) FROM users WHERE ".$query1) or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT COUNT(*) FROM ".TBL_USERS." WHERE ".$query1) or sqlerr(__FILE__, __LINE__);
 $arr = mysqli_fetch_row($res);
 if ($arr[0] > $perpage) {
     $pages = floor($arr[0] / $perpage);
@@ -85,7 +85,7 @@ if ($arr[0] > $perpage) {
 $HTMLOUT.= ($arr[0] > $perpage) ? "<p>$browsemenu<br /><br /></p>" : '<br /><br />';
 $offset = ($page * $perpage) - $perpage;
 if ($arr[0] > 0) {
-    $res = sql_query("SELECT users.*, countries.name, countries.flagpic FROM users FORCE INDEX ( username ) LEFT JOIN countries ON country = countries.id WHERE $query1 ORDER BY username LIMIT $offset,$perpage") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT ".TBL_USERS.".*, ".TBL_COUNTRIES.".name, ".TBL_COUNTRIES.".flagpic FROM ".TBL_USERS." FORCE INDEX ( username ) LEFT JOIN ".TBL_COUNTRIES." ON country = ".TBL_COUNTRIES.".id WHERE $query1 ORDER BY username LIMIT $offset,$perpage") or sqlerr(__FILE__, __LINE__);
     $HTMLOUT.= "<table border='1' cellspacing='0' cellpadding='5'>\n";
     $HTMLOUT.= "<tr><td class='colhead' align='left'>User name</td><td class='colhead'>{$lang['users_regd']}</td><td class='colhead'>{$lang['users_la']}</td><td class='colhead' align='left'>{$lang['users_class']}</td><td class='colhead'>{$lang['users_country']}</td></tr>\n";
     while ($row = mysqli_fetch_assoc($res)) {

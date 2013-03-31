@@ -74,7 +74,7 @@ case 'upload_credit':
     $bonus_added = ($GB / 1073741824);
     //=== if for all classes
     if ($free_for_classes === 1) {
-        $res_GB = sql_query('SELECT id, uploaded, modcomment FROM users WHERE enabled = \'yes\' AND suspended = \'no\'') or sqlerr(__FILE__, __LINE__);
+        $res_GB = sql_query('SELECT id, uploaded, modcomment FROM '.TBL_USERS.' WHERE enabled = \'yes\' AND suspended = \'no\'') or sqlerr(__FILE__, __LINE__);
         $pm_buffer = $users_buffer = array();
         if (mysqli_num_rows($res_GB) > 0) {
             $subject = sqlesc("Upload added");
@@ -102,8 +102,8 @@ case 'upload_credit':
             }
             $count = count($users_buffer);
             if ($count > 0) {
-                sql_query("INSERT INTO messages (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
-                sql_query("INSERT INTO users (id, uploaded, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE uploaded=uploaded+values(uploaded),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
+                sql_query("INSERT INTO ".TBL_MESSAGES." (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
+                sql_query("INSERT INTO ".TBL_USERS." (id, uploaded, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE uploaded=uploaded+values(uploaded),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
                 write_log("Staff mass bonus - added upload credit to ".$count." members in all classes by ".$CURUSER['username']);
             }
             unset($users_buffer, $pm_buffer, $count);
@@ -113,7 +113,7 @@ case 'upload_credit':
     } elseif ($free_for_classes === 0) {
         foreach ($free_for as $class) {
             if (ctype_digit($class)) {
-                $res_GB = sql_query('SELECT id, uploaded, modcomment FROM users WHERE enabled = \'yes\' AND suspended = \'no\' AND class = '.$class);
+                $res_GB = sql_query('SELECT id, uploaded, modcomment FROM '.TBL_USERS.' WHERE enabled = \'yes\' AND suspended = \'no\' AND class = '.$class);
                 $pm_buffer = $users_buffer = array();
                 if (mysqli_num_rows($res_GB) > 0) {
                     $subject = sqlesc("Upload added");
@@ -141,8 +141,8 @@ case 'upload_credit':
                     }
                     $count = count($users_buffer);
                     if ($count > 0) {
-                        sql_query("INSERT INTO messages (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
-                        sql_query("INSERT INTO users (id, uploaded, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE uploaded=uploaded+values(uploaded),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
+                        sql_query("INSERT INTO ".TBL_MESSAGES." (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
+                        sql_query("INSERT INTO ".TBL_USERS." (id, uploaded, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE uploaded=uploaded+values(uploaded),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
                         write_log("Staff mass bonus - added upload credit to ".$count." members by ".$CURUSER['username']);
                     }
                     unset($users_buffer, $pm_buffer, $count);
@@ -160,7 +160,7 @@ case 'karma':
     stderr('Karma Bonus Error', 'You forgot to select an amount!');
     //=== if for all classes
     if ($free_for_classes === 1) {
-        $res_karma = sql_query('SELECT id, seedbonus, modcomment FROM users WHERE enabled = \'yes\' AND suspended = \'no\'') or sqlerr(__FILE__, __LINE__);
+        $res_karma = sql_query('SELECT id, seedbonus, modcomment FROM '.TBL_USERS.' WHERE enabled = \'yes\' AND suspended = \'no\'') or sqlerr(__FILE__, __LINE__);
         $pm_buffer = $users_buffer = array();
         if (mysqli_num_rows($res_karma) > 0) {
             $subject = sqlesc("Karma added");
@@ -188,8 +188,8 @@ case 'karma':
             }
             $count = count($users_buffer);
             if ($count > 0) {
-                sql_query("INSERT INTO messages (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
-                sql_query("INSERT INTO users (id, seedbonus, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE seedbonus=seedbonus+values(seedbonus),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
+                sql_query("INSERT INTO ".TBL_MESSAGES." (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
+                sql_query("INSERT INTO ".TBL_USERS." (id, seedbonus, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE seedbonus=seedbonus+values(seedbonus),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
                 write_log("Staff mass bonus - added karma points to ".$count." members in all classes by ".$CURUSER['username']);
             }
             unset($users_buffer, $pm_buffer, $count);
@@ -199,7 +199,7 @@ case 'karma':
     } elseif ($free_for_classes === 0) {
         foreach ($free_for as $class) {
             if (ctype_digit($class)) {
-                $res_karma = sql_query('SELECT id, seedbonus, modcomment FROM users WHERE enabled = \'yes\' AND suspended = \'no\' AND class = '.$class);
+                $res_karma = sql_query('SELECT id, seedbonus, modcomment FROM '.TBL_USERS.' WHERE enabled = \'yes\' AND suspended = \'no\' AND class = '.$class);
                 $pm_buffer = $users_buffer = array();
                 if (mysqli_num_rows($res_karma) > 0) {
                     $subject = sqlesc("Karma added");
@@ -227,8 +227,8 @@ case 'karma':
                     }
                     $count = count($users_buffer);
                     if ($count > 0) {
-                        sql_query("INSERT INTO messages (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
-                        sql_query("INSERT INTO users (id, seedbonus, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE seedbonus=seedbonus+values(seedbonus),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
+                        sql_query("INSERT INTO ".TBL_MESSAGES." (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
+                        sql_query("INSERT INTO ".TBL_USERS." (id, seedbonus, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE seedbonus=seedbonus+values(seedbonus),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
                         write_log("Staff mass bonus - added karma points to ".$count." members by ".$CURUSER['username']);
                     }
                     unset($users_buffer, $pm_buffer, $count);
@@ -246,7 +246,7 @@ case 'freeslots':
     stderr('Free Leech Slot Error', 'You forgot to select an amount!');
     //=== if for all classes
     if ($free_for_classes === 1) {
-        $res_freeslots = sql_query('SELECT id, freeslots, modcomment FROM users WHERE enabled = \'yes\' AND suspended = \'no\'') or sqlerr(__FILE__, __LINE__);
+        $res_freeslots = sql_query('SELECT id, freeslots, modcomment FROM '.TBL_USERS.' WHERE enabled = \'yes\' AND suspended = \'no\'') or sqlerr(__FILE__, __LINE__);
         $pm_buffer = $users_buffer = array();
         if (mysqli_num_rows($res_freeslots) > 0) {
             $subject = sqlesc("Free Slots added");
@@ -278,8 +278,8 @@ case 'freeslots':
             }
             $count = count($users_buffer);
             if ($count > 0) {
-                sql_query("INSERT INTO messages (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
-                sql_query("INSERT INTO users (id, freeslots, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE freeslots=freeslots+values(freeslots),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
+                sql_query("INSERT INTO ".TBL_MESSAGES." (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
+                sql_query("INSERT INTO ".TBL_USERS." (id, freeslots, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE freeslots=freeslots+values(freeslots),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
                 write_log("Staff mass bonus - added freeslots to ".$count." members in all classes by ".$CURUSER['username']);
             }
             unset($users_buffer, $pm_buffer, $count);
@@ -289,7 +289,7 @@ case 'freeslots':
     } elseif ($free_for_classes === 0) {
         foreach ($free_for as $class) {
             if (ctype_digit($class)) {
-                $res_freeslots = sql_query('SELECT id, freeslots, modcomment FROM users WHERE enabled = \'yes\' AND suspended = \'no\' AND class = '.$class);
+                $res_freeslots = sql_query('SELECT id, freeslots, modcomment FROM '.TBL_USERS.' WHERE enabled = \'yes\' AND suspended = \'no\' AND class = '.$class);
                 $pm_buffer = $users_buffer = array();
                 if (mysqli_num_rows($res_freeslots) > 0) {
                     $subject = sqlesc("Free Slots added");
@@ -321,8 +321,8 @@ case 'freeslots':
                     }
                     $count = count($users_buffer);
                     if ($count > 0) {
-                        sql_query("INSERT INTO messages (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
-                        sql_query("INSERT INTO users (id, freeslots, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE freeslots=freeslots+values(freeslots),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
+                        sql_query("INSERT INTO ".TBL_MESSAGES." (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
+                        sql_query("INSERT INTO ".TBL_USERS." (id, freeslots, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE freeslots=freeslots+values(freeslots),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
                         write_log("Staff mass bonus - added freeslots to ".$count." members by ".$CURUSER['username']);
                     }
                     unset($users_buffer, $pm_buffer, $count);
@@ -340,7 +340,7 @@ case 'invite':
     stderr('Invite Error', 'You forgot to select an amount!');
     //=== if for all classes
     if ($free_for_classes === 1) {
-        $res_invites = sql_query('SELECT id, invites, modcomment FROM users WHERE enabled = \'yes\' AND suspended = \'no\' AND invite_on = \'yes\'');
+        $res_invites = sql_query('SELECT id, invites, modcomment FROM '.TBL_USERS.' WHERE enabled = \'yes\' AND suspended = \'no\' AND invite_on = \'yes\'');
         $pm_buffer = $users_buffer = array();
         if (mysqli_num_rows($res_invites) > 0) {
             $subject = sqlesc("Invites added");
@@ -372,8 +372,8 @@ case 'invite':
             }
             $count = count($users_buffer);
             if ($count > 0) {
-                sql_query("INSERT INTO messages (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
-                sql_query("INSERT INTO users (id, invites, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE invites=invites+values(invites),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
+                sql_query("INSERT INTO ".TBL_MESSAGES." (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
+                sql_query("INSERT INTO ".TBL_USERS." (id, invites, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE invites=invites+values(invites),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
                 write_log("Staff mass bonus - added invites to ".$count." members in all classes by ".$CURUSER['username']);
             }
             unset($users_buffer, $pm_buffer, $count);
@@ -383,7 +383,7 @@ case 'invite':
     } elseif ($free_for_classes === 0) {
         foreach ($free_for as $class) {
             if (ctype_digit($class)) {
-                $res_invites = sql_query('SELECT id, invites, modcomment FROM users WHERE enabled = \'yes\' AND suspended = \'no\' AND invite_on = \'yes\' AND class = '.$class);
+                $res_invites = sql_query('SELECT id, invites, modcomment FROM '.TBL_USERS.' WHERE enabled = \'yes\' AND suspended = \'no\' AND invite_on = \'yes\' AND class = '.$class);
                 $pm_buffer = $users_buffer = array();
                 if (mysqli_num_rows($res_invites) > 0) {
                     $subject = sqlesc("Invites added");
@@ -415,8 +415,8 @@ case 'invite':
                     }
                     $count = count($users_buffer);
                     if ($count > 0) {
-                        sql_query("INSERT INTO messages (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
-                        sql_query("INSERT INTO users (id, invites, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE invites=invites+values(invites),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
+                        sql_query("INSERT INTO ".TBL_MESSAGES." (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
+                        sql_query("INSERT INTO ".TBL_USERS." (id, invites, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE invites=invites+values(invites),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
                         write_log("Staff mass bonus - added invites to ".$count." members by ".$CURUSER['username']);
                     }
                     unset($users_buffer, $pm_buffer, $count);
@@ -431,7 +431,7 @@ case 'pm':
     if (!isset($_POST['body'])) stderr('Error', 'No body text... Please enter something to send!');
     //=== if for all classes
     if ($free_for_classes === 1) {
-        $res_pms = sql_query('SELECT id FROM users WHERE enabled = \'yes\' AND suspended = \'no\'');
+        $res_pms = sql_query('SELECT id FROM '.TBL_USERS.' WHERE enabled = \'yes\' AND suspended = \'no\'');
         $pm_buffer = array();
         if (mysqli_num_rows($res_pms) > 0) {
             $subject = sqlesc(htmlsafechars($_POST['subject']));
@@ -443,7 +443,7 @@ case 'pm':
             }
             $count = count($pm_buffer);
             if ($count > 0) {
-                sql_query("INSERT INTO messages (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
+                sql_query("INSERT INTO ".TBL_MESSAGES." (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
                 write_log("Mass pm sent to ".$count." members in all classes by ".$CURUSER['username']);
             }
             unset($pm_buffer, $count);
@@ -453,7 +453,7 @@ case 'pm':
     } elseif ($free_for_classes === 0) {
         foreach ($free_for as $class) {
             if (ctype_digit($class)) {
-                $res_pms = sql_query('SELECT id FROM users WHERE enabled = \'yes\' AND suspended = \'no\' AND class = '.$class);
+                $res_pms = sql_query('SELECT id FROM '.TBL_USERS.' WHERE enabled = \'yes\' AND suspended = \'no\' AND class = '.$class);
                 $pm_buffer = array();
                 if (mysqli_num_rows($res_pms) > 0) {
                     $subject = sqlesc(htmlsafechars($_POST['subject']));
@@ -465,7 +465,7 @@ case 'pm':
                     }
                     $count = count($pm_buffer);
                     if ($count > 0) {
-                        sql_query("INSERT INTO messages (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
+                        sql_query("INSERT INTO ".TBL_MESSAGES." (sender,receiver,added,msg,subject) VALUES ".implode(', ', $pm_buffer)) or sqlerr(__FILE__, __LINE__);
                         write_log("Mass pm sent to ".$count." members by ".$CURUSER['username']);
                     }
                     unset($pm_buffer, $count);

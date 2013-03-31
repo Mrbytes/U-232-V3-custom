@@ -15,7 +15,7 @@ dbconn(false);
 loggedinorreturn();
 $lang = array_merge(load_language('global') , load_language('comment'));
 if ($CURUSER['suspended'] == 'yes') stderr("Sorry", "Your account is suspended");
-flood_limit('comments');
+flood_limit(''.TBL_COMMENTS.'');
 $action = (isset($_GET['action']) ? $_GET['action'] : 0);
 $stdhead = array(
     /** include css **/
@@ -37,7 +37,7 @@ $stdfoot = array(
 $locale = 'torrent';
 $locale_link = 'details';
 $extra_link = '';
-$sql_1 = 'name, owner, comments, anonymous FROM torrents'; // , anonymous
+$sql_1 = 'name, owner, comments, anonymous FROM '.TBL_TORRENTS.''; // , anonymous
 $name = 'name';
 $table_type = $locale.'s';
 $_GET['type'] = (isset($_GET['type']) ? $_GET['type'] : (isset($_POST['locale']) ? $_POST['locale'] : ''));
@@ -52,7 +52,7 @@ if (isset($_GET['type'])) {
     }
     switch ($_GET['type']) {
     case 'request':
-        $sql_1 = 'request FROM requests';
+        $sql_1 = 'request FROM '.TBL_REQUESTS.'';
         $name = 'request';
         $extra_link = '&req_details';
         $table_type = $locale.'s';
@@ -60,7 +60,7 @@ if (isset($_GET['type'])) {
 
     default:
         //case 'torrent':
-        $sql_1 = 'name, owner, comments, anonymous FROM torrents'; // , anonymous
+        $sql_1 = 'name, owner, comments, anonymous FROM '.TBL_TORRENTS.''; // , anonymous
         $name = 'name';
         $table_type = $locale.'s';
         break;
@@ -81,11 +81,11 @@ if ($action == 'add') {
         $arr['comments'] = (isset($arr['comments']) ? $arr['comments'] : 0);
         if ($CURUSER['id'] == $owner && $arr['anonymous'] == 'yes' || (isset($_POST['anonymous']) && $_POST['anonymous'] == 'yes')) $anon = "'yes'";
         else $anon = "'no'";
-        sql_query("INSERT INTO comments (user, $locale, added, text, ori_text, anonymous) VALUES (".sqlesc($CURUSER["id"]).", ".sqlesc($id).", ".TIME_NOW.", ".sqlesc($body).", ".sqlesc($body).", $anon)");
+        sql_query("INSERT INTO ".TBL_COMMENTS." (user, $locale, added, text, ori_text, anonymous) VALUES (".sqlesc($CURUSER["id"]).", ".sqlesc($id).", ".TIME_NOW.", ".sqlesc($body).", ".sqlesc($body).", $anon)");
         $newid = ((is_null($___mysqli_res = mysqli_insert_id($GLOBALS["___mysqli_ston"]))) ? false : $___mysqli_res);
         sql_query("UPDATE $table_type SET comments = comments + 1 WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
         if ($INSTALLER09['seedbonus_on'] == 1) {
-            if ($INSTALLER09['karma'] && isset($CURUSER['seedbonus'])) sql_query("UPDATE users SET seedbonus = seedbonus+3.0 WHERE id = ".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+            if ($INSTALLER09['karma'] && isset($CURUSER['seedbonus'])) sql_query("UPDATE ".TBL_USERS." SET seedbonus = seedbonus+3.0 WHERE id = ".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
             $update['comments'] = ($arr['comments'] + 1);
             $mc1->begin_transaction('torrent_details_'.$id);
             $mc1->update_row(false, array(
@@ -107,13 +107,13 @@ if ($action == 'add') {
             
         }
         // --- pm if new comment mod---//
-        $cpm = sql_query("SELECT commentpm FROM users WHERE id = ".sqlesc($owner)) or sqlerr(__FILE__, __LINE__);
+        $cpm = sql_query("SELECT commentpm FROM ".TBL_USERS." WHERE id = ".sqlesc($owner)) or sqlerr(__FILE__, __LINE__);
         $cpm_r = mysqli_fetch_assoc($cpm);
         if ($cpm_r['commentpm'] == 'yes') {
             $added = TIME_NOW;
             $subby = sqlesc("Someone has left a comment");
             $notifs = sqlesc("You have received a comment on your torrent [url={$INSTALLER09['baseurl']}/details.php?id={$id}] ".htmlsafechars($arr['name'])."[/url].");
-            sql_query("INSERT INTO messages (sender, receiver, subject, msg, added) VALUES(0, ".sqlesc($arr['owner']).", $subby, $notifs, $added)") or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, subject, msg, added) VALUES(0, ".sqlesc($arr['owner']).", $subby, $notifs, $added)") or sqlerr(__FILE__, __LINE__);
         }
         // ---end---//
         header("Refresh: 0; url=$locale_link.php?id=$id$extra_link&viewcomm=$newid#comm$newid");
@@ -136,7 +136,7 @@ if ($action == 'add') {
       <label for='anonymous'>Tick this to post anonymously</label>
       <input id='anonymous' type='checkbox' name='anonymous' value='yes' />
       <br /><input type='submit' class='btn' value='{$lang['comment_doit']}' /></form>";
-    $res = sql_query("SELECT comments.id, text, comments.added, comments.$locale, comments.anonymous, comments.editedby, comments.editedat, username, users.id as user, users.title, users.avatar, users.offavatar, users.av_w, users.av_h, users.class, users.reputation, users.mood, users.donor, users.warned FROM comments LEFT JOIN users ON comments.user = users.id WHERE $locale = ".sqlesc($id)." ORDER BY comments.id DESC LIMIT 5");
+    $res = sql_query("SELECT ".TBL_COMMENTS.".id, text, ".TBL_COMMENTS.".added, ".TBL_COMMENTS.".$locale, ".TBL_COMMENTS.".anonymous, ".TBL_COMMENTS.".editedby, ".TBL_COMMENTS.".editedat, username, ".TBL_USERS.".id as user, ".TBL_USERS.".title, ".TBL_USERS.".avatar, ".TBL_USERS.".offavatar, ".TBL_USERS.".av_w, ".TBL_USERS.".av_h, ".TBL_USERS.".class, ".TBL_USERS.".reputation, ".TBL_USERS.".mood, ".TBL_USERS."donor, ".TBL_USERS.".warned FROM ".TBL_COMMENTS." LEFT JOIN ".TBL_USERS." ON ".TBL_COMMENTS.".user = ".TBL_USERS.".id WHERE $locale = ".sqlesc($id)." ORDER BY ".TBL_COMMENTS.".id DESC LIMIT 5");
     $allrows = array();
     while ($row = mysqli_fetch_assoc($res)) $allrows[] = $row;
     if (count($allrows)) {
@@ -152,7 +152,7 @@ if ($action == 'add') {
 } elseif ($action == "edit") {
     $commentid = (isset($_GET['cid']) ? (int)$_GET['cid'] : 0);
     if (!is_valid_id($commentid)) stderr("{$lang['comment_error']}", "{$lang['comment_invalid_id']}");
-    $res = sql_query("SELECT c.*, t.$name, t.id as tid FROM comments AS c LEFT JOIN $table_type AS t ON c.$locale = t.id WHERE c.id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT c.*, t.$name, t.id as tid FROM ".TBL_COMMENTS." AS c LEFT JOIN $table_type AS t ON c.$locale = t.id WHERE c.id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_assoc($res);
     if (!$arr) stderr("{$lang['comment_error']}", "{$lang['comment_invalid_id']}.");
     if ($arr["user"] != $CURUSER["id"] && $CURUSER['class'] < UC_STAFF) stderr("{$lang['comment_error']}", "{$lang['comment_denied']}");
@@ -161,8 +161,8 @@ if ($action == 'add') {
         if ($body == '') stderr("{$lang['comment_error']}", "{$lang['comment_body']}");
         $text = htmlsafechars($body);
         $editedat = TIME_NOW;
-        if (isset($_POST['lasteditedby']) || $CURUSER['class'] < UC_STAFF) sql_query("UPDATE comments SET text=".sqlesc($text).", editedat=$editedat, editedby=".sqlesc($CURUSER['id'])." WHERE id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
-        else sql_query("UPDATE comments SET text=".sqlesc($text).", editedat=$editedat, editedby=0 WHERE id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
+        if (isset($_POST['lasteditedby']) || $CURUSER['class'] < UC_STAFF) sql_query("UPDATE ".TBL_COMMENTS." SET text=".sqlesc($text).", editedat=$editedat, editedby=".sqlesc($CURUSER['id'])." WHERE id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
+        else sql_query("UPDATE ".TBL_COMMENTS." SET text=".sqlesc($text).", editedat=$editedat, editedby=0 WHERE id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
         header("Refresh: 0; url=$locale_link.php?id=".(int)$arr['tid']."$extra_link&viewcomm=$commentid#comm$commentid");
         die;
     }
@@ -188,14 +188,14 @@ if ($action == 'add') {
         stderr("{$lang['comment_delete']}", "{$lang['comment_about_delete']}\n"."<a href='comment.php?action=delete&amp;cid=$commentid&amp;tid=$tid&amp;sure=1".($locale == 'request' ? '&amp;type=request' : '')."'>
           here</a> {$lang['comment_delete_sure']}");
     }
-    $res = sql_query("SELECT $locale FROM comments WHERE id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT $locale FROM ".TBL_COMMENTS." WHERE id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_assoc($res);
     $id = 0;
     if ($arr) $id = $arr[$locale];
-    sql_query("DELETE FROM comments WHERE id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
+    sql_query("DELETE FROM ".TBL_COMMENTS." WHERE id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
     if ($id && mysqli_affected_rows($GLOBALS["___mysqli_ston"]) > 0) sql_query("UPDATE $table_type SET comments = comments - 1 WHERE id = ".sqlesc($id));
     if ($INSTALLER09['seedbonus_on'] == 1) {
-        if ($INSTALLER09['karma'] && isset($CURUSER['seedbonus'])) sql_query("UPDATE users SET seedbonus = seedbonus-3.0 WHERE id =".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+        if ($INSTALLER09['karma'] && isset($CURUSER['seedbonus'])) sql_query("UPDATE ".TBL_USERS." SET seedbonus = seedbonus-3.0 WHERE id =".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
         $arr['comments'] = (isset($arr['comments']) ? $arr['comments'] : 0);
         $update['comments'] = ($arr['comments'] - 1);
         $mc1->begin_transaction('torrent_details_'.$id);
@@ -223,7 +223,7 @@ if ($action == 'add') {
     if ($CURUSER['class'] < UC_STAFF) stderr("{$lang['comment_error']}", "{$lang['comment_denied']}");
     $commentid = (isset($_GET['cid']) ? (int)$_GET['cid'] : 0);
     if (!is_valid_id($commentid)) stderr("{$lang['comment_error']}", "{$lang['comment_invalid_id']}");
-    $res = sql_query("SELECT c.*, t.$name FROM comments AS c LEFT JOIN $table_type AS t ON c.$locale = t.id WHERE c.id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT c.*, t.$name FROM ".TBL_COMMENTS." AS c LEFT JOIN $table_type AS t ON c.$locale = t.id WHERE c.id=".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_assoc($res);
     if (!$arr) stderr("{$lang['comment_error']}", "{$lang['comment_invalid_id']} $commentid.");
     $HTMLOUT = '';

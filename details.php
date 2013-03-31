@@ -68,7 +68,7 @@ foreach ($categorie as $key => $value) $change[$value['id']] = array(
     'image' => $value['image']
 );
 if (($torrents = $mc1->get_value('torrent_details_'.$id)) === false) {
-    $torrents = mysqli_fetch_assoc(sql_query("SELECT seeders, leechers, banned, thanks, leechers, info_hash, checked_by, filename, search_text, LENGTH(nfo) AS nfosz, name, comments, owner, save_as, visible, size, added, views, hits, id, type, poster, url, numfiles, times_completed, anonymous, points, allow_comments, description, nuked, nukereason, last_reseed, vip, category, subs, username, newgenre, release_group, free, silver, youtube, tags, rating_sum, num_ratings, IF(num_ratings < {$INSTALLER09['minvotes']}, NULL, ROUND(rating_sum / num_ratings, 1)) AS rating FROM torrents WHERE id = ".sqlesc($id))) or sqlerr(__FILE__, __LINE__);
+    $torrents = mysqli_fetch_assoc(sql_query("SELECT seeders, leechers, banned, thanks, leechers, info_hash, checked_by, filename, search_text, LENGTH(nfo) AS nfosz, name, comments, owner, save_as, visible, size, added, views, hits, id, type, poster, url, numfiles, times_completed, anonymous, points, allow_comments, description, nuked, nukereason, last_reseed, vip, category, subs, username, newgenre, release_group, free, silver, youtube, tags, rating_sum, num_ratings, IF(num_ratings < {$INSTALLER09['minvotes']}, NULL, ROUND(rating_sum / num_ratings, 1)) AS rating FROM ".TBL_TORRENTS." WHERE id = ".sqlesc($id))) or sqlerr(__FILE__, __LINE__);
     $torrents['seeders'] = (int)$torrents['seeders'];
     $torrents['leechers'] = (int)$torrents['leechers'];
     $torrents['points'] = (int)$torrents['points'];
@@ -94,12 +94,12 @@ if (($torrents = $mc1->get_value('torrent_details_'.$id)) === false) {
 }
 //==
 if (($torrents_txt = $mc1->get_value('torrent_details_txt'.$id)) === false) {
-    $torrents_txt = mysqli_fetch_assoc(sql_query("SELECT descr FROM torrents WHERE id =".sqlesc($id))) or sqlerr(__FILE__, __LINE__);
+    $torrents_txt = mysqli_fetch_assoc(sql_query("SELECT descr FROM ".TBL_TORRENTS." WHERE id =".sqlesc($id))) or sqlerr(__FILE__, __LINE__);
     $mc1->cache_value('torrent_details_txt'.$id, $torrents_txt, $INSTALLER09['expires']['torrent_details_text']);
 }
 //==
 if (isset($_GET["hit"])) {
-    sql_query("UPDATE torrents SET views = views + 1 WHERE id =".sqlesc($id));
+    sql_query("UPDATE ".TBL_TORRENTS." SET views = views + 1 WHERE id =".sqlesc($id));
     $update['views'] = ($torrents['views'] + 1);
     $mc1->begin_transaction('torrent_details_'.$id);
     $mc1->update_row(false, array(
@@ -110,7 +110,7 @@ if (isset($_GET["hit"])) {
     exit();
 }
 if (($l_a = $mc1->get_value('last_action_'.$id)) === false) {
-    $l_a = mysqli_fetch_assoc(sql_query('SELECT last_action AS lastseed '.'FROM torrents '.'WHERE id = '.sqlesc($id))) or sqlerr(__FILE__, __LINE__);
+    $l_a = mysqli_fetch_assoc(sql_query('SELECT last_action AS lastseed '.'FROM '.TBL_TORRENTS.' '.'WHERE id = '.sqlesc($id))) or sqlerr(__FILE__, __LINE__);
     $l_a['lastseed'] = (int)$l_a['lastseed'];
     $mc1->add_value('last_action_'.$id, $l_a, 1800);
 }
@@ -132,7 +132,7 @@ $torrent['silver_color'] = 'silver';
 //==rep user query by pdq
 if (($torrent_cache['rep'] = $mc1->get_value('user_rep_'.$torrents['owner'])) === false) {
     $torrent_cache['rep'] = array();
-    $us = sql_query("SELECT reputation FROM users WHERE id =".sqlesc($torrents['owner'])) or sqlerr(__FILE__, __LINE__);
+    $us = sql_query("SELECT reputation FROM ".TBL_USERS." WHERE id =".sqlesc($torrents['owner'])) or sqlerr(__FILE__, __LINE__);
     if (mysqli_num_rows($us)) {
         $torrent_cache['rep'] = mysqli_fetch_assoc($us);
         $mc1->add_value('user_rep_'.$torrents['owner'], $torrent_cache['rep'], 14 * 86400);
@@ -195,7 +195,7 @@ if (isset($_GET["uploaded"])) {
 //==pdq's Torrent Moderation
 if ($CURUSER['class'] >= UC_STAFF) {
     if (isset($_GET["checked"]) && $_GET["checked"] == 1) {
-        sql_query("UPDATE torrents SET checked_by = ".sqlesc($CURUSER['username'])." WHERE id =".sqlesc($id)." LIMIT 1") or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_TORRENTS." SET checked_by = ".sqlesc($CURUSER['username'])." WHERE id =".sqlesc($id)." LIMIT 1") or sqlerr(__FILE__, __LINE__);
         $mc1->begin_transaction('torrent_details_'.$id);
         $mc1->update_row(false, array(
             'checked_by' => $CURUSER['username']
@@ -205,7 +205,7 @@ if ($CURUSER['class'] >= UC_STAFF) {
         write_log("Torrent <a href={$INSTALLER09['baseurl']}/details.php?id=$id>(".htmlsafechars($torrents['name']).")</a> was checked by {$CURUSER['username']}");
         header("Location: {$INSTALLER09["baseurl"]}/details.php?id=$id&checked=done#Success");
     } elseif (isset($_GET["rechecked"]) && $_GET["rechecked"] == 1) {
-        sql_query("UPDATE torrents SET checked_by = ".sqlesc($CURUSER['username'])." WHERE id =".sqlesc($id)." LIMIT 1") or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_TORRENTS." SET checked_by = ".sqlesc($CURUSER['username'])." WHERE id =".sqlesc($id)." LIMIT 1") or sqlerr(__FILE__, __LINE__);
         $mc1->begin_transaction('torrent_details_'.$id);
         $mc1->update_row(false, array(
             'checked_by' => $CURUSER['username']
@@ -215,7 +215,7 @@ if ($CURUSER['class'] >= UC_STAFF) {
         write_log("Torrent <a href={$INSTALLER09['baseurl']}/details.php?id=$id>(".htmlsafechars($torrents['name']).")</a> was re-checked by {$CURUSER['username']}");
         header("Location: {$INSTALLER09["baseurl"]}/details.php?id=$id&rechecked=done#Success");
     } elseif (isset($_GET["clearchecked"]) && $_GET["clearchecked"] == 1) {
-        sql_query("UPDATE torrents SET checked_by = '' WHERE id =".sqlesc($id)." LIMIT 1") or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_TORRENTS." SET checked_by = '' WHERE id =".sqlesc($id)." LIMIT 1") or sqlerr(__FILE__, __LINE__);
         $mc1->begin_transaction('torrent_details_'.$id);
         $mc1->update_row(false, array(
             'checked_by' => ''
@@ -290,7 +290,7 @@ if (!($CURUSER["downloadpos"] == 0 && $CURUSER["id"] != $torrents["owner"] OR $C
     /**  Mod by dokty, rewrote by pdq  **/
     $my_points = 0;
     if (($torrent['torrent_points_'] = $mc1->get('coin_points_'.$id)) === false) {
-        $sql_points = sql_query('SELECT userid, points FROM coins WHERE torrentid='.sqlesc($id));
+        $sql_points = sql_query('SELECT userid, points FROM '.TBL_COINS.' WHERE torrentid='.sqlesc($id));
         $torrent['torrent_points_'] = array();
         if (mysqli_num_rows($sql_points) !== 0) {
             while ($points_cache = mysqli_fetch_assoc($sql_points)) $torrent['torrent_points_'][$points_cache['userid']] = $points_cache['points'];
@@ -351,7 +351,7 @@ if ($torrents['free'] >= 1 || $isfree['yep'] || $free_slot OR $double_slot != 0 
 //==End
 //Thumbs Up
 if (($thumbs = $mc1->get_value('thumbs_up_'.$id)) === false) {
-    $thumbs = mysqli_num_rows(sql_query("SELECT id, type, torrentid, userid FROM thumbsup WHERE torrentid = ".sqlesc($torrents['id'])));
+    $thumbs = mysqli_num_rows(sql_query("SELECT id, type, torrentid, userid FROM ".TBL_THUMBSUP." WHERE torrentid = ".sqlesc($torrents['id'])));
     $thumbs = (int)$thumbs;
     $mc1->add_value('thumbs_up_'.$id, $thumbs, 0);
 }
@@ -370,7 +370,7 @@ $searchname = substr($torrents['name'], 0, 6);
 $query1 = str_replace(" ", ".", sqlesc("%".$searchname."%"));
 $query2 = str_replace(".", " ", sqlesc("%".$searchname."%"));
 if (($sim_torrents = $mc1->get_value('similiar_tor_'.$id)) === false) {
-    $r = sql_query("SELECT id, name, size, added, seeders, leechers, category FROM torrents WHERE name LIKE {$query1} AND id <> ".sqlesc($id)." OR name LIKE {$query2} AND id <> ".sqlesc($id)." ORDER BY name") or sqlerr(__FILE__, __LINE__);
+    $r = sql_query("SELECT id, name, size, added, seeders, leechers, category FROM ".TBL_TORRENTS." WHERE name LIKE {$query1} AND id <> ".sqlesc($id)." OR name LIKE {$query2} AND id <> ".sqlesc($id)." ORDER BY name") or sqlerr(__FILE__, __LINE__);
     while ($sim_torrent = mysqli_fetch_assoc($r)) $sim_torrents[] = $sim_torrent;
     $mc1->cache_value('similiar_tor_'.$id, $sim_torrents, 86400);
 }
@@ -541,7 +541,7 @@ $HTMLOUT.= tr("Upped by", $uprow, 1);
 if ($CURUSER['class'] >= UC_STAFF) {
     if (!empty($torrents['checked_by'])) {
         if (($checked_by = $mc1->get_value('checked_by_'.$id)) === false) {
-            $checked_by = mysqli_fetch_assoc(sql_query("SELECT id FROM users WHERE username=".sqlesc($torrents['checked_by']))) or sqlerr(__FILE__, __LINE__);
+            $checked_by = mysqli_fetch_assoc(sql_query("SELECT id FROM ".TBL_USERS." WHERE username=".sqlesc($torrents['checked_by']))) or sqlerr(__FILE__, __LINE__);
             $mc1->add_value('checked_by_'.$id, $checked_by, 30 * 86400);
         }
         $HTMLOUT.= "<tr><td class='rowhead'>Checked by</td><td align='left'><a href='{$INSTALLER09["baseurl"]}/userdetails.php?id=".(int)$checked_by['id']."'><strong>
@@ -657,7 +657,7 @@ if (!$count) {
     $pager = pager($perpage, $count, "details.php?id=$id&amp;", array(
         'lastpagedefault' => 1
     ));
-    $subres = sql_query("SELECT comments.id, comments.text, comments.user, comments.torrent, comments.added, comments.anonymous, comments.editedby, comments.editedat, users.avatar, users.av_w, users.av_h, users.offavatar, users.warned, users.reputation, users.mood, users.username, users.title, users.class, users.donor FROM comments LEFT JOIN users ON comments.user = users.id WHERE torrent = ".sqlesc($id)." ORDER BY comments.id ".$pager['limit']) or sqlerr(__FILE__, __LINE__);
+    $subres = sql_query("SELECT ".TBL_COMMENTS.".id, ".TBL_COMMENTS.".text, ".TBL_COMMENTS.".user, ".TBL_COMMENTS.".torrent, ".TBL_COMMENTS.".added, ".TBL_COMMENTS.".anonymous, ".TBL_COMMENTS.".editedby, ".TBL_COMMENTS.".editedat, ".TBL_USERS.".avatar, ".TBL_USERS.".av_w, ".TBL_USERS.".av_h, ".TBL_USERS.".offavatar, ".TBL_USERS.".warned, ".TBL_USERS.".reputation, ".TBL_USERS.".mood, ".TBL_USERS.".username, ".TBL_USERS.".title, ".TBL_USERS.".class, ".TBL_USERS.".donor FROM ".TBL_COMMENTS." LEFT JOIN ".TBL_USERS." ON ".TBL_COMMENTS.".user = ".TBL_USERS.".id WHERE torrent = ".sqlesc($id)." ORDER BY ".TBL_COMMENTS.".id ".$pager['limit']) or sqlerr(__FILE__, __LINE__);
     $allrows = array();
     while ($subrow = mysqli_fetch_assoc($subres)) $allrows[] = $subrow;
     $HTMLOUT.= $commentbar;

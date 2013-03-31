@@ -26,7 +26,7 @@ $HTMLOUT = '';
 //-------- Action: View posts
 if ($action == "viewposts") {
     $select_is = "COUNT(DISTINCT p.id)";
-    $from_is = "posts AS p LEFT JOIN topics as t ON p.topic_id = t.id LEFT JOIN forums AS f ON t.forum_id = f.id";
+    $from_is = "posts AS p LEFT JOIN ".TBL_TOPICS." as t ON p.topic_id = t.id LEFT JOIN ".TBL_FORUMS." AS f ON t.forum_id = f.id";
     $where_is = "p.user_id = ".sqlesc($userid)." AND f.min_class_read <= ".sqlesc($CURUSER['class']);
     $order_is = "p.id DESC";
     $query = "SELECT $select_is FROM $from_is WHERE $where_is";
@@ -36,13 +36,13 @@ if ($action == "viewposts") {
     //------ Make page menu
     $pager = pager($perpage, $postcount, "userhistory.php?action=viewposts&amp;id=$userid&amp;");
     //------ Get user data
-    $res = sql_query("SELECT id, username, class, donor, warned, leechwarn, pirate, king, chatpost, enabled FROM users WHERE id=".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT id, username, class, donor, warned, leechwarn, pirate, king, chatpost, enabled FROM ".TBL_USERS." WHERE id=".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
     if (mysqli_num_rows($res) == 1) {
         $arr = mysqli_fetch_assoc($res);
         $subject = "".format_username($arr, true);
     } else $subject = $lang['posts_unknown'].'['.$userid.']';
     //------ Get posts
-    $from_is = "posts AS p LEFT JOIN topics as t ON p.topic_id = t.id LEFT JOIN forums AS f ON t.forum_id = f.id LEFT JOIN read_posts as r ON p.topic_id = r.topic_id AND p.user_id = r.user_id";
+    $from_is = "posts AS p LEFT JOIN ".TBL_TOPICS." as t ON p.topic_id = t.id LEFT JOIN ".TBL_FORUMS." AS f ON t.forum_id = f.id LEFT JOIN ".TBL_READ_POSTS." as r ON p.topic_id = r.topic_id AND p.user_id = r.user_id";
     $select_is = "f.id AS f_id, f.name, t.id AS t_id, t.topic_name, t.last_post, r.last_post_read, p.*";
     $query = "SELECT $select_is FROM $from_is WHERE $where_is ORDER BY $order_is {$pager['limit']}";
     $res = sql_query($query) or sqlerr(__FILE__, __LINE__);
@@ -74,7 +74,7 @@ if ($action == "viewposts") {
         $HTMLOUT.= begin_table(true);
         $body = format_comment($arr["body"]);
         if (is_valid_id($arr['edited_by'])) {
-            $subres = sql_query("SELECT username FROM users WHERE id=".sqlesc($arr['edited_by']));
+            $subres = sql_query("SELECT username FROM ".TBL_USERS." WHERE id=".sqlesc($arr['edited_by']));
             if (mysqli_num_rows($subres) == 1) {
                 $subrow = mysqli_fetch_assoc($subres);
                 $body.= "<p><font size='1' class='small'>{$lang['posts_lasteditedby']} <a href='userdetails.php?id=".(int)$arr['edited_by']."'><b>".htmlsafechars($subrow['username'])."</b></a> {$lang['posts_at']} ".get_date($arr['edit_date'], 'LONG', 0, 1)."</font></p>\n";
@@ -93,7 +93,7 @@ if ($action == "viewposts") {
 if ($action == "viewcomments") {
     $select_is = "COUNT(*)";
     // LEFT due to orphan comments
-    $from_is = "comments AS c LEFT JOIN torrents as t
+    $from_is = "comments AS c LEFT JOIN ".TBL_TORRENTS." as t
                   ON c.torrent = t.id";
     $where_is = "c.user =".sqlesc($userid)."";
     $order_is = "c.id DESC";
@@ -104,7 +104,7 @@ if ($action == "viewcomments") {
     //------ Make page menu
     $pager = pager($perpage, $commentcount, "userhistory.php?action=viewcomments&amp;id=$userid&amp;");
     //------ Get user data
-    $res = sql_query("SELECT id, class, username, donor, warned, leechwarn, chatpost, pirate, king, enabled FROM users WHERE id=".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT id, class, username, donor, warned, leechwarn, chatpost, pirate, king, enabled FROM ".TBL_USERS." WHERE id=".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
     if (mysqli_num_rows($res) == 1) {
         $arr = mysqli_fetch_assoc($res);
         $subject = "".format_username($arr, true);
@@ -126,7 +126,7 @@ if ($action == "viewcomments") {
         if (strlen($torrent) > 55) $torrent = substr($torrent, 0, 52)."...";
         $torrentid = (int)$arr["t_id"];
         //find the page; this code should probably be in details.php instead
-        $subres = sql_query("SELECT COUNT(*) FROM comments WHERE torrent = ".sqlesc($torrentid)." AND id < ".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
+        $subres = sql_query("SELECT COUNT(*) FROM ".TBL_COMMENTS." WHERE torrent = ".sqlesc($torrentid)." AND id < ".sqlesc($commentid)) or sqlerr(__FILE__, __LINE__);
         $subrow = mysqli_fetch_row($subres);
         $count = $subrow[0];
         $comm_page = floor($count / 20);

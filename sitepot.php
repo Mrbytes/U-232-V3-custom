@@ -16,10 +16,10 @@ $lang = array_merge(load_language('global'));
 /** Size of Pot**/
 $potsize = 10000;
 /** Site Pot **/
-$Pot_query = mysqli_query($GLOBALS["___mysqli_ston"], "SELECT value_s, value_i, value_u FROM avps WHERE arg = 'sitepot'") or sqlerr(__file__, __line__);
+$Pot_query = mysqli_query($GLOBALS["___mysqli_ston"], "SELECT value_s, value_i, value_u FROM ".TBL_AVPS." WHERE arg = 'sitepot'") or sqlerr(__file__, __line__);
 $SitePot = mysqli_fetch_assoc($Pot_query) or stderr('ERROR', 'db error.');
 if ($SitePot['value_u'] < TIME_NOW && $SitePot['value_s'] == '1') {
-    mysqli_query($GLOBALS["___mysqli_ston"], "UPDATE avps SET value_i = 0, value_s = '0' WHERE arg = 'sitepot'") or sqlerr(__file__, __line__);
+    mysqli_query($GLOBALS["___mysqli_ston"], "UPDATE ".TBL_AVPS." SET value_i = 0, value_s = '0' WHERE arg = 'sitepot'") or sqlerr(__file__, __line__);
     header('Location: sitepot.php');
     die();
 }
@@ -46,7 +46,7 @@ if ($want_pot && (isset($pot_options[$want_pot]))) {
     if ($give > $potsize) $want_pot = ($potsize - $SitePot['value_i']);
     if (($SitePot['value_i'] + $want_pot) != $potsize) {
         $Remaining = $potsize - $give;
-        sql_query("UPDATE users SET seedbonus = seedbonus - ".sqlesc($want_pot)." 
+        sql_query("UPDATE ".TBL_USERS." SET seedbonus = seedbonus - ".sqlesc($want_pot)." 
                      WHERE id = ".sqlesc($CURUSER['id'])) or sqlerr(__file__, __line__);
         $update['seedbonus_donator'] = ($CURUSER['seedbonus'] - $want_pot);
         //====Update the caches
@@ -62,7 +62,7 @@ if ($want_pot && (isset($pot_options[$want_pot]))) {
         $mc1->commit_transaction($INSTALLER09['expires']['curuser']);
         $mc1->delete_value('Sitepot_');
         write_log("Site Pot ".$CURUSER['username']." has donated ".$want_pot." karma points to the site pot. {$Remaining} karma points remaining.");
-        sql_query("UPDATE avps SET value_i = value_i + ".sqlesc($want_pot)." 
+        sql_query("UPDATE ".TBL_AVPS." SET value_i = value_i + ".sqlesc($want_pot)." 
                      WHERE arg = 'sitepot'") or sqlerr(__file__, __line__);
         /** shoutbox announce **/
         require_once (INCL_DIR.'bbcode_functions.php');
@@ -73,8 +73,8 @@ if ($want_pot && (isset($pot_options[$want_pot]))) {
         die();
     } elseif (($SitePot['value_i'] + $want_pot) == $potsize) {
         //$bonuscomment = gmdate("Y-m-d") . " - User has donated ".$want_pot." to the site pot.\n" . $CURUSER["modcomment"];
-        //mysql_query("UPDATE users SET seedbonus = seedbonus - ".sqlesc($want_pot).", bonuscomment = concat(".sqlesc($bonuscomment).", bonuscomment) WHERE id = ".sqlesc($CURUSER['id'])."") or sqlerr(__FILE__, __LINE__);
-        sql_query("UPDATE users SET seedbonus = seedbonus - ".sqlesc($want_pot)." 
+        //mysql_query("UPDATE ".TBL_USERS." SET seedbonus = seedbonus - ".sqlesc($want_pot).", bonuscomment = concat(".sqlesc($bonuscomment).", bonuscomment) WHERE id = ".sqlesc($CURUSER['id'])."") or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_USERS." SET seedbonus = seedbonus - ".sqlesc($want_pot)." 
                      WHERE id = ".sqlesc($CURUSER['id'])."") or sqlerr(__file__, __line__);
         $update['seedbonus_donator'] = ($CURUSER['seedbonus'] - $want_pot);
         //====Update the caches
@@ -90,13 +90,13 @@ if ($want_pot && (isset($pot_options[$want_pot]))) {
         $mc1->commit_transaction($INSTALLER09['expires']['curuser']);
         $mc1->delete_value('Sitepot_');
         write_log("Site Pot ".$CURUSER['username']." has donated ".$want_pot." karma points to the site pot.");
-        sql_query("UPDATE avps SET value_i = value_i + ".sqlesc($want_pot).", 
+        sql_query("UPDATE ".TBL_AVPS." SET value_i = value_i + ".sqlesc($want_pot).", 
                      value_u = '".(86400 + TIME_NOW)."', 
                      value_s = '1' WHERE arg = 'sitepot'") or sqlerr(__file__, __line__);
         write_log("24 HR FREELEECH is now active! It was started on ".get_date(TIME_NOW, 'DATE').".");
         /** shoutbox announce **/
         require_once (INCL_DIR.'bbcode_functions.php');
-        $res = sql_query("SELECT value_u FROM avps WHERE arg = 'sitepot'") or sqlerr(__file__, __line__);
+        $res = sql_query("SELECT value_u FROM ".TBL_AVPS." WHERE arg = 'sitepot'") or sqlerr(__file__, __line__);
         $arr = mysqli_fetch_array($res);
         $msg = " [color=green][b]24 HR FREELEECH[/b][/color] is now active! It will end at ".get_date($arr['value_u'], 'DATE').".";
         $mc1->delete_value('shoutbox_');

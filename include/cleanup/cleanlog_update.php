@@ -14,7 +14,7 @@ function docleanup($data)
     ignore_user_abort(1);
     //== Delete cleanup log
     $dt = sqlesc(TIME_NOW - 1 * 86400);
-    sql_query('DELETE FROM cleanup_log WHERE clog_time < '.$dt) or sqlerr(__FILE__, __LINE__);
+    sql_query('DELETE FROM '.TBL_CLEANUP_LOG.' WHERE clog_time < '.$dt) or sqlerr(__FILE__, __LINE__);
     if ($queries > 0) write_log("Cleanup log-------------------- Cleanup Log cleanup Complete using $queries queries --------------------");
     if (false !== mysqli_affected_rows($GLOBALS["___mysqli_ston"])) {
         $data['clean_desc'] = mysqli_affected_rows($GLOBALS["___mysqli_ston"])." items deleted/updated";
@@ -29,6 +29,6 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 ?>

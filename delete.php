@@ -20,20 +20,20 @@ if (!is_valid_id($id)) stderr("{$lang['delete_failed']}", "{$lang['delete_missin
 function deletetorrent($id)
 {
     global $INSTALLER09, $mc1, $CURUSER, $lang;
-    sql_query("DELETE peers.*, files.*, comments.*, snatched.*, thanks.*, bookmarks.*, coins.*, rating.*, torrents.* FROM torrents 
-				 LEFT JOIN peers ON peers.torrent = torrents.id
-				 LEFT JOIN files ON files.torrent = torrents.id
-				 LEFT JOIN comments ON comments.torrent = torrents.id
-				 LEFT JOIN thanks ON thanks.torrentid = torrents.id
-				 LEFT JOIN bookmarks ON bookmarks.torrentid = torrents.id
-				 LEFT JOIN coins ON coins.torrentid = torrents.id
-				 LEFT JOIN rating ON rating.torrent = torrents.id
-				 LEFT JOIN snatched ON snatched.torrentid = torrents.id
-				 WHERE torrents.id =".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    sql_query("DELETE ".TBL_PEERS.".*, ".TBL_FILES.".*, ".TBL_COMMENTS.".*, ".TBL_SNATCHED.".*, ".TBL_THANKS.".*, ".TBL_BOOKMARKS.".*, ".TBL_COINS.".*, ".TBL_RATING.".*, ".TBL_TORRENTS.".* FROM ".TBL_TORRENTS." 
+				 LEFT JOIN ".TBL_PEERS." ON ".TBL_PEERS.".torrent = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_FILES." ON ".TBL_FILES.".torrent = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_COMMENTS." ON ".TBL_COMMENTS.".torrent = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_THANKS." ON ".TBL_THANKS.".torrentid = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_BOOKMARKS." ON ".TBL_BOOKMARKS.".torrentid = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_COINS." ON ".TBL_COINS.".torrentid = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_RATING." ON ".TBL_RATING.".torrent = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_SNATCHED." ON ".TBL_SNATCHED.".torrentid = ".TBL_TORRENTS.".id
+				 WHERE ".TBL_TORRENTS.".id =".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     unlink("{$INSTALLER09['torrent_dir']}/$id.torrent");
     $mc1->delete_value('MyPeers_'.$CURUSER['id']);
 }
-$res = sql_query("SELECT name,owner,seeders FROM torrents WHERE id =".sqlesc($id));
+$res = sql_query("SELECT name,owner,seeders FROM ".TBL_TORRENTS." WHERE id =".sqlesc($id));
 $row = mysqli_fetch_assoc($res);
 if (!$row) stderr("{$lang['delete_failed']}", "{$lang['delete_not_exist']}");
 if ($CURUSER["id"] != $row["owner"] && $CURUSER["class"] < UC_STAFF) stderr("{$lang['delete_failed']}", "{$lang['delete_not_owner']}\n");
@@ -61,7 +61,7 @@ $mc1->delete_value('torrent_details_text'.$id);
 write_log("{$lang['delete_torrent']} $id ({$row['name']}){$lang['delete_deleted_by']}{$CURUSER['username']} ($reasonstr)\n");
 if ($INSTALLER09['seedbonus_on'] == 1) {
     //===remove karma
-    sql_query("UPDATE users SET seedbonus = seedbonus-15.0 WHERE id = ".sqlesc($row["owner"])) or sqlerr(__FILE__, __LINE__);
+    sql_query("UPDATE ".TBL_USERS." SET seedbonus = seedbonus-15.0 WHERE id = ".sqlesc($row["owner"])) or sqlerr(__FILE__, __LINE__);
     $update['seedbonus'] = ($CURUSER['seedbonus'] - 15);
     $mc1->begin_transaction('userstats_'.$row["owner"]);
     $mc1->update_row(false, array(
@@ -80,7 +80,7 @@ if ($CURUSER["id"] != $row["owner"] AND $CURUSER['pm_on_delete'] == 'yes') {
     $added = TIME_NOW;
     $pm_on = (int)$row["owner"];
     $message = "Torrent $id (".htmlsafechars($row['name']).") has been deleted.\n  Reason: $reasonstr";
-    sql_query("INSERT INTO messages (sender, receiver, msg, added) VALUES(0, $pm_on,".sqlesc($message).", $added)") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, msg, added) VALUES(0, $pm_on,".sqlesc($message).", $added)") or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('inbox_new_'.$pm_on);
     $mc1->delete_value('inbox_new_sb_'.$pm_on);
 }

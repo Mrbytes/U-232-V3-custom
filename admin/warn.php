@@ -51,14 +51,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $act = isset($_POST["action"]) && in_array($_POST["action"], $valid) ? $_POST["action"] : false;
     if (!$act) stderr("Err", "Something went wrong!");
     if ($act == "delete") {
-        if (sql_query("DELETE FROM users WHERE id IN (".join(",", $_uids).")")) {
+        if (sql_query("DELETE FROM ".TBL_USERS." WHERE id IN (".join(",", $_uids).")")) {
             $c = mysqli_affected_rows($GLOBALS["___mysqli_ston"]);
             header("Refresh: 2; url=".$r);
             stderr("Success", $c." user".($c > 1 ? "s" : "")." deleted!");
         } else stderr("Err", "Something went wrong 2!");
     }
     if ($act == "disable") {
-        if (sql_query("UPDATE users set enabled='no', modcomment=CONCAT(".sqlesc(get_date(TIME_NOW, 'DATE', 1)." - Disabled by ".$CURUSER['username']."\n").",modcomment) WHERE id IN (".join(",", $_uids).")")) {
+        if (sql_query("UPDATE ".TBL_USERS." set enabled='no', modcomment=CONCAT(".sqlesc(get_date(TIME_NOW, 'DATE', 1)." - Disabled by ".$CURUSER['username']."\n").",modcomment) WHERE id IN (".join(",", $_uids).")")) {
             $mc1->begin_transaction('MyUser_'.$_uids);
             $mc1->update_row(false, array(
                 'enabled' => 'no'
@@ -89,8 +89,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $pms = array();
         foreach ($_uids as $id) $pms[] = "(0,".$id.",".sqlesc($sub).",".sqlesc($body).",".sqlesc(TIME_NOW).")";
         if (count($pms)) {
-            $g = sql_query("INSERT INTO messages(sender,receiver,subject,msg,added) VALUE ".join(",", $pms)) or ($q_err = ((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
-            $q1 = sql_query("UPDATE users set warned='0', modcomment=CONCAT(".sqlesc(get_date(TIME_NOW, 'DATE', 1)." - Warning removed by ".$CURUSER['username']."\n").",modcomment) WHERE id IN (".join(",", $_uids).")") or ($q2_err = ((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
+            $g = sql_query("INSERT INTO ".TBL_MESSAGES."(sender,receiver,subject,msg,added) VALUE ".join(",", $pms)) or ($q_err = ((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
+            $q1 = sql_query("UPDATE ".TBL_USERS." set warned='0', modcomment=CONCAT(".sqlesc(get_date(TIME_NOW, 'DATE', 1)." - Warning removed by ".$CURUSER['username']."\n").",modcomment) WHERE id IN (".join(",", $_uids).")") or ($q2_err = ((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
             if ($g && $q1) {
                 header("Refresh: 2; url=".$r);
                 stderr("Success", count($pms)." user".(count($pms) > 1 ? "s" : "")." unwarned");
@@ -101,13 +101,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 switch ($do) {
 case "disabled":
-    $query = "SELECT id,username, class, downloaded, uploaded, IF(downloaded>0, round((uploaded/downloaded),2), '---') as ratio, disable_reason, added, last_access FROM users WHERE enabled='no' ORDER BY last_access DESC ";
+    $query = "SELECT id,username, class, downloaded, uploaded, IF(downloaded>0, round((uploaded/downloaded),2), '---') as ratio, disable_reason, added, last_access FROM ".TBL_USERS." WHERE enabled='no' ORDER BY last_access DESC ";
     $title = "Disabled users";
     $link = "<a href=\"staffpanel.php?tool=warn&amp;action=warn&amp;?do=warned\">warned users</a>";
     break;
 
 case "warned":
-    $query = "SELECT id, username, class, downloaded, uploaded, IF(downloaded>0, round((uploaded/downloaded),2), '---') as ratio, warn_reason, warned, added, last_access FROM users WHERE warned>='1' ORDER BY last_access DESC, warned DESC ";
+    $query = "SELECT id, username, class, downloaded, uploaded, IF(downloaded>0, round((uploaded/downloaded),2), '---') as ratio, warn_reason, warned, added, last_access FROM ".TBL_USERS." WHERE warned>='1' ORDER BY last_access DESC, warned DESC ";
     $title = "Warned users";
     $link = "<a href=\"staffpanel.php?tool=warn&amp;action=warn&amp;do=disabled\">disabled users</a>";
     break;

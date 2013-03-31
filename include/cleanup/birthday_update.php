@@ -13,7 +13,7 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 function docleanup($data)
 {
@@ -22,7 +22,7 @@ function docleanup($data)
     ignore_user_abort(1);
     //== Pm birthday users
     $current_date = getdate();
-    $res = sql_query("SELECT id, username, class, donor, title, warned, enabled, chatpost, leechwarn, pirate, king, uploaded, birthday FROM users WHERE MONTH(birthday) = ".sqlesc($current_date['mon'])." AND DAYOFMONTH(birthday) = ".sqlesc($current_date['mday'])." ORDER BY username ASC") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT id, username, class, donor, title, warned, enabled, chatpost, leechwarn, pirate, king, uploaded, birthday FROM ".TBL_USERS." WHERE MONTH(birthday) = ".sqlesc($current_date['mon'])." AND DAYOFMONTH(birthday) = ".sqlesc($current_date['mday'])." ORDER BY username ASC") or sqlerr(__FILE__, __LINE__);
     $msgs_buffer = $users_buffer = array();
     if (mysqli_num_rows($res) > 0) {
         while ($arr = mysqli_fetch_assoc($res)) {
@@ -44,8 +44,8 @@ function docleanup($data)
         }
         $count = count($users_buffer);
         if ($count > 0) {
-            sql_query("INSERT INTO messages (sender,receiver,added,msg,subject) VALUES ".implode(', ', $msgs_buffer)) or sqlerr(__FILE__, __LINE__);
-            sql_query("INSERT INTO users (id, uploaded) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE uploaded=uploaded+values(uploaded)") or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_MESSAGES." (sender,receiver,added,msg,subject) VALUES ".implode(', ', $msgs_buffer)) or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_USERS." (id, uploaded) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE uploaded=uploaded+values(uploaded)") or sqlerr(__FILE__, __LINE__);
             write_log("Cleanup: Pm'd' ".$count." member(s) and awarded a birthday prize");
         }
         unset($users_buffer, $msgs_buffer, $count);

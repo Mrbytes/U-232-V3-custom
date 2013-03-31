@@ -72,11 +72,11 @@ function manualclean()
     $params['cid'] = filter_var($params['cid'], FILTER_VALIDATE_INT, $opts);
     if (!is_numeric($params['cid'])) stderr('Error', "Bad you!");
     $params['cid'] = sqlesc($params['cid']);
-    $sql = sql_query("SELECT * FROM cleanup WHERE clean_id = {$params['cid']}") or sqlerr(__file__, __line__);
+    $sql = sql_query("SELECT * FROM ".TBL_CLEANUP." WHERE clean_id = {$params['cid']}") or sqlerr(__file__, __line__);
     $row = mysqli_fetch_assoc($sql);
     if ($row['clean_id']) {
         $next_clean = intval(TIME_NOW + ($row['clean_increment'] ? $row['clean_increment'] : 15 * 60));
-        sql_query("UPDATE cleanup SET clean_time = $next_clean WHERE clean_id = {$row['clean_id']}") or sqlerr(__file__, __line__);
+        sql_query("UPDATE ".TBL_CLEANUP." SET clean_time = $next_clean WHERE clean_id = {$row['clean_id']}") or sqlerr(__file__, __line__);
         if (is_file(CLEAN_DIR . '' . $row['clean_file'])) {
             require_once (CLEAN_DIR . '' . $row['clean_file']);
         }
@@ -89,7 +89,7 @@ function manualclean()
 }
 function cleanup_show_main()
 {
-    $count1 = get_row_count('cleanup');
+    $count1 = get_row_count(TBL_CLEANUP);
     $perpage = 15;
     $pager = pager($perpage, $count1, 'staffpanel.php?tool=cleanup_manager&amp;');
     $htmlout = "<h2>Current Cleanup Tasks</h2>
@@ -103,7 +103,7 @@ function cleanup_show_main()
       <td class='colhead' width='40px'>Off/On</td>
       <td class='colhead' style='width: 40px;'>Run&nbsp;now</td>
     </tr>";
-    $sql = sql_query("SELECT * FROM cleanup ORDER BY clean_time ASC " . $pager['limit']) or sqlerr(__FILE__, __LINE__);
+    $sql = sql_query("SELECT * FROM ".TBL_CLEANUP." ORDER BY clean_time ASC " . $pager['limit']) or sqlerr(__FILE__, __LINE__);
     if (!mysqli_num_rows($sql)) stderr('Error', 'Fucking panic now!');
     while ($row = mysqli_fetch_assoc($sql)) {
         $row['_clean_time'] = get_date($row['clean_time'], 'LONG');
@@ -140,7 +140,7 @@ function cleanup_show_edit()
         exit;
     }
     $cid = intval($params['cid']);
-    $sql = sql_query("SELECT * FROM cleanup WHERE clean_id = $cid");
+    $sql = sql_query("SELECT * FROM ".TBL_CLEANUP." WHERE clean_id = $cid");
     if (!mysqli_num_rows($sql)) stderr('Error', 'Why me?');
     $row = mysqli_fetch_assoc($sql);
     $row['clean_title'] = htmlsafechars($row['clean_title'], ENT_QUOTES);
@@ -245,7 +245,7 @@ function cleanup_take_edit()
     foreach ($params as $k => $v) {
         $params[$k] = sqlesc($v);
     }
-    sql_query("UPDATE cleanup SET clean_title = {$params['clean_title']}, clean_desc = {$params['clean_desc']}, clean_file = {$params['clean_file']}, clean_time = {$params['clean_time']}, clean_increment = {$params['clean_increment']}, clean_log = {$params['clean_log']}, clean_on = {$params['clean_on']} WHERE clean_id = {$params['cid']}");
+    sql_query("UPDATE ".TBL_CLEANUP." SET clean_title = {$params['clean_title']}, clean_desc = {$params['clean_desc']}, clean_file = {$params['clean_file']}, clean_time = {$params['clean_time']}, clean_increment = {$params['clean_increment']}, clean_log = {$params['clean_log']}, clean_on = {$params['clean_on']} WHERE clean_id = {$params['cid']}");
     cleanup_show_main();
     exit();
 }
@@ -344,7 +344,7 @@ function cleanup_take_new()
     foreach ($params as $k => $v) {
         $params[$k] = sqlesc($v);
     }
-    sql_query("INSERT INTO cleanup (clean_title, clean_desc, clean_file, clean_time, clean_increment, clean_cron_key, clean_log, clean_on) VALUES ({$params['clean_title']}, {$params['clean_desc']}, {$params['clean_file']}, {$params['clean_time']}, {$params['clean_increment']}, {$params['clean_cron_key']}, {$params['clean_log']}, {$params['clean_on']})");
+    sql_query("INSERT INTO ".TBL_CLEANUP." (clean_title, clean_desc, clean_file, clean_time, clean_increment, clean_cron_key, clean_log, clean_on) VALUES ({$params['clean_title']}, {$params['clean_desc']}, {$params['clean_file']}, {$params['clean_time']}, {$params['clean_increment']}, {$params['clean_cron_key']}, {$params['clean_log']}, {$params['clean_on']})");
     if (((is_null($___mysqli_res = mysqli_insert_id($GLOBALS["___mysqli_ston"]))) ? false : $___mysqli_res)) {
         stderr('Info', "Success, new cleanup task added!");
     } else {
@@ -363,7 +363,7 @@ function cleanup_take_delete()
     $params['cid'] = filter_var($params['cid'], FILTER_VALIDATE_INT, $opts);
     if (!is_numeric($params['cid'])) stderr('Error', "Bad you!");
     $params['cid'] = sqlesc($params['cid']);
-    sql_query("DELETE FROM cleanup WHERE clean_id = {$params['cid']}");
+    sql_query("DELETE FROM ".TBL_CLEANUP." WHERE clean_id = {$params['cid']}");
     if (1 === mysqli_affected_rows($GLOBALS["___mysqli_ston"])) {
         stderr('Info', "Success, cleanup task deleted!");
     } else {
@@ -399,7 +399,7 @@ function cleanup_take_unlock()
     unset($opts);
     $params['cid'] = sqlesc($params['cid']);
     $params['clean_on'] = ($params['clean_on'] === 1 ? sqlesc($params['clean_on'] - 1) : sqlesc($params['clean_on'] + 1));
-    sql_query("UPDATE cleanup SET clean_on = {$params['clean_on']} WHERE clean_id = {$params['cid']}");
+    sql_query("UPDATE ".TBL_CLEANUP." SET clean_on = {$params['clean_on']} WHERE clean_id = {$params['cid']}");
     if (1 === mysqli_affected_rows($GLOBALS["___mysqli_ston"])) {
         cleanup_show_main(); // this go bye bye later
         

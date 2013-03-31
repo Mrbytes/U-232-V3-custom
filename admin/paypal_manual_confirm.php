@@ -26,15 +26,15 @@ class_check(UC_SYSOP);
 $lang = array_merge($lang);
 $HTMLOUT = $class = $letter = $amount = $count = $curuser_cache = $user_cache = $stats_cache = $user_stats_cache = '';
 //get the config from db
-$pconf = sql_query('SELECT name, value FROM paypal_config') or sqlerr(__FILE__, __LINE__);
+$pconf = sql_query('SELECT name, value FROM '.TBL_PAYPAL_CONFIG.'') or sqlerr(__FILE__, __LINE__);
 while ($ac = mysqli_fetch_assoc($pconf)) $paypal_config[$ac['name']] = $ac['value'];
-//GB TO GIVE PER £//
+//GB TO GIVE PER ï¿½//
 $givegb = $paypal_config['gb'] * 1024 * 1024 * 1024;
-//$givegb = 1*1024*1024; //1GB per £1 donated
-//TIME TO GIVE PER £5//
+//$givegb = 1*1024*1024; //1GB per ï¿½1 donated
+//TIME TO GIVE PER ï¿½5//
 $givetime = $paypal_config['weeks'] * 604800;
-//$givetime = 0.5*108000; //108000 = 30 days  //set for 15 days per £5 donated
-//INVITES TO GIVE PER £5//
+//$givetime = 0.5*108000; //108000 = 30 days  //set for 15 days per ï¿½5 donated
+//INVITES TO GIVE PER ï¿½5//
 $giveinvites = $paypal_config['invites'];
 //$giveinvites = 1;
 //=== do it all :D
@@ -44,14 +44,14 @@ if (isset($_GET['doit'])) {
     $id = (int)$_POST['select_this_user'];
     if (!is_valid_id($id)) stderr("Error", "No user with that ID.");
     if ($_POST['amount'] < 4) stderr("Error", "No Amount Selected.");
-    $res = sql_query("SELECT * FROM users WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT * FROM ".TBL_USERS." WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $user = mysqli_fetch_array($res) or stderr("Error", "No user with that ID!");
     $modcomment = htmlsafechars($user['modcomment']);
     //=== add donated amount  to user and to funds table /  Set donor status
     if (isset($_POST['amount'])) {
         $donated = 0 + $_POST['amount'];
         $added = TIME_NOW;
-        sql_query("INSERT INTO funds (cash, user, added) VALUES (".sqlesc($donated).", ".sqlesc($user['id']).", $added)") or sqlerr(__FILE__, __LINE__);
+        sql_query("INSERT INTO ".TBL_FUNDS." (cash, user, added) VALUES (".sqlesc($donated).", ".sqlesc($user['id']).", $added)") or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('totalfunds_');
         $updateset[] = "donated = ".sqlesc($donated);
         $updateset[] = "total_donated = ".sqlesc($user['total_donated'] + $donated);
@@ -62,7 +62,7 @@ if (isset($_GET['doit'])) {
     }
     //=== add to uploaded amount
     $curuploaded = $user['uploaded'];
-    $uploaded = $donated * $givegb; //=== 6442450944 = 6 GB for every 1£ donated || set to 1073741824 for 1 GB for every 1£ donated
+    $uploaded = $donated * $givegb; //=== 6442450944 = 6 GB for every 1ï¿½ donated || set to 1073741824 for 1 GB for every 1ï¿½ donated
     $upadded = mksize($uploaded);
     $total = $uploaded + $curuploaded;
     $updateset[] = "uploaded = ".sqlesc($total);
@@ -81,8 +81,8 @@ if (isset($_GET['doit'])) {
     //=== check to see if they are a donor yet
     $donorlength = $donated / 5;
     if ($user['donor'] == 'no') {
-        $donoruntil = TIME_NOW + $donorlength * $givetime; //===> 2419200 = 2 weeks for 5£ --- 1209600 = 1 week for 5£ donation
-        $donoruntil_val = TIME_NOW + $donorlength * $givetime; //===> 1209600 = 2 weeks for 5$ --- 604800 = 1 week for 5£ donation
+        $donoruntil = TIME_NOW + $donorlength * $givetime; //===> 2419200 = 2 weeks for 5ï¿½ --- 1209600 = 1 week for 5ï¿½ donation
+        $donoruntil_val = TIME_NOW + $donorlength * $givetime; //===> 1209600 = 2 weeks for 5$ --- 604800 = 1 week for 5ï¿½ donation
         $dur = $donorlength." week".($donorlength > 1 ? "s" : ""); //=== I left the 1 ? "s" in case you want to have only one week...
         $subject = sqlesc("Thank You for Your Donation!");
         $msg = sqlesc("Dear ".htmlsafechars($user['username'])."
@@ -110,10 +110,10 @@ PS. Your donator status will last for {$dur}  and can be found on your user deta
         $donorlengthadd = $donated / 5;
         $dur = $donorlengthadd." week".($donorlengthadd > 1 ? "s" : "");
         if ($user['donoruntil'] <= TIME_NOW) {
-            $donoruntil_val = TIME_NOW + $donorlengthadd * $givetime; //===> 1209600 = 2 weeks for 5$ --- 604800 = 1 week for 5£ donation
+            $donoruntil_val = TIME_NOW + $donorlengthadd * $givetime; //===> 1209600 = 2 weeks for 5$ --- 604800 = 1 week for 5ï¿½ donation
             
         } else {
-            $donoruntil_val = $donorlengthadd * $givetime; //===> 1209600 = 2 weeks for 5$ --- 604800 = 1 week for 5£ donation
+            $donoruntil_val = $donorlengthadd * $givetime; //===> 1209600 = 2 weeks for 5$ --- 604800 = 1 week for 5ï¿½ donation
             
         }
         $donorlengthadd = $donoruntil_val;
@@ -130,7 +130,7 @@ cheers,
 
 PS. Your donator status will last for an extra ".$dur." on top of your current donation status, and can be found on your user details page. It can only be seen by you.");
         $modcomment = get_date(TIME_NOW, 'DATE', 1)." - Donator status set for another {$dur} -- {$upadded} bonus added by system.\n".$modcomment;
-        sql_query("UPDATE users SET donoruntil = donoruntil + $donorlengthadd, vipclass_before = ".sqlesc($vipbefore)." WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_USERS." SET donoruntil = donoruntil + $donorlengthadd, vipclass_before = ".sqlesc($vipbefore)." WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('inbox_new_'.$id);
         $mc1->delete_value('inbox_new_sb_'.$id);
         $curuser_cache['donoruntil'] = ($user['donoruntil'] + $donorlengthadd);
@@ -139,7 +139,7 @@ PS. Your donator status will last for an extra ".$dur." on top of your current d
         $user_cache['vipclass_before'] = $vipbefore;
     } //=== end if adding to donor time...
     $added = TIME_NOW;
-    sql_query("INSERT INTO messages (sender, subject, receiver, msg, added) VALUES (0, $subject, $id, $msg, $added)") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_MESSAGES." (sender, subject, receiver, msg, added) VALUES (0, $subject, $id, $msg, $added)") or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('inbox_new_'.$id);
     $mc1->delete_value('inbox_new_sb_'.$id);
     if ($user['class'] < UC_UPLOADER) { //=== set this to the lowest class you don't want changed to VIP
@@ -155,7 +155,7 @@ PS. Your donator status will last for an extra ".$dur." on top of your current d
     //=== Add ModComment to the update set...
     $updateset[] = "modcomment = ".sqlesc($modcomment);
     $user_stats_cache['modcomment'] = $modcomment;
-    sql_query("UPDATE users SET ".implode(", ", $updateset)." WHERE id=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    sql_query("UPDATE ".TBL_USERS." SET ".implode(", ", $updateset)." WHERE id=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $total_donated = $user["total_donated"] + $donated;
     $curuploaded = mksize($curuploaded);
     $totalinvites = $invites_added + $curinvites;
@@ -228,7 +228,7 @@ if (isset($_GET['search']) || isset($_GET['searchl'])) {
     $perpage = 50;
     $browsemenu = '';
     $pagemenu = '';
-    $res = sql_query("SELECT COUNT(id) FROM users WHERE $query") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT COUNT(id) FROM ".TBL_USERS." WHERE $query") or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_row($res);
     $pages = floor($arr[0] / $perpage);
     if ($pages * $perpage < $arr[0]) ++$pages;
@@ -242,7 +242,7 @@ if (isset($_GET['search']) || isset($_GET['searchl'])) {
     if ($page == $pages) $browsemenu.= "<b>Next &gt;&gt;</b>";
     else $browsemenu.= "<a href='?tool=paypal_manual_confirm&searchl=1&amp;$q1&amp;page=".($page + 1)."'><b>Next &gt;&gt;</b></a>";
     $offset = ($page * $perpage) - $perpage;
-    $res = sql_query("SELECT username, class, donated, donor, warned, enabled, leechwarn, chatpost, pirate, king, id FROM users WHERE $query ORDER BY username LIMIT $offset,$perpage") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT username, class, donated, donor, warned, enabled, leechwarn, chatpost, pirate, king, id FROM ".TBL_USERS." WHERE $query ORDER BY username LIMIT $offset,$perpage") or sqlerr(__FILE__, __LINE__);
     $num = mysqli_num_rows($res);
     if (isset($_GET['search']) && $num || isset($_GET['searchl']) && $num) $HTMLOUT.= "<form action='staffpanel.php?tool=paypal_manual_confirm&amp;doit=1' method='post'>
 <table border='1' cellspacing='0' cellpadding='5'>

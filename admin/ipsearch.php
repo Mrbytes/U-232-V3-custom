@@ -61,13 +61,13 @@ if ($ip) {
             die();
         }
         $where1 = "INET_ATON(u.ip) & INET_ATON('$mask') = INET_ATON('$ip') & INET_ATON('$mask')";
-        $where2 = "INET_ATON(ips.ip) & INET_ATON('$mask') = INET_ATON('$ip') & INET_ATON('$mask')";
+        $where2 = "INET_ATON(".TBL_IPS.".ip) & INET_ATON('$mask') = INET_ATON('$ip') & INET_ATON('$mask')";
         $addr = "Mask: $mask";
     }
     $queryc = "SELECT COUNT(id) FROM
 		   (
-			 SELECT u.id FROM users AS u WHERE $where1
-			 UNION SELECT u.id FROM users AS u RIGHT JOIN ips ON u.id = ips.userid WHERE $where2
+			 SELECT u.id FROM ".TBL_USERS." AS u WHERE $where1
+			 UNION SELECT u.id FROM ".TBL_USERS." AS u RIGHT JOIN ".TBL_IPS." ON u.id = ".TBL_IPS.".userid WHERE $where2
 			 GROUP BY u.id
 		   ) AS ipsearch";
     $res = sql_query($queryc) or sqlerr(__FILE__, __LINE__);
@@ -91,11 +91,11 @@ if ($ip) {
     else $orderby = "access DESC";
     $query1 = "SELECT * FROM (
 		  SELECT u.id, u.username, u.ip AS ip, u.ip AS last_ip, u.last_access, u.last_access AS access, u.email, u.invitedby, u.added, u.class, u.uploaded, u.downloaded, u.donor, u.enabled, u.warned, u.leechwarn, u.chatpost, u.pirate, u.king
-		  FROM users AS u
+		  FROM ".TBL_USERS." AS u
 		  WHERE $where1
-		  UNION SELECT u.id, u.username, ips.ip AS ip, u.ip as last_ip, u.last_access, max(ips.lastlogin) AS access, u.email, u.invitedby, u.added, u.class, u.uploaded, u.downloaded, u.donor, u.enabled, u.warned, u.leechwarn, u.chatpost, u.pirate, u.king
-		  FROM users AS u
-		  RIGHT JOIN ips ON u.id = ips.userid
+		  UNION SELECT u.id, u.username, ".TBL_IPS.".ip AS ip, u.ip as last_ip, u.last_access, max(".TBL_IPS.".lastlogin) AS access, u.email, u.invitedby, u.added, u.class, u.uploaded, u.downloaded, u.donor, u.enabled, u.warned, u.leechwarn, u.chatpost, u.pirate, u.king
+		  FROM ".TBL_USERS." AS u
+		  RIGHT JOIN ".TBL_IPS." ON u.id = ".TBL_IPS.".userid
 		  WHERE $where2
 		  GROUP BY u.id ) as ipsearch
 		  GROUP BY id
@@ -112,15 +112,15 @@ if ($ip) {
         if ($user['last_access'] == '0') $user['last_access'] = '---';
         if ($user['last_ip']) {
             $nip = ip2long($user['last_ip']);
-            $res1 = sql_query("SELECT COUNT(*) FROM bans WHERE $nip >= first AND $nip <= last") or sqlerr(__FILE__, __LINE__);
+            $res1 = sql_query("SELECT COUNT(*) FROM ".TBL_BANS." WHERE $nip >= first AND $nip <= last") or sqlerr(__FILE__, __LINE__);
             $array = mysqli_fetch_row($res1);
             if ($array[0] == 0) $ipstr = $user['last_ip'];
             else $ipstr = "<a href='{$INSTALLER09['baseurl']}/staffpanel.php?tool=testip&amp;action=testip&amp;ip=".htmlsafechars($user['last_ip'])."'><font color='#FF0000'><b>".htmlsafechars($user["last_ip"])."</b></font></a>";
         } else $ipstr = "---";
-        $resip = sql_query("SELECT ip FROM ips WHERE userid=".sqlesc($user["id"])." GROUP BY ips.ip") or sqlerr(__FILE__, __LINE__);
+        $resip = sql_query("SELECT ip FROM ".TBL_IPS." WHERE userid=".sqlesc($user["id"])." GROUP BY ".TBL_IPS.".ip") or sqlerr(__FILE__, __LINE__);
         $iphistory = mysqli_num_rows($resip);
         if ($user["invitedby"] > 0) {
-            $res2 = sql_query("SELECT username FROM users WHERE id=".sqlesc($user["invitedby"])."");
+            $res2 = sql_query("SELECT username FROM ".TBL_USERS." WHERE id=".sqlesc($user["invitedby"])."");
             $array = mysqli_fetch_assoc($res2);
             $invitedby = $array["username"];
             if ($invitedby == "") $invitedby = "<i>[Deleted]</i>";

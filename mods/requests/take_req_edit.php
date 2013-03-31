@@ -8,7 +8,7 @@ if (!defined('IN_REQUESTS')) exit('No direct script access allowed');
  *   Project Leaders: Mindless, putyn.
  *
  */
-$res = sql_query("SELECT userid, cat FROM requests WHERE id = $id") or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT userid, cat FROM ".TBL_REQUESTS." WHERE id = $id") or sqlerr(__FILE__, __LINE__);
 $num = mysqli_fetch_assoc($res);
 if ($CURUSER['id'] != $num['userid'] && $CURUSER['class'] < UC_MODERATOR) stderr("{$lang['error_error']}", "{$lang['error_denied']}");
 $request = (isset($_POST['requesttitle']) ? htmlspecialchars($_POST['requesttitle']) : '');
@@ -39,12 +39,12 @@ if ($filled) {
     //stderr('Error', 'ID is your own. Cannot fill your own Requests.');
     //$filledby = 0;
     //else {
-    $res = mysqli_query($GLOBALS["___mysqli_ston"], "SELECT id FROM users WHERE id = ".$filledby);
+    $res = mysqli_query($GLOBALS["___mysqli_ston"], "SELECT id FROM ".TBL_USERS." WHERE id = ".$filledby);
     if (mysqli_num_rows($res) == 0) stderr("{$lang['error_error']}", "{$lang['error_no_user']}");
     //  }
-    $res = sql_query("SELECT id FROM torrents WHERE id = ".$torrentid);
+    $res = sql_query("SELECT id FROM ".TBL_TORRENTS." WHERE id = ".$torrentid);
     if (mysqli_num_rows($res) == 0) stderr("{$lang['error_error']}", "{$lang['error_no_torrent']}");
-    sql_query("UPDATE requests SET cat = $cat, request = $request, descr = $descr, filledby = $filledby, torrentid=$torrentid WHERE id = $id") or sqlerr(__FILE__, __LINE__);
-} else sql_query("UPDATE requests SET cat = $cat, filledby = 0, request = $request, descr = $descr, torrentid = 0 WHERE id = $id") or sqlerr(__FILE__, __LINE__);
+    sql_query("UPDATE ".TBL_REQUESTS." SET cat = $cat, request = $request, descr = $descr, filledby = $filledby, torrentid=$torrentid WHERE id = $id") or sqlerr(__FILE__, __LINE__);
+} else sql_query("UPDATE ".TBL_REQUESTS." SET cat = $cat, filledby = 0, request = $request, descr = $descr, torrentid = 0 WHERE id = $id") or sqlerr(__FILE__, __LINE__);
 header("Refresh: 0; url=viewrequests.php?id=$id&req_details");
 ?>

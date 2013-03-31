@@ -72,7 +72,7 @@ if (strlen($search) > 4) {
     $p = "letter=a&amp;";
     $letter = "a";
 }
-$count = mysqli_fetch_row(sql_query("SELECT count(*) FROM torrents AS t $where"));
+$count = mysqli_fetch_row(sql_query("SELECT count(*) FROM ".TBL_TORRENTS." AS t $where"));
 $perpage = 10;
 $pager = pager($perpage, $count[0], $_SERVER["PHP_SELF"]."?".$p);
 //$tid='';
@@ -81,13 +81,13 @@ $top = '';
 $bottom = '';
 $rows = array();
 $tids = array();
-$t = sql_query("SELECT t.id,t.name,t.leechers,t.seeders,t.poster,t.times_completed as snatched,t.owner,t.size,t.added,t.descr, u.username as user FROM torrents as t LEFT JOIN users AS u on u.id=t.owner $where ORDER BY t.name ASC ".$pager['limit']) or sqlerr(__FILE__, __LINE__);
+$t = sql_query("SELECT t.id,t.name,t.leechers,t.seeders,t.poster,t.times_completed as ".TBL_SNATCHED.",t.owner,t.size,t.added,t.descr, u.username as user FROM ".TBL_TORRENTS." as t LEFT JOIN ".TBL_USERS." AS u on u.id=t.owner $where ORDER BY t.name ASC ".$pager['limit']) or sqlerr(__FILE__, __LINE__);
 while ($ta = mysqli_fetch_assoc($t)) {
     $rows[] = $ta;
     $tid[] = (int)$ta["id"];
 }
 if (isset($tids) && count($tids)) {
-    $p = sql_query("SELECT p.id,p.torrent as tid,p.seeder, p.finishedat, p.downloadoffset, p.uploadoffset, p.ip, p.port, p.uploaded, p.downloaded, p.started AS started, p.last_action AS last_action, u.id as p_uid , u.username as p_user FROM peers AS p LEFT JOIN users as u on u.id=p.userid WHERE p.torrent IN (".join(",", $tid).") AND p.seeder = 'yes' AND to_go=0 LIMIT 5") or sqlerr(__FILE__, __LINE__);
+    $p = sql_query("SELECT p.id,p.torrent as tid,p.seeder, p.finishedat, p.downloadoffset, p.uploadoffset, p.ip, p.port, p.uploaded, p.downloaded, p.started AS started, p.last_action AS last_action, u.id as p_uid , u.username as p_user FROM ".TBL_PEERS." AS p LEFT JOIN ".TBL_USERS." as u on u.id=p.userid WHERE p.torrent IN (".join(",", $tid).") AND p.seeder = 'yes' AND to_go=0 LIMIT 5") or sqlerr(__FILE__, __LINE__);
     while ($pa = mysqli_fetch_assoc($p)) $peers[$pa["tid"]][] = $pa;
 }
 $htmlout.= "<div align='center' style='width:90%'>

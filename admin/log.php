@@ -31,14 +31,14 @@ $search = isset($_POST['search']) ? strip_tags($_POST['search']) : '';
 if (!empty($search)) $where = "WHERE txt LIKE ".sqlesc("%$search%")."";
 // delete items older than 1 month
 $secs = 30 * 86400;
-sql_query("DELETE FROM sitelog WHERE ".TIME_NOW." - added > $secs") or sqlerr(__FILE__, __LINE__);
-$resx = sql_query("SELECT COUNT(*) FROM sitelog $where");
+sql_query("DELETE FROM ".TBL_SITELOG." WHERE ".TIME_NOW." - added > $secs") or sqlerr(__FILE__, __LINE__);
+$resx = sql_query("SELECT COUNT(*) FROM ".TBL_SITELOG." $where");
 $rowx = mysqli_fetch_array($resx, MYSQLI_NUM);
 $count = $rowx[0];
 $perpage = 50;
 $pager = pager($perpage, $count, "staffpanel.php?tool=log&amp;action=log&amp;"."");
 $HTMLOUT = '';
-$res = sql_query("SELECT added, txt FROM sitelog $where ORDER BY added DESC {$pager['limit']} ") or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT added, txt FROM ".TBL_SITELOG." $where ORDER BY added DESC {$pager['limit']} ") or sqlerr(__FILE__, __LINE__);
 $HTMLOUT.= "<h1>{$lang['text_sitelog']}</h1>";
 $HTMLOUT.= "<table border='1' cellspacing='0' width='115' cellpadding='5'>\n
              <tr>

@@ -134,6 +134,7 @@ function db_insert()
         file_put_contents('step2.lock', 1);
     $out.= '</fieldset>';
     print ($out);
+    $mysqli->close();
 }
 
 ?>

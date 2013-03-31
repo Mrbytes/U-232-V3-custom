@@ -31,7 +31,7 @@ if ($needed == "leechers") {
     $HTMLOUT.= begin_main_frame();
     $HTMLOUT.= begin_frame("{$lang['needseed_sin']}&nbsp;&nbsp;-&nbsp;&nbsp;[<a href='?needed=seeders' class='altlink'>{$lang['needseed_tns']}</a>]");
     $Dur = TIME_NOW - 86400 * 7; //== 7 days
-    $res = sql_query("SELECT p.id, p.userid, p.torrent, u.username, u.uploaded, u.downloaded, t.name, t.seeders, t.leechers, t.category "."FROM peers AS p "."LEFT JOIN users AS u ON u.id=p.userid "."LEFT JOIN torrents AS t ON t.id=p.torrent WHERE p.seeder = 'yes' "."AND u.downloaded > '1024' AND u.added < $Dur ORDER BY u.uploaded / u.downloaded ASC LIMIT 20") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT p.id, p.userid, p.torrent, u.username, u.uploaded, u.downloaded, t.name, t.seeders, t.leechers, t.category "."FROM ".TBL_PEERS." AS p "."LEFT JOIN ".TBL_USERS." AS u ON u.id=p.userid "."LEFT JOIN ".TBL_TORRENTS." AS t ON t.id=p.torrent WHERE p.seeder = 'yes' "."AND u.downloaded > '1024' AND u.added < $Dur ORDER BY u.uploaded / u.downloaded ASC LIMIT 20") or sqlerr(__FILE__, __LINE__);
     if (mysqli_num_rows($res) > 0) {
         $HTMLOUT.= "<table align='center' class='main' border='1' cellspacing='0' cellpadding='5'>
     <tr><td class='colhead'>{$lang['needseed_user']}</td><td class='colhead'>{$lang['needseed_tor']}</td><td class='colhead'>{$lang['needseed_cat']}</td><td class='colhead'>{$lang['needseed_peer']}</td></tr>\n";
@@ -51,7 +51,7 @@ if ($needed == "leechers") {
 } else {
     $HTMLOUT.= begin_main_frame();
     $HTMLOUT.= begin_frame("[<a href='?needed=leechers' class='altlink'>{$lang['needseed_sin']}</a>]&nbsp;&nbsp;-&nbsp;&nbsp;{$lang['needseed_tns']}");
-    $res = sql_query("SELECT id, name, seeders, leechers, added, category FROM torrents WHERE leechers >= 0 AND seeders = 0 ORDER BY leechers DESC LIMIT 20") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT id, name, seeders, leechers, added, category FROM ".TBL_TORRENTS." WHERE leechers >= 0 AND seeders = 0 ORDER BY leechers DESC LIMIT 20") or sqlerr(__FILE__, __LINE__);
     if (mysqli_num_rows($res) > 0) {
         $HTMLOUT.= "<table align='center' class='main' border='1' cellspacing='0' cellpadding='5'>
         <tr><td class='colhead'>{$lang['needseed_cat']}</td><td class='colhead'>{$lang['needseed_tor']}</td><td class='colhead'>{$lang['needseed_seed']}</td><td class='colhead'>{$lang['needseed_leech']}</td></tr>\n";

@@ -147,7 +147,7 @@ $top_links = '<div style="text-align: center;">
 //=== change  number of PMs per page on the fly
 if (isset($_GET['change_pm_number'])) {
     $change_pm_number = (isset($_GET['change_pm_number']) ? intval($_GET['change_pm_number']) : 20);
-    sql_query('UPDATE users SET pms_per_page = '.sqlesc($change_pm_number).' WHERE id = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+    sql_query('UPDATE '.TBL_USERS.' SET pms_per_page = '.sqlesc($change_pm_number).' WHERE id = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
     $mc1->begin_transaction('user'.$CURUSER['id']);
     $mc1->update_row(false, array(
         'pms_per_page' => $change_pm_number
@@ -165,7 +165,7 @@ if (isset($_GET['change_pm_number'])) {
 //=== show small avatar drop down thingie / change on the fly
 if (isset($_GET['show_pm_avatar'])) {
     $show_pm_avatar = ($_GET['show_pm_avatar'] === 'yes' ? 'yes' : 'no');
-    sql_query('UPDATE users SET show_pm_avatar = '.sqlesc($show_pm_avatar).' WHERE id = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+    sql_query('UPDATE '.TBL_USERS.' SET show_pm_avatar = '.sqlesc($show_pm_avatar).' WHERE id = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
     $mc1->begin_transaction('user'.$CURUSER['id']);
     $mc1->update_row(false, array(
         'show_pm_avatar' => $show_pm_avatar
@@ -254,7 +254,7 @@ function get_all_boxes()
 {
     global $CURUSER, $mc1, $INSTALLER09;
     if (($get_all_boxes = $mc1->get_value('get_all_boxes'.$CURUSER['id'])) === false) {
-        $res = sql_query('SELECT boxnumber, name FROM pmboxes WHERE userid='.sqlesc($CURUSER['id']).' ORDER BY boxnumber') or sqlerr(__FILE__, __LINE__);
+        $res = sql_query('SELECT boxnumber, name FROM '.TBL_PMBOXES.' WHERE userid='.sqlesc($CURUSER['id']).' ORDER BY boxnumber') or sqlerr(__FILE__, __LINE__);
         $get_all_boxes = '<select name="box">
                                             <option class="body" value="1">Inbox</option>
                                             <option class="body" value="-1">Sentbox</option>
@@ -272,7 +272,7 @@ function insertJumpTo($mailbox)
 {
     global $CURUSER, $mc1, $INSTALLER09;
     if (($insertJumpTo = $mc1->get_value('insertJumpTo'.$CURUSER['id'])) === false) {
-        $res = sql_query('SELECT boxnumber,name FROM pmboxes WHERE userid='.sqlesc($CURUSER['id']).' ORDER BY boxnumber') or sqlerr(__FILE__, __LINE__);
+        $res = sql_query('SELECT boxnumber,name FROM '.TBL_PMBOXES.' WHERE userid='.sqlesc($CURUSER['id']).' ORDER BY boxnumber') or sqlerr(__FILE__, __LINE__);
         $insertJumpTo = '<form action="pm_system.php" method="get">
                                     <input type="hidden" name="action" value="view_mailbox" />
                                     <select name="box" onchange="location = this.options[this.selectedIndex].value;">

@@ -29,13 +29,13 @@ $lang = array_merge($lang);
 $HTMLOUT = '';
 $id = 0 + $_GET["id"];
 if (!is_valid_id($id) || $CURUSER['id'] <> $id && $CURUSER['class'] < UC_STAFF) $id = $CURUSER['id'];
-$res = sql_query("SELECT COUNT(id) FROM userhits WHERE hitid = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT COUNT(id) FROM ".TBL_USERHITS." WHERE hitid = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
 $row = mysqli_fetch_row($res);
 $count = $row[0];
 $perpage = 15;
 $pager = pager($perpage, $count, "staffpanel.php?tool=user_hits&amp;id=$id&amp;");
 if (!$count) stderr("No views", "This user has had no profile views yet.");
-$res = sql_query("SELECT username FROM users WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT username FROM ".TBL_USERS." WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
 $user = mysqli_fetch_assoc($res);
 $HTMLOUT.= "<h1>Profile views of <a href=\"userdetails.php?id=".$id."\">".htmlsafechars($user['username'])."</a></h1>
 <h2>In total ".htmlsafechars($count)." views</h2>";
@@ -47,7 +47,7 @@ $HTMLOUT.= "
 <td class='colhead'>Username</td>
 <td class='colhead'>Viewed at</td>
 </tr>\n";
-$res = sql_query("SELECT uh.*, username, users.id as uid FROM userhits uh LEFT JOIN users ON uh.userid = users.id WHERE hitid =".sqlesc($id)." ORDER BY uh.id DESC ".$pager['limit']) or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT uh.*, username, ".TBL_USERS.".id as uid FROM ".TBL_USERHITS." uh LEFT JOIN ".TBL_USERS." ON uh.userid = ".TBL_USERS.".id WHERE hitid =".sqlesc($id)." ORDER BY uh.id DESC ".$pager['limit']) or sqlerr(__FILE__, __LINE__);
 while ($arr = mysqli_fetch_assoc($res)) {
     $HTMLOUT.= "
 <tr><td>".number_format($arr['number'])."</td>

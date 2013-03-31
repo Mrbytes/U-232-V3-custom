@@ -16,10 +16,10 @@ if (!isset($CURUSER['id'])) die('log in to use this feature!');
 $more = (($CURUSER['perms'] & bt_options::UNLOCK_MORE_MOODS) ? 2 : 1);
 if (isset($_GET['id'])) {
     $moodid = (isset($_GET['id']) ? (int)$_GET['id'] : 1);
-    $res_moods = sql_query('SELECT * FROM moods WHERE bonus < '.sqlesc($more).' AND id = '.sqlesc($moodid)) or sqlerr(__file__, __line__);
+    $res_moods = sql_query('SELECT * FROM '.TBL_MOODS.' WHERE bonus < '.sqlesc($more).' AND id = '.sqlesc($moodid)) or sqlerr(__file__, __line__);
     if (mysqli_num_rows($res_moods)) {
         $rmood = mysqli_fetch_assoc($res_moods);
-        sql_query('UPDATE users SET mood = '.sqlesc($moodid).' WHERE id = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+        sql_query('UPDATE ".TBL_USERS." SET mood = '.sqlesc($moodid).' WHERE id = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
         $mc1->begin_transaction('MyUser_'.$CURUSER['id']);
         $mc1->update_row(false, array(
             'mood' => $moodid
@@ -59,7 +59,7 @@ $HTMLOUT.= '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 <body>
 <h3 align="center">'.$CURUSER['username'].'\'s Mood</h3>
 <table width="500px">';
-$res = sql_query('SELECT * FROM moods WHERE bonus < '.sqlesc($more).' ORDER BY id ASC') or sqlerr(__FILE__, __LINE__);
+$res = sql_query('SELECT * FROM '.TBL_MOODS.' WHERE bonus < '.sqlesc($more).' ORDER BY id ASC') or sqlerr(__FILE__, __LINE__);
 $count = 0;
 while ($arr = mysqli_fetch_assoc($res)) {
     if ($count % 3 == 0) $HTMLOUT.= '<tr>';

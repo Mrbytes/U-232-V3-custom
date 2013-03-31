@@ -31,7 +31,7 @@ function write_staffs2()
     //==ids
     $t = '$INSTALLER09';
     $iconfigfile = "<"."?php\n/**\nThis file created on ".date('M d Y H:i:s').".\nSite Config staff mod by pdq/U-232.\n**/\n";
-    $ri = sql_query("SELECT id, username, class FROM users WHERE class BETWEEN ".UC_STAFF." AND ".UC_MAX." ORDER BY id ASC") or sqlerr(__file__, __line__);
+    $ri = sql_query("SELECT id, username, class FROM ".TBL_USERS." WHERE class BETWEEN ".UC_STAFF." AND ".UC_MAX." ORDER BY id ASC") or sqlerr(__file__, __line__);
     $iconfigfile.= "".$t."['allowed_staff']['id'] = array(";
     while ($ai = mysqli_fetch_assoc($ri)) {
         $ids[] = $ai['id'];

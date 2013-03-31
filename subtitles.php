@@ -79,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $filename = "$new_name.$ext";
             $date = TIME_NOW;
             $owner = $CURUSER["id"];
-            sql_query("INSERT INTO subtitles (name , filename,imdb,comment, lang, fps, poster, cds, added, owner ) VALUES (".implode(",", array_map("sqlesc", array(
+            sql_query("INSERT INTO ".TBL_SUBTITLES." (name , filename,imdb,comment, lang, fps, poster, cds, added, owner ) VALUES (".implode(",", array_map("sqlesc", array(
                 $releasename,
                 $filename,
                 $imdb,
@@ -99,7 +99,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $id = isset($_POST["id"]) ? 0 + $_POST["id"] : 0;
             if ($id == 0) stderr("Err", "Not a valid id");
             else {
-                $res = sql_query("SELECT * FROM subtitles WHERE id={$id} ") or sqlerr(__FILE__, __LINE__);
+                $res = sql_query("SELECT * FROM ".TBL_SUBTITLES." WHERE id={$id} ") or sqlerr(__FILE__, __LINE__);
                 $arr = mysqli_fetch_assoc($res);
                 if (mysqli_num_rows($res) == 0) stderr("Sorry", "There is no subtitle with that id");
                 if ($CURUSER["id"] != $arr["owner"] && $CURUSER['class'] < UC_MODERATOR) bark("You're not the owner! How did that happen?\n");
@@ -111,7 +111,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 if ($arr["fps"] != $fps) $updateset[] = "fps = ".sqlesc($fps);
                 if ($arr["cds"] != $cd) $updateset[] = "cds = ".sqlesc($cd);
                 if ($arr["comment"] != $comment) $updateset[] = "comment = ".sqlesc($comment);
-                if (count($updateset) > 0) sql_query("UPDATE subtitles SET ".join(",", $updateset)." WHERE id ={$id} ") or sqlerr(__FILE__, __LINE__);
+                if (count($updateset) > 0) sql_query("UPDATE ".TBL_SUBTITLES." SET ".join(",", $updateset)." WHERE id ={$id} ") or sqlerr(__FILE__, __LINE__);
                 header("Refresh: 0; url=subtitles.php?mode=details&id=$id");
             }
         } //end edit
@@ -124,7 +124,7 @@ if ($mode == "upload" || $mode == "edit") {
         $id = isset($_GET["id"]) ? 0 + $_GET["id"] : 0;
         if ($id == 0) stderr("Err", "Not a valid id");
         else {
-            $res = sql_query("SELECT id, name, imdb, poster, fps, comment, cds, lang FROM subtitles WHERE id={$id} ") or sqlerr(__FILE__, __LINE__);
+            $res = sql_query("SELECT id, name, imdb, poster, fps, comment, cds, lang FROM ".TBL_SUBTITLES." WHERE id={$id} ") or sqlerr(__FILE__, __LINE__);
             $arr = mysqli_fetch_assoc($res);
             if (mysqli_num_rows($res) == 0) stderr("Sorry", "There is no subtitle with that id");
         }
@@ -210,13 +210,13 @@ elseif ($mode == "delete") {
     $id = isset($_GET["id"]) ? 0 + $_GET["id"] : 0;
     if ($id == 0) stderr("Err", "Not a valid id");
     else {
-        $res = sql_query("SELECT id, name, filename FROM subtitles WHERE id={$id} ") or sqlerr(__FILE__, __LINE__);
+        $res = sql_query("SELECT id, name, filename FROM ".TBL_SUBTITLES." WHERE id={$id} ") or sqlerr(__FILE__, __LINE__);
         $arr = mysqli_fetch_assoc($res);
         if (mysqli_num_rows($res) == 0) stderr("Sorry", "There is no subtitle with that id");
         $sure = (isset($_GET["sure"]) && $_GET["sure"] == "yes") ? "yes" : "no";
         if ($sure == "no") stderr("Sanity check...", "Your are about to delete subtitile <b>".safe($arr["name"])."</b> . Click <a href='subtitles.php?mode=delete&amp;id=$id&amp;sure=yes'>here</a> if you are sure.", false);
         else {
-            sql_query("DELETE FROM subtitles WHERE id={$id} ") or sqlerr(__FILE__, __LINE__);
+            sql_query("DELETE FROM ".TBL_SUBTITLES." WHERE id={$id} ") or sqlerr(__FILE__, __LINE__);
             $file = $INSTALLER09['sub_up_dir'].'/'.$arr["filename"];
             @unlink($file);
             header("Refresh: 0; url=subtitles.php");
@@ -228,7 +228,7 @@ elseif ($mode == "details") {
     $id = isset($_GET["id"]) ? 0 + $_GET["id"] : 0;
     if ($id == 0) stderr("Err", "Not a valid id");
     else {
-        $res = sql_query("SELECT s.id, s.name,s.lang, s.imdb,s.fps,s.poster,s.cds,s.hits,s.added,s.owner,s.comment, u.username FROM subtitles AS s LEFT JOIN users AS u ON s.owner=u.id  WHERE s.id={$id} ") or sqlerr(__FILE__, __LINE__);
+        $res = sql_query("SELECT s.id, s.name,s.lang, s.imdb,s.fps,s.poster,s.cds,s.hits,s.added,s.owner,s.comment, u.username FROM ".TBL_SUBTITLES." AS s LEFT JOIN '.TBL_USERS.' AS u ON s.owner=u.id  WHERE s.id={$id} ") or sqlerr(__FILE__, __LINE__);
         $arr = mysqli_fetch_assoc($res);
         if (mysqli_num_rows($res) == 0) stderr("Sorry", "There is no subtitle with that id");
         if ($arr["lang"] == "eng") $langs = "<img src=\"pic/flag/england.gif\" border=\"0\" alt=\"English\" title=\"English\" />";
@@ -275,7 +275,7 @@ elseif ($mode == "details") {
     $id = isset($_GET["id"]) ? 0 + $_GET["id"] : 0;
     if ($id == 0) stderr("Err", "Not a valid id");
     else {
-        $res = sql_query("SELECT id, name,filename FROM subtitles  WHERE id={$id} ") or sqlerr(__FILE__, __LINE__);
+        $res = sql_query("SELECT id, name,filename FROM ".TBL_SUBTITLES."  WHERE id={$id} ") or sqlerr(__FILE__, __LINE__);
         $arr = mysqli_fetch_assoc($res);
         if (mysqli_num_rows($res) == 0) stderr("Sorry", "There is no subtitle with that id");
         $file = $INSTALLER09['sub_up_dir']."/".$arr["filename"];
@@ -300,11 +300,11 @@ elseif ($mode == "details") {
     elseif ($s && $w == "comment") $where = "WHERE s.comment LIKE ".sqlesc("%".$s."%");
     else $where = "";
     $link = ($s && $w ? "s=$s&amp;w=$w&amp;" : "");
-    $count = get_row_count("subtitles AS s", "$where");
+    $count = get_row_count("TBL_SUBTITLES AS s", "$where");
     if ($count == 0 && !$s && !$w) stdmsg("", "There is no subtitle, go <a href=\"subtitles.php?mode=upload\">here</a> and start uploading.", false);
     $perpage = 5;
     $pager = pager($perpage, $count, "subtitles.php?".$link);
-    $res = sql_query("SELECT s.id, s.name,s.lang, s.imdb,s.fps,s.poster,s.cds,s.hits,s.added,s.owner,s.comment, u.username FROM subtitles AS s LEFT JOIN users AS u ON s.owner=u.id $where ORDER BY s.added DESC {$pager['limit']}") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT s.id, s.name,s.lang, s.imdb,s.fps,s.poster,s.cds,s.hits,s.added,s.owner,s.comment, u.username FROM ".TBL_SUBTITLES." AS s LEFT JOIN ".TBL_USERS." AS u ON s.owner=u.id $where ORDER BY s.added DESC {$pager['limit']}") or sqlerr(__FILE__, __LINE__);
     $HTMLOUT.= "<table width='700' cellpadding='5' cellspacing='0' border='0' align='center' style='font-weight:bold'>
 <tr><td style='border:none' valign='middle'>
 <fieldset style='text-align:center; border:#0066CC solid 1px; background-color:#999999'>

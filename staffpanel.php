@@ -163,11 +163,11 @@ if (in_array($tool, $staff_tools) and file_exists(ADMIN_DIR.$staff_tools[$tool].
 } else {
     if ($action == 'delete' && is_valid_id($id) && $staff_classes[$CURUSER['class']]['delete']) {
         $sure = ((isset($_GET['sure']) ? $_GET['sure'] : '') == 'yes');
-        $res = sql_query('SELECT av_class'.(!$sure || $staff_classes[$CURUSER['class']]['log'] ? ', page_name' : '').' FROM staffpanel WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+        $res = sql_query('SELECT av_class'.(!$sure || $staff_classes[$CURUSER['class']]['log'] ? ', page_name' : '').' FROM '.TBL_STAFFPANEL.' WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
         $arr = mysqli_fetch_assoc($res);
         if ($CURUSER['class'] < $arr['av_class']) stderr('Error', 'You are not allowed to delete this page.');
         if (!$sure) stderr('Sanity check', 'Are you sure you want to delete this page: "'.htmlsafechars($arr['page_name']).'"? Click <a href="'.$_SERVER['PHP_SELF'].'?action='.$action.'&amp;id='.$id.'&amp;sure=yes">here</a> to delete it or <a href="'.$_SERVER['PHP_SELF'].'">here</a> to go back.');
-        sql_query('DELETE FROM staffpanel WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+        sql_query('DELETE FROM '.TBL_STAFFPANEL.' WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
         if (mysqli_affected_rows($GLOBALS["___mysqli_ston"])) {
             if ($staff_classes[$CURUSER['class']]['log']) write_log('Page "'.htmlsafechars($arr['page_name']).'"('.($class_color ? '<font color="#'.get_user_class_color($arr['av_class']).'">' : '').get_user_class_name($arr['av_class']).($class_color ? '</font>' : '').') was deleted from the staff panel by <a href="/userdetails.php?id='.(int)$CURUSER['id'].'">'.$CURUSER['username'].'</a>('.($class_color ? '<font color="#'.get_user_class_color($CURUSER['class']).'">' : '').get_user_class_name($CURUSER['class']).($class_color ? '</font>' : '').')');
             header('Location: '.$_SERVER['PHP_SELF']);
@@ -181,7 +181,7 @@ if (in_array($tool, $staff_tools) and file_exists(ADMIN_DIR.$staff_tools[$tool].
             'av_class'
         );
         if ($action == 'edit') {
-            $res = sql_query('SELECT '.implode(', ', $names).' FROM staffpanel WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+            $res = sql_query('SELECT '.implode(', ', $names).' FROM '.TBL_STAFFPANEL.' WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
             $arr = mysqli_fetch_assoc($res);
         }
         foreach ($names as $name) $$name = (isset($_POST[$name]) ? $_POST[$name] : ($action == 'edit' ? $arr[$name] : ''));
@@ -199,7 +199,7 @@ if (in_array($tool, $staff_tools) and file_exists(ADMIN_DIR.$staff_tools[$tool].
             if (strlen($description) > 100) $errors[] = 'The description is too long (max 100 chars).';
             if (empty($errors)) {
                 if ($action == 'add') {
-                    $res = sql_query("INSERT INTO staffpanel (page_name, file_name, description, av_class, added_by, added) "."VALUES (".implode(", ", array_map("sqlesc", array(
+                    $res = sql_query("INSERT INTO ".TBL_STAFFPANEL." (page_name, file_name, description, av_class, added_by, added) "."VALUES (".implode(", ", array_map("sqlesc", array(
                         $page_name,
                         $file_name,
                         $description,
@@ -212,7 +212,7 @@ if (in_array($tool, $staff_tools) and file_exists(ADMIN_DIR.$staff_tools[$tool].
                         else $errors[] = "There was a database error, please retry.";
                     }
                 } else {
-                    $res = sql_query("UPDATE staffpanel SET page_name = ".sqlesc($page_name).", file_name = ".sqlesc($file_name).", description = ".sqlesc($description).", av_class = ".sqlesc((int)$av_class)." WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+                    $res = sql_query("UPDATE ".TBL_STAFFPANEL." SET page_name = ".sqlesc($page_name).", file_name = ".sqlesc($file_name).", description = ".sqlesc($description).", av_class = ".sqlesc((int)$av_class)." WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
                     if (!$res) $errors[] = "There was a database error, please retry.";
                 }
                 if (empty($errors)) {
@@ -276,7 +276,7 @@ if (in_array($tool, $staff_tools) and file_exists(ADMIN_DIR.$staff_tools[$tool].
             $HTMLOUT.= stdmsg('Options', '<a href="staffpanel.php?action=add" title="Add a new page">Add a new page</a>');
             $HTMLOUT.= "<br />";
         }
-        $res = sql_query('SELECT staffpanel.*, users.username '.'FROM staffpanel '.'LEFT JOIN users ON users.id = staffpanel.added_by '.'WHERE av_class <= '.sqlesc($CURUSER['class']).' '.'ORDER BY av_class DESC, page_name ASC') or sqlerr(__FILE__, __LINE__);
+        $res = sql_query('SELECT '.TBL_STAFFPANEL.'.*, '.TBL_USERS.'.username '.'FROM '.TBL_STAFFPANEL.' '.'LEFT JOIN '.TBL_USERS.' ON '.TBL_USERS.'.id = '.TBL_STAFFPANEL.'.added_by '.'WHERE av_class <= '.sqlesc($CURUSER['class']).' '.'ORDER BY av_class DESC, page_name ASC') or sqlerr(__FILE__, __LINE__);
         if (mysqli_num_rows($res) > 0) {
             $db_classes = $unique_classes = $mysql_data = array();
             while ($arr = mysqli_fetch_assoc($res)) $mysql_data[] = $arr;

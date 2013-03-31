@@ -102,7 +102,7 @@ function dbconn($autoclean = false)
 }
 function status_change($id)
 {
-    sql_query('UPDATE announcement_process SET status = 0 WHERE user_id = '.sqlesc($id).' AND status = 1');
+    sql_query('UPDATE '.TBL_ANNOUNCEMENT_PROCESS.' SET status = 0 WHERE user_id = '.sqlesc($id).' AND status = 1');
 }
 function hashit($var, $addtext = "")
 {
@@ -115,7 +115,7 @@ function check_bans($ip, &$reason = '')
     $key = 'bans:::'.$ip;
     if (($ban = $mc1->get_value($key)) === false) {
         $nip = ip2long($ip);
-        $ban_sql = sql_query('SELECT comment FROM bans WHERE (first <= '.$nip.' AND last >= '.$nip.') LIMIT 1');
+        $ban_sql = sql_query('SELECT comment FROM '.TBL_BANS.' WHERE (first <= '.$nip.' AND last >= '.$nip.') LIMIT 1');
         if (mysqli_num_rows($ban_sql)) {
             $comment = mysqli_fetch_row($ban_sql);
             $reason = 'Manual Ban ('.$comment[0].')';
@@ -146,7 +146,7 @@ function userlogin()
     // let's cache $CURUSER - pdq
     if (($row = $mc1->get_value('MyUser_'.$id)) === false) { // $row not found
         $user_fields = 'id, username, passhash, secret, passkey, email, status, added, '.'last_login, last_access, curr_ann_last_check, curr_ann_id, editsecret, privacy, stylesheet, '.'info, acceptpms, ip, class, override_class, language, avatar, av_w, av_h, '.'title, country, notifs, enabled, donor, warned, torrentsperpage, topicsperpage, '.'postsperpage, deletepms, savepms, reputation, time_offset, dst_in_use, auto_correct_dst, '.'show_shout, show_staffshout, shoutboxbg, chatpost, smile_until, vip_added, vip_until, '.'freeslots, free_switch, invites, invitedby, invite_rights, anonymous, uploadpos, forumpost, '.'downloadpos, immunity, leechwarn, disable_reason, clear_new_tag_manually, last_browse, sig_w, '.'sig_h, signatures, signature, forum_access, highspeed, hnrwarn, hit_and_run_total, donoruntil, '.'donated, total_donated, vipclass_before, parked, passhint, hintanswer, avatarpos, support, '.'supportfor, sendpmpos, invitedate, invitees, invite_on, subscription_pm, gender, anonymous_until, '.'viewscloud, tenpercent, avatars, offavatar, pirate, king, hidecur, ssluse, signature_post, forum_post, '.'avatar_rights, offensive_avatar, view_offensive_avatar, paranoia, google_talk, msn, aim, yahoo, website, '.'icq, show_email, parked_until, gotgift, hash1, suspended, bjwins, bjlosses, warn_reason, onirc, irctotal, '.'birthday, got_blocks, last_access_numb, onlinetime, pm_on_delete, commentpm, split, browser, hits, '.'comments, categorie_icon, reputation, perms, mood, got_moods, pms_per_page, show_pm_avatar, watched_user, game_access, browse_icons';
-        $res = sql_query("SELECT ".$user_fields." "."FROM users "."WHERE id = ".sqlesc($id)." "."AND enabled='yes' "."AND status = 'confirmed'") or sqlerr(__FILE__, __LINE__);
+        $res = sql_query("SELECT ".$user_fields." "."FROM ".TBL_USERS." "."WHERE id = ".sqlesc($id)." "."AND enabled='yes' "."AND status = 'confirmed'") or sqlerr(__FILE__, __LINE__);
         if (mysqli_num_rows($res) == 0) {
             logoutcookie();
             return;
@@ -253,7 +253,7 @@ function userlogin()
         if (!in_array(((int)$row["id"]) , $allowed_ID, true)) {
             $msg = "Fake Account Detected: Username: ".htmlsafechars($row["username"])." - UserID: ".(int)$row["id"]." - UserIP : ".getip();
             // Demote and disable
-            sql_query("UPDATE users SET enabled = 'no', class = 0 WHERE id =".sqlesc($row["id"])) or sqlerr(__file__, __line__);
+            sql_query("UPDATE ".TBL_USERS." SET enabled = 'no', class = 0 WHERE id =".sqlesc($row["id"])) or sqlerr(__file__, __line__);
             $mc1->begin_transaction('MyUser_'.$row['id']);
             $mc1->update_row(false, array(
                 'enabled' => 'no',
@@ -272,7 +272,7 @@ function userlogin()
     }
     // user stats
     if (($stats = $mc1->get_value('userstats_'.$id)) === false) {
-        $sql = sql_query('SELECT uploaded, downloaded, seedbonus FROM users WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+        $sql = sql_query('SELECT uploaded, downloaded, seedbonus FROM '.TBL_USERS.' WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
         $stats = mysqli_fetch_assoc($sql);
         $stats['seedbonus'] = (float)$stats['seedbonus'];
         $stats['uploaded'] = (float)$stats['uploaded'];
@@ -288,7 +288,7 @@ function userlogin()
     $row['ratio'] = $stats['ratio'];
     //==
     if (($ustatus = $mc1->get_value('userstatus_'.$id)) === false) {
-        $sql2 = sql_query('SELECT * FROM ustatus WHERE userid = '.sqlesc($id));
+        $sql2 = sql_query('SELECT * FROM '.TBL_USTATUS.' WHERE userid = '.sqlesc($id));
         if (mysqli_num_rows($sql2)) $ustatus = mysqli_fetch_assoc($sql2);
         else $ustatus = array(
             'last_status' => '',
@@ -310,9 +310,9 @@ function userlogin()
     // bitwise curuser bloks by pdq
     $blocks_key = 'blocks::'.$row['id'];
     if (($CURBLOCK = $mc1->get_value($blocks_key)) === false) {
-        $c_sql = sql_query('SELECT * FROM user_blocks WHERE userid = '.sqlesc($row['id'])) or sqlerr(__FILE__, __LINE__);
+        $c_sql = sql_query('SELECT * FROM '.TBL_USER_BLOCKS.' WHERE userid = '.sqlesc($row['id'])) or sqlerr(__FILE__, __LINE__);
         if (mysqli_num_rows($c_sql) == 0) {
-            sql_query('INSERT INTO user_blocks(userid) VALUES('.sqlesc($row['id']).')');
+            sql_query('INSERT INTO '.TBL_USER_BLOCKS.'(userid) VALUES('.sqlesc($row['id']).')');
             header('Location: index.php');
             die();
         }
@@ -335,7 +335,7 @@ function userlogin()
     $update_time = ($row['onlinetime'] + $update_time);
     if (($row['last_access'] != '0') AND (($row['last_access']) < (TIME_NOW - 180))
     /** 3 mins **/) {
-        sql_query("UPDATE users SET last_access=".TIME_NOW.", $userupdate0, $userupdate1 WHERE id=".sqlesc($row['id']));
+        sql_query("UPDATE ".TBL_USERS." SET last_access=".TIME_NOW.", $userupdate0, $userupdate1 WHERE id=".sqlesc($row['id']));
         $mc1->begin_transaction('MyUser_'.$row['id']);
         $mc1->update_row(false, array(
             'last_access' => TIME_NOW,
@@ -375,11 +375,11 @@ function autoclean()
 {
     global $INSTALLER09;
     $now = TIME_NOW;
-    $sql = sql_query("SELECT * FROM cleanup WHERE clean_on = 1 AND clean_time <= {$now} ORDER BY clean_time ASC LIMIT 0,1");
+    $sql = sql_query("SELECT * FROM ".TBL_CLEANUP." WHERE clean_on = 1 AND clean_time <= {$now} ORDER BY clean_time ASC LIMIT 0,1");
     $row = mysqli_fetch_assoc($sql);
     if ($row['clean_id']) {
         $next_clean = intval($now + ($row['clean_increment'] ? $row['clean_increment'] : 15 * 60));
-        sql_query("UPDATE cleanup SET clean_time = $next_clean WHERE clean_id = {$row['clean_id']}");
+        sql_query("UPDATE ".TBL_CLEANUP." SET clean_time = $next_clean WHERE clean_id = {$row['clean_id']}");
         if (file_exists(CLEAN_DIR.''.$row['clean_file'])) {
             require_once (CLEAN_DIR.''.$row['clean_file']);
             if (function_exists('docleanup')) {
@@ -451,7 +451,7 @@ function make_freeslots($userid, $key)
 {
     global $mc1, $INSTALLER09;
     if (($slot = $mc1->get_value($key.$userid)) === false) {
-        $res_slots = sql_query('SELECT * FROM freeslots WHERE userid = '.sqlesc($userid)) or sqlerr(__file__, __line__);
+        $res_slots = sql_query('SELECT * FROM '.TBL_FREESLOTS.' WHERE userid = '.sqlesc($userid)) or sqlerr(__file__, __line__);
         $slot = array();
         if (mysqli_num_rows($res_slots)) {
             while ($rowslot = mysqli_fetch_assoc($res_slots)) $slot[] = $rowslot;
@@ -465,7 +465,7 @@ function make_bookmarks($userid, $key)
 {
     global $mc1, $INSTALLER09;
     if (($book = $mc1->get_value($key.$userid)) === false) {
-        $res_books = sql_query('SELECT * FROM bookmarks WHERE userid = '.sqlesc($userid)) or sqlerr(__file__, __line__);
+        $res_books = sql_query('SELECT * FROM '.TBL_BOOKMARKS.' WHERE userid = '.sqlesc($userid)) or sqlerr(__file__, __line__);
         $book = array();
         if (mysqli_num_rows($res_books)) {
             while ($rowbook = mysqli_fetch_assoc($res_books)) $book[] = $rowbook;
@@ -481,7 +481,7 @@ function genrelist()
     global $mc1, $INSTALLER09;
     if (($ret = $mc1->get_value('genrelist')) == false) {
         $ret = array();
-        $res = sql_query("SELECT id, image, name FROM categories ORDER BY name");
+        $res = sql_query("SELECT id, image, name FROM ".TBL_CATEGORIES." ORDER BY name");
         while ($row = mysqli_fetch_assoc($res)) $ret[] = $row;
         $mc1->cache_value('genrelist', $ret, $INSTALLER09['expires']['genrelist']);
     }
@@ -493,7 +493,7 @@ function create_moods($force = false)
     global $mc1, $INSTALLER09;
     $key = 'moods';
     if (($mood = $mc1->get_value($key)) === false || $force) {
-        $res_moods = sql_query('SELECT * FROM moods ORDER BY id ASC') or sqlerr(__file__, __line__);
+        $res_moods = sql_query('SELECT * FROM '.TBL_MOODS.' ORDER BY id ASC') or sqlerr(__file__, __line__);
         $mood = array();
         if (mysqli_num_rows($res_moods)) {
             while ($rmood = mysqli_fetch_assoc($res_moods)) {
@@ -594,7 +594,7 @@ function logincookie($id, $passhash, $updatedb = 1, $expires = 0x7fffffff)
     set_mycookie("uid", $id, $expires);
     set_mycookie("pass", $passhash, $expires);
     set_mycookie("hashv", hashit($id, $passhash) , $expires);
-    if ($updatedb) sql_query("UPDATE users SET last_login = ".TIME_NOW." WHERE id = ".sqlesc($id)) or sqlerr(__file__, __line__);
+    if ($updatedb) sql_query("UPDATE ".TBL_USERS." SET last_login = ".TIME_NOW." WHERE id = ".sqlesc($id)) or sqlerr(__file__, __line__);
 }
 function set_mycookie($name, $value = "", $expires_in = 0, $sticky = 1)
 {
@@ -718,7 +718,7 @@ function write_log($text)
 {
     $text = sqlesc($text);
     $added = TIME_NOW;
-    sql_query("INSERT INTO sitelog (added, txt) VALUES($added, $text)") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_SITELOG." (added, txt) VALUES($added, $text)") or sqlerr(__FILE__, __LINE__);
 }
 function sql_timestamp_to_unix_timestamp($s)
 {
@@ -865,9 +865,9 @@ function flood_limit($table)
     if (!file_exists($INSTALLER09['flood_file']) || !is_array($max = unserialize(file_get_contents($INSTALLER09['flood_file'])))) return;
     if (!isset($max[$CURUSER['class']])) return;
     $tb = array(
-        'posts' => 'posts.userid',
-        'comments' => 'comments.user',
-        'messages' => 'messages.sender'
+        'posts' => ''.TBL_POSTS.'.userid',
+        'comments' => ''.TBL_COMMENTS.'.user',
+        'messages' => ''.TBL_MESSAGES.'.sender'
     );
     $q = sql_query('SELECT min('.$table.'.added) as first_post, count('.$table.'.id) as how_many FROM '.$table.' WHERE '.$tb[$table].' = '.$CURUSER['id'].' AND '.TIME_NOW.' - '.$table.'.added < '.$INSTALLER09['flood_time']);
     $a = mysqli_fetch_assoc($q);

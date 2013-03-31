@@ -30,27 +30,27 @@ $HTMLOUT = $count2 = "";
 if (isset($_GET["total_donors"])) {
     $total_donors = 0 + $_GET["total_donors"];
     if ($total_donors != '1') stderr("Error", "I smell a rat!");
-    $res = sql_query("SELECT COUNT(*) FROM users WHERE total_donated != '0.00' AND enabled='yes'") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT COUNT(*) FROM ".TBL_USERS." WHERE total_donated != '0.00' AND enabled='yes'") or sqlerr(__FILE__, __LINE__);
     $row = mysqli_fetch_array($res);
     $count = $row[0];
     $perpage = 15;
     $pager = pager($perpage, $count, "staffpanel.php?tool=donations&amp;action=donations&amp;");
     if (mysqli_num_rows($res) == 0) stderr("Sorry", "no donors found!");
-    $users = number_format(get_row_count("users", "WHERE total_donated != '0.00'"));
+    $users = number_format(get_row_count(TBL_USERS, "WHERE total_donated != '0.00'"));
     $HTMLOUT.= begin_frame("Donor List: All Donations [".htmlsafechars($users)."]", true);
-    $res = sql_query("SELECT id, username, email, added, donated, donoruntil, total_donated FROM users WHERE total_donated != '0.00' ORDER BY id DESC ".$pager['limit']."") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT id, username, email, added, donated, donoruntil, total_donated FROM ".TBL_USERS." WHERE total_donated != '0.00' ORDER BY id DESC ".$pager['limit']."") or sqlerr(__FILE__, __LINE__);
 }
 // ===end total donors
 else {
-    $res = sql_query("SELECT COUNT(id) FROM users WHERE donor='yes'") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT COUNT(id) FROM ".TBL_USERS." WHERE donor='yes'") or sqlerr(__FILE__, __LINE__);
     $row = mysqli_fetch_array($res);
     $count = $row[0];
     $perpage = 15;
     $pager = pager($perpage, $count, "staffpanel.php?tool=donations&amp;action=donations&amp;");
     if (mysqli_num_rows($res) == 0) stderr("Sorry", "no donors found!");
-    $users = number_format(get_row_count("users", "WHERE donor='yes'"));
+    $users = number_format(get_row_count(TBL_USERS, "WHERE donor='yes'"));
     $HTMLOUT.= begin_frame("Donor List: Current Donors [".htmlsafechars($users)." ]", true);
-    $res = sql_query("SELECT id, username, email, added, donated, total_donated, donoruntil FROM users WHERE donor='yes' ORDER BY id DESC ".$pager['limit']."") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT id, username, email, added, donated, total_donated, donoruntil FROM ".TBL_USERS." WHERE donor='yes' ORDER BY id DESC ".$pager['limit']."") or sqlerr(__FILE__, __LINE__);
 }
 if ($count > $perpage) $HTMLOUT.= $pager['pagertop'];
 $HTMLOUT.= begin_table();

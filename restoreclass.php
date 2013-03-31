@@ -11,7 +11,7 @@ require_once (dirname(__FILE__).DIRECTORY_SEPARATOR.'include'.DIRECTORY_SEPARATO
 require_once (INCL_DIR.'user_functions.php');
 dbconn(false);
 loggedinorreturn();
-sql_query("UPDATE users SET override_class='255' WHERE id = ".sqlesc($CURUSER['id']));
+sql_query("UPDATE ".TBL_USERS." SET override_class='255' WHERE id = ".sqlesc($CURUSER['id']));
 $mc1->begin_transaction('MyUser_'.$CURUSER['id']);
 $mc1->update_row(false, array(
     'override_class' => 255

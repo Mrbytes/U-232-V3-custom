@@ -16,7 +16,7 @@ $lang = array_merge(load_language('global') , load_language('uploadapp'));
 $HTMLOUT = '';
 // Fill in application
 if (isset($_POST["form"]) != "1") {
-    $res = sql_query("SELECT status FROM uploadapp WHERE userid = ".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT status FROM ".TBL_UPLOADAPP." WHERE userid = ".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_assoc($res);
     if ($CURUSER['class'] >= UC_UPLOADER) stderr($lang['uploadapp_user_error'], $lang['uploadapp_alreadyup']);
     elseif ($arr['status'] == 'pending') stderr($lang['uploadapp_user_error'], $lang['uploadapp_pending']);
@@ -27,7 +27,7 @@ if (isset($_POST["form"]) != "1") {
         <form action='./uploadapp.php' method='post' enctype='multipart/form-data'>
         <table border='1' cellspacing='0' cellpadding='5' align='center'>";
         $ratio = member_ratio($CURUSER['uploaded'], $CURUSER['downloaded']);
-        $res = sql_query("SELECT connectable FROM peers WHERE userid=".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+        $res = sql_query("SELECT connectable FROM ".TBL_PEERS." WHERE userid=".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
         if ($row = mysqli_fetch_row($res)) {
             $connect = $row[0];
             if ($connect == 'yes') $connectable = 'Yes';
@@ -103,7 +103,7 @@ if (isset($_POST["form"]) != "1") {
     if (!$app['offer']) stderr($lang['uploadapp_error'], $lang['uploadapp_offerblank']);
     if (!$app['reason']) stderr($lang['uploadapp_error'], $lang['uploadapp_reasonblank']);
     if ($app['sites'] == 'yes' && !$app['sitenames']) stderr($lang['uploadapp_error'], $lang['uploadapp_sitesblank']);
-    $res = sql_query("INSERT INTO uploadapp(userid,applied,connectable,speed,offer,reason,sites,sitenames,scene,creating,seeding) VALUES({$app['userid']}, ".implode(",", array_map("sqlesc", array(
+    $res = sql_query("INSERT INTO ".TBL_UPLOADAPP."(userid,applied,connectable,speed,offer,reason,sites,sitenames,scene,creating,seeding) VALUES({$app['userid']}, ".implode(",", array_map("sqlesc", array(
         TIME_NOW,
         $app['connectable'],
         $app['speed'],
@@ -123,8 +123,8 @@ if (isset($_POST["form"]) != "1") {
         $subject = sqlesc("Uploader application");
         $msg = sqlesc("An uploader application has just been filled in by [url={$INSTALLER09['baseurl']}/userdetails.php?id=".(int)$CURUSER['id']."][b]{$CURUSER['username']}[/b][/url]. Click [url={$INSTALLER09['baseurl']}/staffpanel.php?tool=uploadapps&action=show][b]Here[/b][/url] to go to the uploader applications page.");
         $dt = TIME_NOW;
-        $subres = sql_query('SELECT id FROM users WHERE class = '.UC_STAFF) or sqlerr(__FILE__, __LINE__);
-        while ($arr = mysqli_fetch_assoc($subres)) sql_query("INSERT INTO messages(sender, receiver, added, msg, subject, poster) VALUES(0, ".sqlesc($arr['id']).", $dt, $msg, $subject, 0)") or sqlerr(__FILE__, __LINE__);
+        $subres = sql_query('SELECT id FROM '.TBL_USERS.' WHERE class = '.UC_STAFF) or sqlerr(__FILE__, __LINE__);
+        while ($arr = mysqli_fetch_assoc($subres)) sql_query("INSERT INTO ".TBL_MESSAGES."(sender, receiver, added, msg, subject, poster) VALUES(0, ".sqlesc($arr['id']).", $dt, $msg, $subject, 0)") or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('inbox_new_'.$arr['id']);
         $mc1->delete_value('inbox_new_sb_'.$arr['id']);
         stderr($lang['uploadapp_appsent'], $lang['uploadapp_success']);

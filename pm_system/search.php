@@ -46,7 +46,7 @@ if (!in_array($sort, $possible_sort)) {
 }
 //=== Try finding a user with specified name
 if ($member) {
-    $res_username = sql_query('SELECT id, username, class, warned, suspended, leechwarn, chatpost, pirate, king, enabled, donor FROM users WHERE LOWER(username)=LOWER('.sqlesc($member).') LIMIT 1') or sqlerr(__FILE__, __LINE__);
+    $res_username = sql_query('SELECT id, username, class, warned, suspended, leechwarn, chatpost, pirate, king, enabled, donor FROM '.TBL_USERS.' WHERE LOWER(username)=LOWER('.sqlesc($member).') LIMIT 1') or sqlerr(__FILE__, __LINE__);
     $arr_username = mysqli_fetch_assoc($res_username);
     if (mysqli_num_rows($res_username) === 0) stderr('Error', 'Sorry, there is no member with that username.');
     //=== if searching by member...
@@ -58,7 +58,7 @@ if ($member_sys) {
     $the_username = '<span style="font-weight: bold;">sys-bot</span>';
 }
 //=== get all boxes
-$res = sql_query('SELECT boxnumber, name FROM pmboxes WHERE userid = '.sqlesc($CURUSER['id']).' ORDER BY boxnumber') or sqlerr(__FILE__, __LINE__);
+$res = sql_query('SELECT boxnumber, name FROM '.TBL_PMBOXES.' WHERE userid = '.sqlesc($CURUSER['id']).' ORDER BY boxnumber') or sqlerr(__FILE__, __LINE__);
 $get_all_boxes = '<select name="box">
                                             <option class="body" value="1" '.($mailbox == PM_INBOX ? 'selected="selected"' : '').'>Inbox</option>
                                             <option class="body" value="-1" '.($mailbox == PM_SENTBOX ? 'selected="selected"' : '').'>Sentbox</option>
@@ -153,27 +153,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         //=== if only member name is entered and no search string... get all messages by that member
         
     case (!$keywords && $member):
-        $res_search = sql_query("SELECT * FROM messages WHERE sender = ".sqlesc($arr_username['id'])." AND saved = 'yes' $location AND receiver = ".sqlesc($CURUSER['id'])." ORDER BY ".sqlesc($sort)." $desc_asc LIMIT ".$limit) or sqlerr(__FILE__, __LINE__);
+        $res_search = sql_query("SELECT * FROM ".TBL_MESSAGES." WHERE sender = ".sqlesc($arr_username['id'])." AND saved = 'yes' $location AND receiver = ".sqlesc($CURUSER['id'])." ORDER BY ".sqlesc($sort)." $desc_asc LIMIT ".$limit) or sqlerr(__FILE__, __LINE__);
         break;
         //=== if system entered default both ...
         
     case (!$keywords && $member_sys):
-        $res_search = sql_query("SELECT * FROM messages WHERE sender = 0 $location AND receiver = ".sqlesc($CURUSER['id'])." ORDER BY ".sqlesc($sort)." $desc_asc LIMIT ".$limit) or sqlerr(__FILE__, __LINE__);
+        $res_search = sql_query("SELECT * FROM ".TBL_MESSAGES." WHERE sender = 0 $location AND receiver = ".sqlesc($CURUSER['id'])." ORDER BY ".sqlesc($sort)." $desc_asc LIMIT ".$limit) or sqlerr(__FILE__, __LINE__);
         break;
         //=== if just subject
         
     case ($subject && !$text):
-        $res_search = sql_query("SELECT *, MATCH(subject) AGAINST(".sqlesc($search)." IN BOOLEAN MODE) AS relevance FROM messages WHERE ( MATCH(subject) AGAINST (".sqlesc($search)." IN BOOLEAN MODE) ) $and_member $location $what_in_out ORDER BY ".sqlesc($sort)." $desc_asc LIMIT ".$limit) or sqlerr(__FILE__, __LINE__);
+        $res_search = sql_query("SELECT *, MATCH(subject) AGAINST(".sqlesc($search)." IN BOOLEAN MODE) AS relevance FROM ".TBL_MESSAGES." WHERE ( MATCH(subject) AGAINST (".sqlesc($search)." IN BOOLEAN MODE) ) $and_member $location $what_in_out ORDER BY ".sqlesc($sort)." $desc_asc LIMIT ".$limit) or sqlerr(__FILE__, __LINE__);
         break;
         //=== if just message
         
     case (!$subject && $text):
-        $res_search = sql_query("SELECT *, MATCH(msg) AGAINST(".sqlesc($search)." IN BOOLEAN MODE) AS relevance FROM messages WHERE ( MATCH(msg) AGAINST (".sqlesc($search)." IN BOOLEAN MODE) ) $and_member $location $what_in_out ORDER BY ".sqlesc($sort)." $desc_asc LIMIT ".$limit) or sqlerr(__FILE__, __LINE__);;
+        $res_search = sql_query("SELECT *, MATCH(msg) AGAINST(".sqlesc($search)." IN BOOLEAN MODE) AS relevance FROM ".TBL_MESSAGES." WHERE ( MATCH(msg) AGAINST (".sqlesc($search)." IN BOOLEAN MODE) ) $and_member $location $what_in_out ORDER BY ".sqlesc($sort)." $desc_asc LIMIT ".$limit) or sqlerr(__FILE__, __LINE__);;
         break;
         //=== if subject and message
         
     case ($subject && $text || !$subject && !$text):
-        $res_search = sql_query("SELECT *, ( (1.3 * (MATCH(subject) AGAINST (".sqlesc($search)." IN BOOLEAN MODE))) + (0.6 * (MATCH(msg) AGAINST (".sqlesc($search)." IN BOOLEAN MODE)))) AS relevance FROM messages WHERE ( MATCH(subject,msg) AGAINST (".sqlesc($search)." IN BOOLEAN MODE) ) $and_member $location $what_in_out ORDER BY ".sqlesc($sort)." $desc_asc LIMIT ".$limit) or sqlerr(__FILE__, __LINE__);
+        $res_search = sql_query("SELECT *, ( (1.3 * (MATCH(subject) AGAINST (".sqlesc($search)." IN BOOLEAN MODE))) + (0.6 * (MATCH(msg) AGAINST (".sqlesc($search)." IN BOOLEAN MODE)))) AS relevance FROM ".TBL_MESSAGES." WHERE ( MATCH(subject,msg) AGAINST (".sqlesc($search)." IN BOOLEAN MODE) ) $and_member $location $what_in_out ORDER BY ".sqlesc($sort)." $desc_asc LIMIT ".$limit) or sqlerr(__FILE__, __LINE__);
         break;
     }
     $num_resault = mysqli_num_rows($res_search);
@@ -204,14 +204,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $class2 = ($count2 == 0 ? 'two' : 'one');
         //=== if not searching one member...
         if (!$member) {
-            $res_username = sql_query('SELECT id, username, warned, suspended, enabled, donor, leechwarn, chatpost, pirate, king, class FROM users WHERE id = '.sqlesc($row[$sender_reciever]).' LIMIT 1') or sqlerr(__FILE__, __LINE__);
+            $res_username = sql_query('SELECT id, username, warned, suspended, enabled, donor, leechwarn, chatpost, pirate, king, class FROM '.TBL_USERS.' WHERE id = '.sqlesc($row[$sender_reciever]).' LIMIT 1') or sqlerr(__FILE__, __LINE__);
             $arr_username = mysqli_fetch_assoc($res_username);
             $the_username = print_user_stuff($arr_username);
         }
         //=== if searching all boxes...
         $arr_box = ($row['location'] == 1 ? 'Inbox' : ($row['location'] == - 1 ? 'Sentbox' : ($row['location'] == - 2 ? 'Drafts' : '')));
         if ($all_boxes && $arr_box === '') {
-            $res_box_name = sql_query('SELECT name FROM pmboxes WHERE userid = '.sqlesc($CURUSER['id']).' AND boxnumber = '.sqlesc($row['location'])) or sqlerr(__FILE__, __LINE__);
+            $res_box_name = sql_query('SELECT name FROM '.TBL_PMBOXES.' WHERE userid = '.sqlesc($CURUSER['id']).' AND boxnumber = '.sqlesc($row['location'])) or sqlerr(__FILE__, __LINE__);
             $arr_box_name = mysqli_fetch_assoc($res_box_name);
             $arr_box = htmlsafechars($arr_box_name['name']);
         }

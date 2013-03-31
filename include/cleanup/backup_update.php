@@ -13,7 +13,7 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 function docleanup($data)
 {
@@ -22,7 +22,7 @@ function docleanup($data)
     ignore_user_abort(1);
     //== Delete old backup's
     $days = 3;
-    $res = sql_query("SELECT id, name FROM dbbackup WHERE added < ".sqlesc(TIME_NOW - ($days * 86400))) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT id, name FROM ".TBL_DBBACKUP." WHERE added < ".sqlesc(TIME_NOW - ($days * 86400))) or sqlerr(__FILE__, __LINE__);
     if (mysqli_num_rows($res) > 0) {
         $ids = array();
         while ($arr = mysqli_fetch_assoc($res)) {
@@ -30,7 +30,7 @@ function docleanup($data)
             $filename = $INSTALLER09['backup_dir'].'/'.$arr['name'];
             if (is_file($filename)) unlink($filename);
         }
-        sql_query('DELETE FROM dbbackup WHERE id IN ('.implode(', ', $ids).')') or sqlerr(__FILE__, __LINE__);
+        sql_query('DELETE FROM '.TBL_DBBACKUP.' WHERE id IN ('.implode(', ', $ids).')') or sqlerr(__FILE__, __LINE__);
     }
     //== end
     if ($queries > 0) write_log("Backup Clean -------------------- Backup Clean Complete using $queries queries--------------------");

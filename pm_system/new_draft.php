@@ -21,7 +21,7 @@ if (isset($_POST['buttonval']) && $_POST['buttonval'] == 'save draft') {
     if (empty($_POST['body'])) stderr('Error!', 'To save a message in your draft folder, it must have body text!');
     $body = sqlesc($_POST['body']);
     $subject = sqlesc(strip_tags($_POST['subject']));
-    $go_for_it = sql_query('INSERT INTO messages (sender, receiver, added, msg, subject, location, draft, unread, saved) VALUES  
+    $go_for_it = sql_query('INSERT INTO '.TBL_MESSAGES.' (sender, receiver, added, msg, subject, location, draft, unread, saved) VALUES  
                                                                         ('.sqlesc($CURUSER['id']).', '.sqlesc($CURUSER['id']).','.TIME_NOW.', '.$body.', '.$subject.', \'-2\', \'yes\',\'no\',\'yes\')') or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('inbox_new_'.$CURUSER['id']);
     $mc1->delete_value('inbox_new_sb_'.$CURUSER['id']);

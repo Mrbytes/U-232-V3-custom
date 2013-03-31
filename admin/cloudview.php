@@ -30,7 +30,7 @@ class_check(UC_ADMINISTRATOR);
 $lang = array_merge($lang);
 $HTMLOUT = '';
 if (isset($_POST["delcloud"])) {
-    $do = "DELETE FROM searchcloud WHERE id IN (".implode(", ", $_POST['delcloud']).")";
+    $do = "DELETE FROM ".TBL_SEARCHCLOUD." WHERE id IN (".implode(", ", $_POST['delcloud']).")";
     $res = sql_query($do);
     $mc1->delete_value('searchcloud');
     header("Refresh: 3; url=staffpanel.php?tool=cloudview&action=cloudview");
@@ -53,13 +53,13 @@ checkflag = "false";
 }
 /*]]>*/
 </script>';
-$search_count = sql_query("SELECT COUNT(id) FROM searchcloud");
+$search_count = sql_query("SELECT COUNT(id) FROM ".TBL_SEARCHCLOUD."");
 $row = mysqli_fetch_array($search_count);
 $count = $row[0];
 $perpage = 15;
 $pager = pager($perpage, $count, "staffpanel.php?tool=cloudview&amp;action=cloudview&amp;");
 if ($count > $perpage) $HTMLOUT.= $pager['pagertop'];
-$search_q = sql_query('SELECT id, searchedfor, ip, howmuch FROM searchcloud ORDER BY howmuch DESC '.$pager['limit']) or sqlerr(__FILE__, __LINE__);
+$search_q = sql_query('SELECT id, searchedfor, ip, howmuch FROM '.TBL_SEARCHCLOUD.' ORDER BY howmuch DESC '.$pager['limit']) or sqlerr(__FILE__, __LINE__);
 $HTMLOUT.= begin_main_frame("Searchcloud overview");
 $HTMLOUT.= "
 <form method='post' action='staffpanel.php?tool=cloudview&amp;action=cloudview'>

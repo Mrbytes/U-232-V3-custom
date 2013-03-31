@@ -36,7 +36,7 @@ $stdfoot = array(
 );
 $HTMLOUT = '';
 if (isset($_POST["delmp"])) {
-    $do = "DELETE FROM messages WHERE id IN (".implode(", ", $_POST['delmp']).")";
+    $do = "DELETE FROM ".TBL_MESSAGES." WHERE id IN (".implode(", ", $_POST['delmp']).")";
     $res = sql_query($do);
     header("Refresh: 0; url=staffpanel.php?tool=pmview&action=pmview");
     stderr("Success", "The messages where successfully deleted!");
@@ -58,13 +58,13 @@ checkflag = "false";
 }
 /*]]>*/
 </script>';
-$res2 = sql_query("SELECT COUNT(*) FROM messages");
+$res2 = sql_query("SELECT COUNT(*) FROM ".TBL_MESSAGES."");
 $row = mysqli_fetch_array($res2);
 $count = $row[0];
 $perpage = 15;
 $pager = pager($perpage, $count, "staffpanel.php?tool=pmview&amp;action=pmview&amp;");
 if ($count > $perpage) $HTMLOUT.= $pager['pagertop'];
-$res = sql_query("SELECT msg.receiver, msg.subject, msg.sender, msg.unread, msg.msg, msg.added, msg.id, u1.username AS u1_username, u2.username AS u2_username FROM messages AS msg LEFT JOIN users AS u1 ON u1.id=msg.receiver LEFT JOIN users AS u2 ON u2.id=msg.sender ORDER BY msg.id DESC {$pager['limit']}") or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT msg.receiver, msg.subject, msg.sender, msg.unread, msg.msg, msg.added, msg.id, u1.username AS u1_username, u2.username AS u2_username FROM ".TBL_MESSAGES." AS msg LEFT JOIN ".TBL_USERS." AS u1 ON u1.id=msg.receiver JOIN ".TBL_USERS." AS u2 ON u2.id=msg.sender ORDER BY msg.id DESC {$pager['limit']}") or sqlerr(__FILE__, __LINE__);
 $HTMLOUT.= begin_main_frame("Administrative message overview");
 $HTMLOUT.= "
 <form method='post' action='staffpanel.php?tool=pmview&amp;action=pmview'>

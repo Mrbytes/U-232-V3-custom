@@ -61,8 +61,8 @@ function delete_poll()
     $pid = intval($_GET['pid']);
     if (!isset($_GET['sure'])) stderr('USER WARNING', "<h2>You are about to delete a poll forever!</h2>
       <a href='javascript:history.back()' title='Cancel this operation!' style='color:green;font-weight:bold'><span class='btn' style='padding:3px;'><img style='vertical-align:middle;' src='{$INSTALLER09['pic_base_url']}/polls/p_delete.gif' alt='Go Back' />Go Back</span></a>&nbsp;<a href=staffpanel.php?tool=polls_manager&amp;'action=polls_manager&amp;mode=delete&amp;pid={$pid}&amp;sure=1' title='Delete this poll, there is no going back!' style='color:green;font-weight:bold'><span class='btn' style='padding:3px;'><img style='vertical-align:middle;' src='{$INSTALLER09['pic_base_url']}/polls/p_tick.gif' alt='Delete' />Delete Sure?</span></a>");
-    sql_query("DELETE FROM polls WHERE pid = $pid");
-    sql_query("DELETE FROM poll_voters WHERE poll_id = $pid");
+    sql_query("DELETE FROM ".TBL_POLLS." WHERE pid = $pid");
+    sql_query("DELETE FROM ".TBL_POLL_VOTERS." WHERE poll_id = $pid");
     $mc1->delete_value('poll_data_'.$CURUSER['id']);
     show_poll_archive();
 }
@@ -82,7 +82,7 @@ function update_poll()
     //all ok, serialize
     $poll_data = sqlesc(serialize($poll_data));
     $username = sqlesc($CURUSER['username']);
-    sql_query("UPDATE polls SET choices=$poll_data, starter_id={$CURUSER['id']}, starter_name=$username, votes=$total_votes, poll_question=$poll_title WHERE pid=$pid") or sqlerr(__FILE__, __LINE__);
+    sql_query("UPDATE ".TBL_POLLS." SET choices=$poll_data, starter_id={$CURUSER['id']}, starter_name=$username, votes=$total_votes, poll_question=$poll_title WHERE pid=$pid") or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('poll_data_'.$CURUSER['id']);
     if (-1 == mysqli_affected_rows($GLOBALS["___mysqli_ston"])) {
         $msg = "<h2>An Error Occured!</h2>
@@ -105,7 +105,7 @@ function insert_new_poll()
     $poll_data = sqlesc(serialize($poll_data));
     $username = sqlesc($CURUSER['username']);
     $time = TIME_NOW;
-    sql_query("INSERT INTO polls (start_date, choices, starter_id, starter_name, votes, poll_question)VALUES($time, $poll_data, {$CURUSER['id']}, $username, 0, $poll_title)") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_POLLS." (start_date, choices, starter_id, starter_name, votes, poll_question)VALUES($time, $poll_data, {$CURUSER['id']}, $username, 0, $poll_title)") or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('poll_data_'.$CURUSER['id']);
     if (false == ((is_null($___mysqli_res = mysqli_insert_id($GLOBALS["___mysqli_ston"]))) ? false : $___mysqli_res)) {
         $msg = "<h2>An Error Occured!</h2>
@@ -129,7 +129,7 @@ function edit_poll_form()
     $poll_multi = '';
     $poll_choices = '';
     $poll_votes = '';
-    $query = sql_query("SELECT * FROM polls WHERE pid = ".intval($_GET['pid']));
+    $query = sql_query("SELECT * FROM ".TBL_POLLS." WHERE pid = ".intval($_GET['pid']));
     if (false == mysqli_num_rows($query)) return 'No poll with that ID';
     $poll_data = mysqli_fetch_assoc($query);
     $poll_answers = $poll_data['choices'] ? unserialize(stripslashes($poll_data['choices'])) : array();
@@ -157,7 +157,7 @@ function show_poll_archive()
 {
     global $INSTALLER09;
     $HTMLOUT = '';
-    $query = sql_query("SELECT * FROM polls ORDER BY start_date DESC");
+    $query = sql_query("SELECT * FROM ".TBL_POLLS." ORDER BY start_date DESC");
     if (false == mysqli_num_rows($query)) {
         $HTMLOUT = "<h2>No polls defined</h2>
       <br />

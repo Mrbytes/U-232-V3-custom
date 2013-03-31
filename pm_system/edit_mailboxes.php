@@ -30,7 +30,7 @@ if (isset($_POST['action2'])) {
     switch ($action2) {
     case 'change_pm':
         $change_pm_number = (isset($_POST['change_pm_number']) ? intval($_POST['change_pm_number']) : 20);
-        sql_query('UPDATE users SET pms_per_page = '.sqlesc($change_pm_number).' WHERE id = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+        sql_query('UPDATE '.TBL_USERS.' SET pms_per_page = '.sqlesc($change_pm_number).' WHERE id = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
         $mc1->begin_transaction('user'.$CURUSER['id']);
         $mc1->update_row(false, array(
             'pms_per_page' => $change_pm_number
@@ -49,7 +49,7 @@ if (isset($_POST['action2'])) {
         //=== make sure they posted something...
         if ($_POST['new'] === '') stderr('Error', 'to add new PM boxes you MUST enter at least one PM box name!');
         //=== Get current highest box number
-        $res = sql_query('SELECT boxnumber FROM pmboxes WHERE userid = '.sqlesc($CURUSER['id']).' ORDER BY boxnumber  DESC LIMIT 1') or sqlerr(__FILE__, __LINE__);
+        $res = sql_query('SELECT boxnumber FROM '.TBL_PMBOXES.' WHERE userid = '.sqlesc($CURUSER['id']).' ORDER BY boxnumber  DESC LIMIT 1') or sqlerr(__FILE__, __LINE__);
         $box_arr = mysqli_fetch_row($res);
         $box = ($box_arr[0] < 2 ? 2 : ($box_arr[0] + 1));
         //=== let's add the new boxes to the DB
@@ -57,7 +57,7 @@ if (isset($_POST['action2'])) {
         foreach ($new_box as $key => $add_it) {
             if (validusername($add_it) && $add_it !== '') {
                 $name = htmlsafechars($add_it);
-                sql_query('INSERT INTO pmboxes (userid, name, boxnumber) VALUES ('.sqlesc($CURUSER['id']).', '.sqlesc($name).', '.sqlesc($box).')') or sqlerr(__FILE__, __LINE__);
+                sql_query('INSERT INTO '.TBL_PMBOXES.' (userid, name, boxnumber) VALUES ('.sqlesc($CURUSER['id']).', '.sqlesc($name).', '.sqlesc($box).')') or sqlerr(__FILE__, __LINE__);
                 $mc1->delete_value('get_all_boxes'.$CURUSER['id']);
                 $mc1->delete_value('insertJumpTo'.$CURUSER['id']);
             }
@@ -72,13 +72,13 @@ if (isset($_POST['action2'])) {
         
     case 'edit_boxes':
         //=== get info
-        $res = sql_query('SELECT * FROM pmboxes WHERE userid='.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+        $res = sql_query('SELECT * FROM '.TBL_PMBOXES.' WHERE userid='.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
         if (mysqli_num_rows($res) === 0) stderr(' Error', 'No Mailboxes to edit');
         while ($row = mysqli_fetch_assoc($res)) {
             //=== if name different AND safe, update it
             if (validusername($_POST['edit'.$row['id']]) && $_POST['edit'.$row['id']] !== '' && $_POST['edit'.$row['id']] !== $row['name']) {
                 $name = htmlsafechars($_POST['edit'.$row['id']]);
-                sql_query('UPDATE pmboxes SET name='.sqlesc($name).' WHERE id='.sqlesc($row['id']).' LIMIT 1') or sqlerr(__FILE__, __LINE__);
+                sql_query('UPDATE '.TBL_PMBOXES.' SET name='.sqlesc($name).' WHERE id='.sqlesc($row['id']).' LIMIT 1') or sqlerr(__FILE__, __LINE__);
                 $mc1->delete_value('get_all_boxes'.$CURUSER['id']);
                 $mc1->delete_value('insertJumpTo'.$CURUSER['id']);
                 $worked = '&name=1';
@@ -86,13 +86,13 @@ if (isset($_POST['action2'])) {
             //=== if name is empty, delete the box(es) and send the PMs back to the inbox..
             if ($_POST['edit'.$row['id']] == '') {
                 //=== get messages to move
-                $remove_messages_res = sql_query('SELECT id FROM messages WHERE location='.sqlesc($row['boxnumber']).'  AND receiver='.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+                $remove_messages_res = sql_query('SELECT id FROM '.TBL_MESSAGES.' WHERE location='.sqlesc($row['boxnumber']).'  AND receiver='.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
                 //== move the messages to the inbox
                 while ($remove_messages_arr = mysqli_fetch_assoc($remove_messages_res)) {
-                    sql_query('UPDATE messages SET location=1 WHERE id='.sqlesc($remove_messages_arr['id'])) or sqlerr(__FILE__, __LINE__);
+                    sql_query('UPDATE '.TBL_MESSAGES.' SET location=1 WHERE id='.sqlesc($remove_messages_arr['id'])) or sqlerr(__FILE__, __LINE__);
                 }
                 //== delete the box
-                sql_query('DELETE FROM pmboxes WHERE id='.sqlesc($row['id']).'  LIMIT 1') or sqlerr(__FILE__, __LINE__);
+                sql_query('DELETE FROM '.TBL_PMBOXES.' WHERE id='.sqlesc($row['id']).'  LIMIT 1') or sqlerr(__FILE__, __LINE__);
                 $mc1->delete_value('get_all_boxes'.$CURUSER['id']);
                 $mc1->delete_value('insertJumpTo'.$CURUSER['id']);
                 $deleted = '&box_delete=1';
@@ -155,7 +155,7 @@ if (isset($_POST['action2'])) {
             $mc1->update_row(false, $user_cache);
             $mc1->commit_transaction($INSTALLER09['expires']['user_cache']);
         }
-        sql_query('UPDATE users SET '.implode(', ', $updateset).' WHERE id = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+        sql_query('UPDATE '.TBL_USERS.' SET '.implode(', ', $updateset).' WHERE id = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
         $worked = '&pms=1';
         //=== redirect back with messages :P
         header('Location: pm_system.php?action=edit_mailboxes'.$worked);
@@ -165,12 +165,12 @@ if (isset($_POST['action2'])) {
     
 } //=== end of $_POST stuff
 //=== main page here :D
-$res = sql_query('SELECT * FROM pmboxes WHERE userid='.sqlesc($CURUSER['id']).' ORDER BY name ASC') or sqlerr(__FILE__, __LINE__);
+$res = sql_query('SELECT * FROM '.TBL_PMBOXES.' WHERE userid='.sqlesc($CURUSER['id']).' ORDER BY name ASC') or sqlerr(__FILE__, __LINE__);
 if (mysqli_num_rows($res) > 0) {
     //=== get all PM boxes for editing
     while ($row = mysqli_fetch_assoc($res)) {
         //==== get count from PM boxes
-        $res_count = sql_query('SELECT COUNT(id) FROM messages WHERE  location = '.sqlesc($row['boxnumber']).' AND receiver = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+        $res_count = sql_query('SELECT COUNT(id) FROM '.TBL_MESSAGES.' WHERE  location = '.sqlesc($row['boxnumber']).' AND receiver = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
         $arr_count = mysqli_fetch_row($res_count);
         $messages = $arr_count[0];
         $all_my_boxes.= '

@@ -1,6 +1,6 @@
 <?php
 $draft = $subject = $body = '';
-flood_limit('messages');
+flood_limit(''.TBL_MESSAGES.'');
 //=== don't allow direct access
 if (!defined('BUNNY_PM_SYSTEM')) {
     $HTMLOUT = '';
@@ -28,18 +28,18 @@ if (isset($_POST['buttonval']) && $_POST['buttonval'] == 'Send') {
     $returnto = htmlsafechars(isset($_POST['returnto']) ? $_POST['returnto'] : '');
     //$returnto = htmlsafechars($_POST['returnto']);
     //=== get user info from DB
-    $res_receiver = sql_query('SELECT id, acceptpms, notifs, email, class, username FROM users WHERE id='.sqlesc($receiver)) or sqlerr(__FILE__, __LINE__);
+    $res_receiver = sql_query('SELECT id, acceptpms, notifs, email, class, username FROM '.TBL_USERS.' WHERE id='.sqlesc($receiver)) or sqlerr(__FILE__, __LINE__);
     $arr_receiver = mysqli_fetch_assoc($res_receiver);
     if (!is_valid_id(intval($_POST['receiver'])) || !is_valid_id($arr_receiver['id'])) stderr('Error', 'Member not found!!!');
     if (!isset($_POST['body'])) stderr('Error', 'No body text... Please enter something to send!');
     //=== allow suspended users to PM / forward to staff only
     if ($CURUSER['suspended'] === 'yes') {
-        $res = sql_query('SELECT class FROM users WHERE id = '.sqlesc($receiver)) or sqlerr(__FILE__, __LINE__);
+        $res = sql_query('SELECT class FROM '.TBL_USERS.' WHERE id = '.sqlesc($receiver)) or sqlerr(__FILE__, __LINE__);
         $row = mysqli_fetch_assoc($res);
         if ($row['class'] < UC_STAFF) stderr('Error', 'Your account is suspended, you may only contact staff members!');
     }
     //=== make sure they have space
-    $res_count = sql_query('SELECT COUNT(*) FROM messages WHERE receiver = '.sqlesc($receiver).' AND location = 1') or sqlerr(__FILE__, __LINE__);
+    $res_count = sql_query('SELECT COUNT(*) FROM '.TBL_MESSAGES.' WHERE receiver = '.sqlesc($receiver).' AND location = 1') or sqlerr(__FILE__, __LINE__);
     $arr_count = mysqli_fetch_row($res_count);
     if ($arr_count[0] >= $maxbox && $CURUSER['class'] < UC_STAFF) stderr('Sorry', 'Members PM box is full.');
     //=== Make sure recipient wants this message
@@ -47,13 +47,13 @@ if (isset($_POST['buttonval']) && $_POST['buttonval'] == 'Send') {
         $should_i_send_this = ($arr_receiver['acceptpms'] == 'yes' ? 'yes' : ($arr_receiver['acceptpms'] == 'no' ? 'no' : ($arr_receiver['acceptpms'] == 'friends' ? 'friends' : '')));
         switch ($should_i_send_this) {
         case 'yes':
-            $r = sql_query('SELECT id FROM blocks WHERE userid = '.sqlesc($receiver).' AND blockid = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+            $r = sql_query('SELECT id FROM '.TBL_BLOCKS.' WHERE userid = '.sqlesc($receiver).' AND blockid = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
             $block = mysqli_fetch_row($r);
             if ($block[0] > 0) stderr('Refused', htmlsafechars($arr_receiver['username']).' has blocked PMs from you.');
             break;
 
         case 'friends':
-            $r = sql_query('SELECT id FROM friends WHERE userid = '.sqlesc($receiver).' AND friendid = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+            $r = sql_query('SELECT id FROM '.TBL_FRIENDS.' WHERE userid = '.sqlesc($receiver).' AND friendid = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
             $friend = mysqli_fetch_row($r);
             if ($friend[0] > 0) stderr('Refused', htmlsafechars($arr_receiver['username']).' only accepts PMs from members in their friends list.');
             break;
@@ -64,7 +64,7 @@ if (isset($_POST['buttonval']) && $_POST['buttonval'] == 'Send') {
         }
     }
     //=== ok all is well... post the message :D
-    sql_query('INSERT INTO messages (poster, sender, receiver, added, msg, subject, saved, location, urgent) VALUES 
+    sql_query('INSERT INTO '.TBL_MESSAGES.' (poster, sender, receiver, added, msg, subject, saved, location, urgent) VALUES 
                             ('.sqlesc($CURUSER['id']).', '.sqlesc($CURUSER['id']).', '.sqlesc($receiver).', '.TIME_NOW.', '.$body.', '.$subject.', '.$save.', 1,'.$urgent.')') or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('inbox_new_'.$receiver);
     $mc1->delete_value('inbox_new_sb_'.$receiver);
@@ -89,15 +89,15 @@ EOD;
     //=== if they don't want to keep the message they are replying to then delete it!
     if ($delete != 0) {
         //=== be sure they should be deleting this...
-        $res = sql_query('SELECT saved, receiver FROM messages WHERE id='.sqlesc($delete)) or sqlerr(__FILE__, __LINE__);
+        $res = sql_query('SELECT saved, receiver FROM '.TBL_MESSAGES.' WHERE id='.sqlesc($delete)) or sqlerr(__FILE__, __LINE__);
         if (mysqli_num_rows($res) > 0) {
             $arr = mysqli_fetch_assoc($res);
             //if ($arr['receiver'] !== $CURUSER['id'])
             if ($arr['receiver'] != $CURUSER['id']) stderr('Quote!', 'Thou spongy prick-eared bag of guts!');
             if ($arr['saved'] == 'no') {
-                sql_query('DELETE FROM messages WHERE id = '.sqlesc($delete)) or sqlerr(__FILE__, __LINE__);
+                sql_query('DELETE FROM '.TBL_MESSAGES.' WHERE id = '.sqlesc($delete)) or sqlerr(__FILE__, __LINE__);
             } elseif ($arr['saved'] == 'yes') {
-                sql_query('UPDATE messages SET location = 0 WHERE id = '.sqlesc($delete)) or sqlerr(__FILE__, __LINE__);
+                sql_query('UPDATE '.TBL_MESSAGES.' SET location = 0 WHERE id = '.sqlesc($delete)) or sqlerr(__FILE__, __LINE__);
             }
         }
     }
@@ -112,13 +112,13 @@ $replyto = (isset($_GET['replyto']) ? intval($_GET['replyto']) : (isset($_POST['
 $returnto = htmlsafechars(isset($_POST['returnto']) ? $_POST['returnto'] : '');
 if ($receiver === 0) stderr('Error', 'you can\'t PM Sys-Bot... It won\'t write you back!');
 if (!is_valid_id($receiver)) stderr('Error', 'No member with that ID!');
-$res_member = sql_query('SELECT username FROM users WHERE id = '.sqlesc($receiver)) or sqlerr(__FILE__, __LINE__);
+$res_member = sql_query('SELECT username FROM '.TBL_USERS.' WHERE id = '.sqlesc($receiver)) or sqlerr(__FILE__, __LINE__);
 $arr_member = mysqli_fetch_row($res_member);
 //=== if reply
 if ($replyto != 0) {
     if (!validusername($arr_member[0])) stderr('Error', 'No member with that ID!');
     //=== make sure they should be replying to this PM...
-    $res_old_message = sql_query('SELECT receiver, sender, subject, msg FROM messages WHERE id = '.sqlesc($replyto)) or sqlerr(__FILE__, __LINE__);
+    $res_old_message = sql_query('SELECT receiver, sender, subject, msg FROM '.TBL_MESSAGES.' WHERE id = '.sqlesc($replyto)) or sqlerr(__FILE__, __LINE__);
     $arr_old_message = mysqli_fetch_assoc($res_old_message);
     //print $arr_old_message['sender'];
     //exit();

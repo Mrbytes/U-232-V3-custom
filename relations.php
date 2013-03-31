@@ -44,7 +44,7 @@ switch ($action) {
 case 'add':
     if ($uid === 0 || $uid === $cid) stderr('Err', sprintf('<b>%s</b>, wtf are you trying to do ?%s', ucfirst($CURUSER['username']) , ($uid === $cid ? 'You can\'t add yourself as friend, fool !' : '')));
     if ($sure === false) {
-        $q1 = sql_query(sprintf('SELECT u.username , r1.relation as your_relation, r2.relation as his_relation FROM users as u LEFT JOIN relations as r1 ON r1.user = %d AND r1.relation_with = %d LEFT JOIN relations as r2 ON r2.user = %d AND r2.relation_with = %d WHERE u.id = %d', $cid, $uid, $uid, $cid, $uid)) or die(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
+        $q1 = sql_query(sprintf('SELECT u.username , r1.relation as your_relation, r2.relation as his_relation FROM '.TBL_USERS.' as u LEFT JOIN '.TBL_RELATIONS.' as r1 ON r1.user = %d AND r1.relation_with = %d LEFT JOIN '.TBL_RELATIONS.' as r2 ON r2.user = %d AND r2.relation_with = %d WHERE u.id = %d', $cid, $uid, $uid, $cid, $uid)) or die(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
         if (mysqli_num_rows($q1) === 1) {
             $ar1 = mysqli_fetch_assoc($q1);
             $err_key = sprintf('%s_%s', ($ar1['his_relation'] == 'blocked' ? 'x' : $ar1['your_relation']) , ($ar1['your_relation'] == 'blocked' ? 'x' : $ar1['his_relation']));
@@ -71,8 +71,8 @@ case 'add':
                 'relation' => 'neutral'
             )
         );
-        sql_query(sprintf('INSERT INTO messages(%s) VALUES(%s)', join(', ', array_keys($message)) , join(', ', array_map('sqlesc', $message)))) or sqlerr(__FILE__, __LINE__);
-        sql_query(sprintf('INSERT INTO relations (%s) VALUES %s', join(', ', array_keys($relation[0])) , join(', ', array_map('fooboo', $relation)))) or sqlerr(__FILE__, __LINE__);
+        sql_query(sprintf('INSERT INTO '.TBL_MESSAGES.'(%s) VALUES(%s)', join(', ', array_keys($message)) , join(', ', array_map('sqlesc', $message)))) or sqlerr(__FILE__, __LINE__);
+        sql_query(sprintf('INSERT INTO '.TBL_RELATIONS.' (%s) VALUES %s', join(', ', array_keys($relation[0])) , join(', ', array_map('fooboo', $relation)))) or sqlerr(__FILE__, __LINE__);
         stderr('Success', 'Your friendship request was sent, wait till the user reviewes it!');
     }
     break;

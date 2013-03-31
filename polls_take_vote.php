@@ -27,9 +27,9 @@ $_POST['choice'] = isset($_POST['choice']) ? $_POST['choice'] : array();
 			stderr( 'ERROR', 'ya nay alood ta vot' );
 		}
 */
-$query = sql_query("SELECT * FROM polls
-                            LEFT JOIN poll_voters ON polls.pid = poll_voters.poll_id
-                            AND poll_voters.user_id = {$CURUSER['id']} 
+$query = sql_query("SELECT * FROM ".TBL_POLLS."
+                            LEFT JOIN ".TBL_POLL_VOTERS." ON ".TBL_POLLS.".pid =  ".TBL_POLL_VOTERS.".poll_id
+                            AND ".TBL_POLL_VOTERS.".user_id = {$CURUSER['id']} 
                             WHERE pid = ".sqlesc($poll_id));
 if (!mysqli_num_rows($query) == 1) {
     stderr('ERROR', 'No poll with that ID');
@@ -60,7 +60,7 @@ if (!$_POST['nullvote']) {
     if (count($vote_cast) < count($poll_answers)) {
         stderr('ERROR', 'No vote');
     }
-    @sql_query("INSERT INTO poll_voters (user_id, ip_address, poll_id, vote_date)
+    @sql_query("INSERT INTO ".TBL_POLL_VOTERS." (user_id, ip_address, poll_id, vote_date)
                         VALUES ({$CURUSER['id']},
 															 ".sqlesc($CURUSER['ip']).",
 															 {$poll_data['pid']},
@@ -82,11 +82,11 @@ if (!$_POST['nullvote']) {
         }
     }
     $poll_data['choices'] = addslashes(serialize($poll_answers));
-    @sql_query("UPDATE polls set votes=votes+1, choices='{$poll_data['choices']}' 
+    @sql_query("UPDATE ".TBL_POLLS." set votes=votes+1, choices='{$poll_data['choices']}' 
 									WHERE pid={$poll_data['pid']}");
     if (-1 == mysqli_affected_rows($GLOBALS["___mysqli_ston"])) stderr('DBERROR', 'Could not update records');
 } else {
-    @sql_query("INSERT INTO poll_voters (user_id, ip_address, poll_id, vote_date)
+    @sql_query("INSERT INTO ".TBL_POLL_VOTERS." (user_id, ip_address, poll_id, vote_date)
                 VALUES
                 ({$CURUSER['id']}, ".sqlesc($CURUSER['ip']).", {$poll_data['pid']},
 								".TIME_NOW.")");

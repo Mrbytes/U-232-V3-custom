@@ -40,7 +40,7 @@ $id = 0 + $_GET["id"];
 if (!is_valid_id($id)) stderr("Error", "{$lang['userdetails_bad_id']}");
 $user_fields = 'id, username, passhash, secret, passkey, email, status, added, '.'last_login, last_access, curr_ann_last_check, curr_ann_id, editsecret, privacy, stylesheet, '.'info, acceptpms, ip, class, override_class, language, avatar, av_w, av_h, '.'title, country, notifs, enabled, donor, warned, torrentsperpage, topicsperpage, '.'postsperpage, deletepms, savepms, reputation, time_offset, dst_in_use, auto_correct_dst, '.'show_shout, shoutboxbg, chatpost, smile_until, vip_added, vip_until, '.'freeslots, free_switch, invites, invitedby, invite_rights, anonymous, uploadpos, forumpost, '.'downloadpos, immunity, leechwarn, disable_reason, clear_new_tag_manually, last_browse, sig_w, '.'sig_h, signatures, signature, forum_access, highspeed, hnrwarn, hit_and_run_total, donoruntil, '.'donated, total_donated, vipclass_before, parked, passhint, hintanswer, avatarpos, support, '.'supportfor, sendpmpos, invitedate, invitees, invite_on, subscription_pm, gender,  anonymous_until, '.'viewscloud, tenpercent, avatars, offavatar, pirate, king, hidecur, ssluse, signature_post, forum_post, '.'avatar_rights, offensive_avatar, view_offensive_avatar, paranoia, google_talk, msn, aim, yahoo, website, '.'icq, show_email, parked_until, gotgift, hash1, suspended, bjwins, bjlosses, warn_reason, onirc, irctotal, '.'birthday, got_blocks, last_access_numb, onlinetime, pm_on_delete, commentpm, split, browser, hits, '.'comments, categorie_icon, reputation, perms, mood, got_moods, pms_per_page, show_pm_avatar, watched_user, watched_user_reason, staff_notes, game_access, browse_icons';
 if (($user = $mc1->get_value('user'.$id)) === false) {
-    $r1 = sql_query("SELECT ".$user_fields." FROM users WHERE id=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    $r1 = sql_query("SELECT ".$user_fields." FROM ".TBL_USERS." WHERE id=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $user = mysqli_fetch_assoc($r1) or stderr("Error", "{$lang['userdetails_no_user']}");
     $user['id'] = (int)$user['id'];
     $user['added'] = (int)$user['added'];
@@ -110,7 +110,7 @@ if (($user = $mc1->get_value('user'.$id)) === false) {
 if ($user["status"] == "pending") stderr("Error", "User is still pending.");
 // user stats
 if (($user_stats = $mc1->get_value('user_stats_'.$id)) === false) {
-    $sql_1 = sql_query('SELECT uploaded, downloaded, seedbonus, bonuscomment, modcomment FROM users WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    $sql_1 = sql_query('SELECT uploaded, downloaded, seedbonus, bonuscomment, modcomment FROM '.TBL_USERS.' WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $user_stats = mysqli_fetch_assoc($sql_1);
     $user_stats['seedbonus'] = (float)$user_stats['seedbonus'];
     $user_stats['uploaded'] = (float)$user_stats['uploaded'];
@@ -121,7 +121,7 @@ if (($user_stats = $mc1->get_value('user_stats_'.$id)) === false) {
     
 }
 if (($user_status = $mc1->get_value('user_status_'.$id)) === false) {
-    $sql_2 = sql_query('SELECT * FROM ustatus WHERE userid = '.sqlesc($id));
+    $sql_2 = sql_query('SELECT * FROM '.TBL_USTATUS.' WHERE userid = '.sqlesc($id));
     if (mysqli_num_rows($sql_2)) $user_status = mysqli_fetch_assoc($sql_2);
     else $user_status = array(
         'last_status' => '',
@@ -141,14 +141,14 @@ if ($user['paranoia'] == 3 && $CURUSER['class'] < UC_STAFF && $CURUSER['id'] <> 
 if (isset($_GET['delete_hit_and_run']) && $CURUSER['class'] >= UC_STAFF) {
     $delete_me = isset($_GET['delete_hit_and_run']) ? intval($_GET['delete_hit_and_run']) : 0;
     if (!is_valid_id($delete_me)) stderr('Error!', 'Bad ID');
-    sql_query('UPDATE snatched SET hit_and_run = \'0\', mark_of_cain = \'no\' WHERE id = '.sqlesc($delete_me)) or sqlerr(__FILE__, __LINE__);
+    sql_query('UPDATE '.TBL_SNATCHED.' SET hit_and_run = \'0\', mark_of_cain = \'no\' WHERE id = '.sqlesc($delete_me)) or sqlerr(__FILE__, __LINE__);
     if (@mysqli_affected_rows($GLOBALS["___mysqli_ston"]) === 0) {
         stderr('Error!', 'H&R not deleted!');
     }
     header('Location: ?id='.$id.'&completed=1');
     die();
 }
-$r = sql_query("SELECT t.id, t.name, t.seeders, t.leechers, c.name AS cname, c.image FROM torrents t LEFT JOIN categories c ON t.category = c.id WHERE t.owner = ".sqlesc($id)." ORDER BY t.name") or sqlerr(__FILE__, __LINE__);
+$r = sql_query("SELECT t.id, t.name, t.seeders, t.leechers, c.name AS cname, c.image FROM ".TBL_TORRENTS." t LEFT JOIN ".TBL_CATEGORIES." c ON t.category = c.id WHERE t.owner = ".sqlesc($id)." ORDER BY t.name") or sqlerr(__FILE__, __LINE__);
 if (mysqli_num_rows($r) > 0) {
     $torrents = "<table class='main' border='1' cellspacing='0' cellpadding='5'>\n"."<tr><td class='colhead'>{$lang['userdetails_type']}</td><td class='colhead'>{$lang['userdetails_name']}</td><td class='colhead'>{$lang['userdetails_seeders']}</td><td class='colhead'>{$lang['userdetails_leechers']}</td></tr>\n";
     while ($a = mysqli_fetch_assoc($r)) {
@@ -186,7 +186,7 @@ function countries()
 {
     global $mc1, $INSTALLER09;
     if (($ret = $mc1->get_value('countries::arr')) === false) {
-        $res = sql_query("SELECT id, name, flagpic FROM countries ORDER BY name ASC") or sqlerr(__FILE__, __LINE__);
+        $res = sql_query("SELECT id, name, flagpic FROM ".TBL_COUNTRIES." ORDER BY name ASC") or sqlerr(__FILE__, __LINE__);
         while ($row = mysqli_fetch_assoc($res)) $ret[] = $row;
         $mc1->cache_value('countries::arr', $ret, $INSTALLER09['expires']['user_flag']);
     }
@@ -198,18 +198,18 @@ foreach ($countries as $cntry) if ($cntry['id'] == $user['country']) {
     $country = "<img src=\"{$INSTALLER09['pic_base_url']}flag/{$cntry['flagpic']}\" alt=\"".htmlsafechars($cntry['name'])."\" style='margin-left: 8pt' />";
     break;
 }
-$res = sql_query("SELECT p.torrent, p.uploaded, p.downloaded, p.seeder, t.added, t.name as torrentname, t.size, t.category, t.seeders, t.leechers, c.name as catname, c.image FROM peers p LEFT JOIN torrents t ON p.torrent = t.id LEFT JOIN categories c ON t.category = c.id WHERE p.userid=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT p.torrent, p.uploaded, p.downloaded, p.seeder, t.added, t.name as torrentname, t.size, t.category, t.seeders, t.leechers, c.name as catname, c.image FROM ".TBL_PEERS." p LEFT JOIN ".TBL_TORRENTS." t ON p.torrent = t.id LEFT JOIN ".TBL_CATEGORIES." c ON t.category = c.id WHERE p.userid=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
 while ($arr = mysqli_fetch_assoc($res)) {
     if ($arr['seeder'] == 'yes') $seeding[] = $arr;
     else $leeching[] = $arr;
 }
 //==userhits update by pdq
 if (!(isset($_GET["hit"])) && $CURUSER["id"] <> $user["id"]) {
-    $res = sql_query("SELECT added FROM userhits WHERE userid =".sqlesc($CURUSER['id'])." AND hitid = ".sqlesc($id)." LIMIT 1") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT added FROM ".TBL_USERHITS." WHERE userid =".sqlesc($CURUSER['id'])." AND hitid = ".sqlesc($id)." LIMIT 1") or sqlerr(__FILE__, __LINE__);
     $row = mysqli_fetch_row($res);
     if (!($row[0] > TIME_NOW - 3600)) {
         $hitnumber = $user['hits'] + 1;
-        sql_query("UPDATE users SET hits = hits + 1 WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_USERS." SET hits = hits + 1 WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
         // do update hits userdetails cache
         $update['user_hits'] = ($user['hits'] + 1);
         $mc1->begin_transaction('MyUser_'.$id);
@@ -222,7 +222,7 @@ if (!(isset($_GET["hit"])) && $CURUSER["id"] <> $user["id"]) {
             'hits' => $update['user_hits']
         ));
         $mc1->commit_transaction($INSTALLER09['expires']['user_cache']);
-        sql_query("INSERT INTO userhits (userid, hitid, number, added) VALUES(".sqlesc($CURUSER['id']).", ".sqlesc($id).", ".sqlesc($hitnumber).", ".sqlesc(TIME_NOW).")") or sqlerr(__FILE__, __LINE__);
+        sql_query("INSERT INTO ".TBL_USERHITS." (userid, hitid, number, added) VALUES(".sqlesc($CURUSER['id']).", ".sqlesc($id).", ".sqlesc($hitnumber).", ".sqlesc(TIME_NOW).")") or sqlerr(__FILE__, __LINE__);
     }
 }
 $HTMLOUT = $perms = $stealth = $suspended = $watched_user = $h1_thingie = '';
@@ -250,12 +250,12 @@ if ($user["parked"] == 'yes') $HTMLOUT.= "<p><b>{$lang['userdetails_parked']}</b
 if (!$enabled) $HTMLOUT.= "<p><b>{$lang['userdetails_disabled']}</b></p>\n";
 elseif ($CURUSER["id"] <> $user["id"]) {
     if (($friends = $mc1->get_value('Friends_'.$id)) === false) {
-        $r3 = sql_query("SELECT id FROM friends WHERE userid=".sqlesc($CURUSER['id'])." AND friendid=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+        $r3 = sql_query("SELECT id FROM ".TBL_FRIENDS." WHERE userid=".sqlesc($CURUSER['id'])." AND friendid=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
         $friends = mysqli_num_rows($r3);
         $mc1->cache_value('Friends_'.$id, $friends, $INSTALLER09['expires']['user_friends']);
     }
     if (($blocks = $mc1->get_value('Blocks_'.$id)) === false) {
-        $r4 = sql_query("SELECT id FROM blocks WHERE userid=".sqlesc($CURUSER['id'])." AND blockid=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+        $r4 = sql_query("SELECT id FROM ".TBL_BLOCKS." WHERE userid=".sqlesc($CURUSER['id'])." AND blockid=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
         $blocks = mysqli_num_rows($r4);
         $mc1->cache_value('Blocks_'.$id, $blocks, $INSTALLER09['expires']['user_blocks']);
     }
@@ -268,7 +268,7 @@ elseif ($CURUSER["id"] <> $user["id"]) {
 if ($CURUSER['class'] >= UC_STAFF) {
     $shitty = '';
     if (($shit_list = $mc1->get_value('shit_list_'.$id)) === false) {
-        $check_if_theyre_shitty = sql_query("SELECT suspect FROM shit_list WHERE userid=".sqlesc($CURUSER['id'])." AND suspect=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+        $check_if_theyre_shitty = sql_query("SELECT suspect FROM ".TBL_SHIT_LIST." WHERE userid=".sqlesc($CURUSER['id'])." AND suspect=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
         list($shit_list) = mysqli_fetch_row($check_if_theyre_shitty);
         $mc1->cache_value('shit_list_'.$id, $shit_list, $INSTALLER09['expires']['shit_list']);
     }

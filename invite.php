@@ -37,7 +37,7 @@ if ($CURUSER['suspended'] == 'yes') stderr("Sorry", "Your account is suspended")
  * @action Main Page
  */
 if ($do == 'view_page') {
-    $query = sql_query('SELECT * FROM users WHERE invitedby = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+    $query = sql_query('SELECT * FROM '.TBL_USERS.' WHERE invitedby = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
     $rows = mysqli_num_rows($query);
     $HTMLOUT = '';
     $HTMLOUT.= "
@@ -69,7 +69,7 @@ if ($do == 'view_page') {
         }
     }
     $HTMLOUT.= "</table><br />";
-    $select = sql_query("SELECT * FROM invite_codes WHERE sender = ".sqlesc($CURUSER['id'])." AND status = 'Pending'") or sqlerr(__FILE__, __LINE__);
+    $select = sql_query("SELECT * FROM ".TBL_INVITE_CODES." WHERE sender = ".sqlesc($CURUSER['id'])." AND status = 'Pending'") or sqlerr(__FILE__, __LINE__);
     $num_row = mysqli_num_rows($select);
     $HTMLOUT.= "<table border='1' width='750' cellspacing='0' cellpadding='5'>"."<tr class='tabletitle'><td colspan='6' class='colhead'><b>{$lang['invites_codes']}</b></td></tr>";
     if (!$num_row) {
@@ -96,12 +96,12 @@ if ($do == 'view_page') {
 elseif ($do == 'create_invite') {
     if ($CURUSER['invites'] <= 0) stderr($lang['invites_error'], $lang['invites_noinvite']);
     if ($CURUSER["invite_rights"] == 'no' || $CURUSER['suspended'] == 'yes') stderr($lang['invites_deny'], $lang['invites_disabled']);
-    $res = sql_query("SELECT COUNT(id) FROM users") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT COUNT(id) FROM ".TBL_USERS."") or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_row($res);
     if ($arr[0] >= $INSTALLER09['invites']) stderr($lang['invites_error'], $lang['invites_limit']);
     $invite = md5(mksecret());
-    sql_query('INSERT INTO invite_codes (sender, invite_added, code) VALUES ('.sqlesc((int)$CURUSER['id']).', '.TIME_NOW.', '.sqlesc($invite).')') or sqlerr(__FILE__, __LINE__);
-    sql_query('UPDATE users SET invites = invites - 1 WHERE id = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+    sql_query('INSERT INTO '.TBL_INVITE_CODES.' (sender, invite_added, code) VALUES ('.sqlesc((int)$CURUSER['id']).', '.TIME_NOW.', '.sqlesc($invite).')') or sqlerr(__FILE__, __LINE__);
+    sql_query('UPDATE '.TBL_USERS.' SET invites = invites - 1 WHERE id = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
     $update['invites'] = ($CURUSER['invites'] - 1);
     $mc1->begin_transaction('MyUser_'.$CURUSER['id']);
     $mc1->update_row(false, array(
@@ -123,7 +123,7 @@ elseif ($do == 'send_email') {
         $email = (isset($_POST['email']) ? htmlsafechars($_POST['email']) : '');
         $invite = (isset($_POST['code']) ? htmlsafechars($_POST['code']) : '');
         if (!$email) stderr($lang['invites_error'], $lang['invites_noemail']);
-        $check = (mysqli_fetch_row(sql_query('SELECT COUNT(id) FROM users WHERE email = '.sqlesc($email)))) or sqlerr(__FILE__, __LINE__);
+        $check = (mysqli_fetch_row(sql_query('SELECT COUNT(id) FROM '.TBL_USERS.' WHERE email = '.sqlesc($email)))) or sqlerr(__FILE__, __LINE__);
         if ($check[0] != 0) stderr('Error', 'This email address is already in use!');
         if (!validemail($email)) stderr($lang['invites_error'], $lang['invites_invalidemail']);
         $inviter = htmlsafechars($CURUSER['username']);
@@ -158,7 +158,7 @@ EOD;
     }
     $id = (isset($_GET['id']) ? (int)$_GET['id'] : (isset($_POST['id']) ? (int)$_POST['id'] : ''));
     if (!is_valid_id($id)) stderr($lang['invites_error'], $lang['invites_invalid']);
-    $query = sql_query('SELECT * FROM invite_codes WHERE id = '.sqlesc($id).' AND sender = '.sqlesc($CURUSER['id']).' AND status = "Pending"') or sqlerr(__FILE__, __LINE__);
+    $query = sql_query('SELECT * FROM '.TBL_INVITE_CODES.' WHERE id = '.sqlesc($id).' AND sender = '.sqlesc($CURUSER['id']).' AND status = "Pending"') or sqlerr(__FILE__, __LINE__);
     $fetch = mysqli_fetch_assoc($query) or stderr($lang['invites_error'], $lang['invites_noexsist']);
     $HTMLOUT.= "<form method='post' action='?do=send_email'><table border='1' cellspacing='0' cellpadding='10'>
 <tr><td class='rowhead'>E-Mail</td><td><input type='text' size='40' name='email' /></td></tr><tr><td colspan='2' align='center'><input type='hidden' name='code' value='".htmlsafechars($fetch['code'])."' /></td></tr><tr><td colspan='2' align='center'><input type='submit' value='Send e-mail' class='btn' /></td></tr></table></form>";
@@ -169,13 +169,13 @@ EOD;
  */
 elseif ($do == 'delete_invite') {
     $id = (isset($_GET["id"]) ? (int)$_GET["id"] : (isset($_POST["id"]) ? (int)$_POST["id"] : ''));
-    $query = sql_query('SELECT * FROM invite_codes WHERE id = '.sqlesc($id).' AND sender = '.sqlesc($CURUSER['id']).' AND status = "Pending"') or sqlerr(__FILE__, __LINE__);
+    $query = sql_query('SELECT * FROM '.TBL_INVITE_CODES.' WHERE id = '.sqlesc($id).' AND sender = '.sqlesc($CURUSER['id']).' AND status = "Pending"') or sqlerr(__FILE__, __LINE__);
     $assoc = mysqli_fetch_assoc($query);
     if (!$assoc) stderr($lang['invites_error'], $lang['invites_noexsist']);
     isset($_GET['sure']) && $sure = htmlsafechars($_GET['sure']);
     if (!$sure) stderr($lang['invites_delete1'], $lang['invites_sure'].' Click <a href="'.$_SERVER['PHP_SELF'].'?do=delete_invite&amp;id='.$id.'&amp;sender='.$CURUSER['id'].'&amp;sure=yes">here</a> to delete it or <a href="?do=view_page">here</a> to go back.');
-    sql_query('DELETE FROM invite_codes WHERE id = '.sqlesc($id).' AND sender ='.sqlesc($CURUSER['id'].' AND status = "Pending"')) or sqlerr(__FILE__, __LINE__);
-    sql_query('UPDATE users SET invites = invites + 1 WHERE id = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+    sql_query('DELETE FROM '.TBL_INVITE_CODES.' WHERE id = '.sqlesc($id).' AND sender ='.sqlesc($CURUSER['id'].' AND status = "Pending"')) or sqlerr(__FILE__, __LINE__);
+    sql_query('UPDATE '.TBL_USERS.' SET invites = invites + 1 WHERE id = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
     $update['invites'] = ($CURUSER['invites'] + 1);
     $mc1->begin_transaction('MyUser_'.$CURUSER['id']);
     $mc1->update_row(false, array(
@@ -195,12 +195,12 @@ elseif ($do == 'delete_invite') {
 elseif ($do = 'confirm_account') {
     $userid = (isset($_GET["userid"]) ? (int)$_GET["userid"] : (isset($_POST["userid"]) ? (int)$_POST["userid"] : ''));
     if (!is_valid_id($userid)) stderr($lang['invites_error'], $lang['invites_invalid']);
-    $select = sql_query('SELECT id, username FROM users WHERE id = '.sqlesc($userid).' AND invitedby = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+    $select = sql_query('SELECT id, username FROM '.TBL_USERS.' WHERE id = '.sqlesc($userid).' AND invitedby = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
     $assoc = mysqli_fetch_assoc($select);
     if (!$assoc) stderr($lang['invites_error'], $lang['invites_errorid']);
     isset($_GET['sure']) && $sure = htmlsafechars($_GET['sure']);
     if (!$sure) stderr($lang['invites_confirm1'], $lang['invites_sure1'].' '.htmlsafechars($assoc['username']).'\'s account? Click <a href="?do=confirm_account&amp;userid='.$userid.'&amp;sender='.(int)$CURUSER['id'].'&amp;sure=yes">here</a> to confirm it or <a href="?do=view_page">here</a> to go back.');
-    sql_query('UPDATE users SET status = "confirmed" WHERE id = '.sqlesc($userid).' AND invitedby = '.sqlesc($CURUSER['id']).' AND status="pending"') or sqlerr(__FILE__, __LINE__);
+    sql_query('UPDATE '.TBL_USERS.' SET status = "confirmed" WHERE id = '.sqlesc($userid).' AND invitedby = '.sqlesc($CURUSER['id']).' AND status="pending"') or sqlerr(__FILE__, __LINE__);
     //==pm to new invitee/////
     $msg = sqlesc("Hey there :wave:
 Welcome to {$INSTALLER09['site_name']}!\n
@@ -216,7 +216,7 @@ cheers,\n
     $id = (int)$assoc["id"];
     $subject = sqlesc("Welcome to {$INSTALLER09['site_name']} !");
     $added = TIME_NOW;
-    sql_query("INSERT INTO messages (sender, subject, receiver, msg, added) VALUES (0, $subject, ".sqlesc($id).", $msg, $added)") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_MESSAGES." (sender, subject, receiver, msg, added) VALUES (0, $subject, ".sqlesc($id).", $msg, $added)") or sqlerr(__FILE__, __LINE__);
     ///////////////////end////////////
     header("Location: ?do=view_page");
 }

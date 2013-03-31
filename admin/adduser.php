@@ -44,12 +44,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } else stderr($lang['std_err'], $lang['err_password']);
     if (isset($_POST['email']) && validemail($_POST['email'])) $insert['email'] = $_POST['email'];
     else stderr($lang['std_err'], $lang['err_email']);
-    if (sql_query(sprintf('INSERT INTO users (username, email, secret, passhash, status, added, last_access) VALUES (%s)', join(', ', array_map('sqlesc', $insert))))) {
+    if (sql_query(sprintf('INSERT INTO '.TBL_USERS.' (username, email, secret, passhash, status, added, last_access) VALUES (%s)', join(', ', array_map('sqlesc', $insert))))) {
         $user_id = ((is_null($___mysqli_res = mysqli_insert_id($GLOBALS["___mysqli_ston"]))) ? false : $___mysqli_res);
         stderr($lang['std_success'], sprintf($lang['text_user_added'], $user_id));
     } else {
         if (((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_errno($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_errno()) ? $___mysqli_res : false)) == 1062) {
-            $res = sql_query(sprintf('SELECT id FROM users WHERE username = %s', sqlesc($insert['username']))) or sqlerr(__FILE__, __LINE__);
+            $res = sql_query(sprintf('SELECT id FROM '.TBL_USERS.' WHERE username = %s', sqlesc($insert['username']))) or sqlerr(__FILE__, __LINE__);
             if (mysqli_num_rows($res)) {
                 $arr = mysqli_fetch_assoc($res);
                 header(sprintf('refresh:3; url=userdetails.php?id=%d', $arr['id']));

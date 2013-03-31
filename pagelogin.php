@@ -17,10 +17,10 @@ function failedloginscheck()
     global $INSTALLER09;
     $total = 0;
     $ip = sqlesc(getip());
-    $res = sql_query("SELECT SUM(attempts) FROM failedlogins WHERE ip=$ip") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT SUM(attempts) FROM ".TBL_FAILEDLOGINS." WHERE ip=$ip") or sqlerr(__FILE__, __LINE__);
     list($total) = mysqli_fetch_row($res);
     if ($total >= $INSTALLER09['failedlogins']) {
-        sql_query("UPDATE failedlogins SET banned = 'yes' WHERE ip=$ip") or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_FAILEDLOGINS." SET banned = 'yes' WHERE ip=$ip") or sqlerr(__FILE__, __LINE__);
         stderr("Login Locked!", "You have been <b>Exceeded</b> the allowed maximum login attempts without successful login, therefore your ip address <b>(".htmlsafechars($ip).")</b> has been locked for 24 hours.");
     }
 }
@@ -41,20 +41,20 @@ $hash1 = substr($qlogin, 0, 32);
 $hash2 = substr($qlogin, 32, 32);
 $hash3 = substr($qlogin, 64, 32);
 $hash1.= $hash2.$hash3;
-$res = sql_query("SELECT id, username, passhash, enabled FROM users WHERE hash1 = ".sqlesc($hash1)." AND class >= ".UC_STAFF." AND status = 'confirmed' LIMIT 1");
+$res = sql_query("SELECT id, username, passhash, enabled FROM ".TBL_USERS." WHERE hash1 = ".sqlesc($hash1)." AND class >= ".UC_STAFF." AND status = 'confirmed' LIMIT 1");
 $row = mysqli_fetch_assoc($res);
 $ip = sqlesc(getip());
 if (!$row) {
     $added = TIME_NOW;
-    $fail = (mysqli_fetch_row(sql_query("SELECT COUNT(id) from failedlogins where ip=$ip"))) or sqlerr(__FILE__, __LINE__);
-    if ($fail[0] == 0) sql_query("INSERT INTO failedlogins (ip, added, attempts) VALUES ($ip, $added, 1)") or sqlerr(__FILE__, __LINE__);
-    else sql_query("UPDATE failedlogins SET attempts = attempts + 1 WHERE ip=$ip") or sqlerr(__FILE__, __LINE__);
+    $fail = (mysqli_fetch_row(sql_query("SELECT COUNT(id) FROM ".TBL_FAILEDLOGINS." WHERE ip=$ip"))) or sqlerr(__FILE__, __LINE__);
+    if ($fail[0] == 0) sql_query("INSERT INTO ".TBL_FAILEDLOGINS." (ip, added, attempts) VALUES ($ip, $added, 1)") or sqlerr(__FILE__, __LINE__);
+    else sql_query("UPDATE ".TBL_FAILEDLOGINS." SET attempts = attempts + 1 WHERE ip=$ip") or sqlerr(__FILE__, __LINE__);
     bark();
 }
 if ($row['enabled'] == 'no') stderr("Error", "This account has been disabled.");
 $passh = md5($row["passhash"].$_SERVER["REMOTE_ADDR"]);
 logincookie($row["id"], $passh);
-sql_query("DELETE FROM failedlogins WHERE ip = $ip");
+sql_query("DELETE FROM ".TBL_FAILEDLOGINS." WHERE ip = $ip");
 $HTMLOUT = '';
 $HTMLOUT.= "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN'
 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>

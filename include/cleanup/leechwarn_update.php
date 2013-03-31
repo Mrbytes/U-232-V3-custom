@@ -13,7 +13,7 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 function docleanup($data)
 {
@@ -25,7 +25,7 @@ function docleanup($data)
     $minratio = 0.3; // ratio < 0.4
     $downloaded = 10 * 1024 * 1024 * 1024; // + 10 GB
     $length = 3 * 7; // Give 3 weeks to let them sort there shit
-    $res = sql_query("SELECT id, modcomment FROM users WHERE enabled='yes' AND class = ".UC_USER." AND leechwarn = '0' AND uploaded / downloaded < $minratio AND downloaded >= $downloaded AND immunity = '0'") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT id, modcomment FROM ".TBL_USERS." WHERE enabled='yes' AND class = ".UC_USER." AND leechwarn = '0' AND uploaded / downloaded < $minratio AND downloaded >= $downloaded AND immunity = '0'") or sqlerr(__FILE__, __LINE__);
     $msgs_buffer = $users_buffer = array();
     if (mysqli_num_rows($res) > 0) {
         $dt = sqlesc(TIME_NOW);
@@ -61,8 +61,8 @@ function docleanup($data)
         }
         $count = count($users_buffer);
         if ($count > 0) {
-            sql_query("INSERT INTO messages (sender,receiver,added,msg,subject) VALUES ".implode(', ', $msgs_buffer)) or sqlerr(__FILE__, __LINE__);
-            sql_query("INSERT INTO users (id, leechwarn, downloadpos, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE leechwarn=values(leechwarn),downloadpos=values(downloadpos),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_MESSAGES." (sender,receiver,added,msg,subject) VALUES ".implode(', ', $msgs_buffer)) or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_USERS." (id, leechwarn, downloadpos, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE leechwarn=values(leechwarn),downloadpos=values(downloadpos),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
             write_log("Cleanup: System applied auto leech Warning(s) to  ".$count." Member(s)");
         }
         unset($users_buffer, $msgs_buffer, $update, $count);
@@ -71,7 +71,7 @@ function docleanup($data)
     //== 09 Auto leech warn by Bigjoos/pdq
     //== Updated/Modified autoleech warn system - Remove warning and enable downloads
     $minratio = 0.5; // ratio > 0.5
-    $res = sql_query("SELECT id, modcomment FROM users WHERE downloadpos = '0' AND leechwarn > '1' AND uploaded / downloaded >= $minratio") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT id, modcomment FROM ".TBL_USERS." WHERE downloadpos = '0' AND leechwarn > '1' AND uploaded / downloaded >= $minratio") or sqlerr(__FILE__, __LINE__);
     $msgs_buffer = $users_buffer = array();
     if (mysqli_num_rows($res) > 0) {
         $subject = "Auto leech warning removed";
@@ -104,8 +104,8 @@ function docleanup($data)
         }
         $count = count($users_buffer);
         if ($count > 0) {
-            sql_query("INSERT INTO messages (sender,receiver,added,msg,subject) VALUES ".implode(', ', $msgs_buffer)) or sqlerr(__FILE__, __LINE__);
-            sql_query("INSERT INTO users (id, leechwarn, downloadpos, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE leechwarn=values(leechwarn),downloadpos=values(downloadpos),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_MESSAGES." (sender,receiver,added,msg,subject) VALUES ".implode(', ', $msgs_buffer)) or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_USERS." (id, leechwarn, downloadpos, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE leechwarn=values(leechwarn),downloadpos=values(downloadpos),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
             write_log("Cleanup: System removed auto leech Warning(s) and renabled download(s) - ".$count." Member(s)");
         }
         unset($users_buffer, $msgs_buffer, $count);
@@ -113,7 +113,7 @@ function docleanup($data)
     //==End
     //== 09 Auto leech warn by Bigjoos/pdq
     //== Disabled expired leechwarns
-    $res = sql_query("SELECT id, modcomment FROM users WHERE leechwarn > '1' AND leechwarn < ".TIME_NOW." AND leechwarn <> '0' ") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT id, modcomment FROM ".TBL_USERS." WHERE leechwarn > '1' AND leechwarn < ".TIME_NOW." AND leechwarn <> '0' ") or sqlerr(__FILE__, __LINE__);
     $users_buffer = array();
     if (mysqli_num_rows($res) > 0) {
         while ($arr = mysqli_fetch_assoc($res)) {
@@ -141,7 +141,7 @@ function docleanup($data)
         }
         $count = count($users_buffer);
         if ($count > 0) {
-            sql_query("INSERT INTO users (id, leechwarn, enabled, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE class=values(class),leechwarn=values(leechwarn),enabled=values(enabled),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_USERS." (id, leechwarn, enabled, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE class=values(class),leechwarn=values(leechwarn),enabled=values(enabled),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
             write_log("Cleanup: Disabled ".$count." Member(s) - Leechwarns expired");
         }
         unset($users_buffer, $count);

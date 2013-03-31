@@ -30,11 +30,11 @@ $colour = $topicpoll = $topic_status_image = '';
 $links = '<span style="text-align: center;"><a class="altlink" href="' . $INSTALLER09['baseurl'] . '/forums.php">Main Forums</a> |  ' . $mini_menu . '<br /><br /></span>';
 $HTMLOUT.= '<h1>Unread posts since your last visit</h1>' . $links;
 $time = $readpost_expiry;
-$res_count = sql_query('SELECT t.id, t.last_post FROM topics AS t LEFT JOIN posts AS p ON t.last_post = p.id LEFT JOIN forums as f ON f.id = t.forum_id WHERE ' . ($CURUSER['class'] < UC_STAFF ? 'p.status = \'ok\' AND t.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? 'p.status != \'deleted\' AND t.status != \'deleted\'  AND' : '')) . ' f.min_class_read <= ' . $CURUSER['class'] . ' AND p.added > ' . $time);
+$res_count = sql_query('SELECT t.id, t.last_post FROM '.TBL_TOPICS.' AS t LEFT JOIN ".TBL_POSTS." AS p ON t.last_post = p.id LEFT JOIN '.TBL_FORUMS.' as f ON f.id = t.forum_id WHERE ' . ($CURUSER['class'] < UC_STAFF ? 'p.status = \'ok\' AND t.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? 'p.status != \'deleted\' AND t.status != \'deleted\'  AND' : '')) . ' f.min_class_read <= ' . $CURUSER['class'] . ' AND p.added > ' . $time);
 //=== lets do the loop / Check if post is read / get count there must be a beter way to do this lol
 $count = 0;
 while ($arr_count = mysqli_fetch_assoc($res_count)) {
-    $res_post_read = sql_query('SELECT last_post_read FROM read_posts WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($arr_count['id']));
+    $res_post_read = sql_query('SELECT last_post_read FROM '.TBL_READ_POSTS.' WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($arr_count['id']));
     $arr_post_read = mysqli_fetch_row($res_post_read);
     if ($arr_post_read[0] < $arr_count['last_post']) {
         ++$count;
@@ -61,7 +61,7 @@ if ($count == 0) {
    </tr></table>';
     //=== main huge query:
     $res_unread = sql_query('SELECT t.id AS topic_id, t.topic_name AS topic_name, t.last_post, t.post_count, t.views, t.topic_desc, t.locked, t.sticky, t.poll_id, t.forum_id, t.rating_sum, t.num_ratings, t.status, t.anonymous AS tan, f.name AS forum_name, f.description AS forum_desc, p.post_title, p.body, p.icon, p.user_id, p.anonymous AS pan,
-   u.id, u.username, u.class, u.donor, u.suspended, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king FROM topics AS t LEFT JOIN posts AS p ON t.last_post = p.id LEFT JOIN forums as f ON f.id = t.forum_id LEFT JOIN users AS u on u.id = t.user_id WHERE ' . ($CURUSER['class'] < UC_STAFF ? 'p.status = \'ok\' AND t.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? 'p.status != \'deleted\' AND t.status != \'deleted\'  AND' : '')) . ' f.min_class_read <= ' . $CURUSER['class'] . ' AND p.added > ' . $time . ' ORDER BY t.last_post DESC ' . $LIMIT);
+   u.id, u.username, u.class, u.donor, u.suspended, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king FROM '.TBL_TOPICS.' AS t LEFT JOIN ".TBL_POSTS." AS p ON t.last_post = p.id LEFT JOIN '.TBL_FORUMS.' as f ON f.id = t.forum_id LEFT JOIN '.TBL_USERS.' AS u on u.id = t.user_id WHERE ' . ($CURUSER['class'] < UC_STAFF ? 'p.status = \'ok\' AND t.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? 'p.status != \'deleted\' AND t.status != \'deleted\'  AND' : '')) . ' f.min_class_read <= ' . $CURUSER['class'] . ' AND p.added > ' . $time . ' ORDER BY t.last_post DESC ' . $LIMIT);
     $HTMLOUT.= $the_top_and_bottom . '<table border="0" cellspacing="5" cellpadding="10" width="90%">
 	<tr>
 	<td align="center" valign="middle" class="forum_head_dark" width="10"><img src="' . $INSTALLER09['pic_base_url'] . 'forums/topic.gif" alt="topic" title="topic" /></td>
@@ -73,7 +73,7 @@ if ($count == 0) {
 	</tr>';
     //=== ok let's show the posts...
     while ($arr_unread = mysqli_fetch_assoc($res_unread)) {
-        $res_post_read = sql_query('SELECT last_post_read FROM read_posts WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($arr_unread['topic_id']));
+        $res_post_read = sql_query('SELECT last_post_read FROM '.TBL_READ_POSTS.' WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($arr_unread['topic_id']));
         $arr_post_read = mysqli_fetch_row($res_post_read);
         if ($arr_post_read[0] < $arr_unread['last_post']) {
             //=== change colors
@@ -97,7 +97,7 @@ if ($count == 0) {
             $locked = $arr_unread['locked'] == 'yes';
             $sticky = $arr_unread['sticky'] == 'yes';
             $topic_poll = $arr_unread['poll_id'] > 0;
-            $first_unread_poster = sql_query('SELECT added FROM posts WHERE topic_id=' . sqlesc($arr_unread['topic_id']) . ' ORDER BY id ASC LIMIT 1');
+            $first_unread_poster = sql_query('SELECT added FROM ".TBL_POSTS." WHERE topic_id=' . sqlesc($arr_unread['topic_id']) . ' ORDER BY id ASC LIMIT 1');
             $first_unread_poster_arr = mysqli_fetch_row($first_unread_poster);
             //==Anonymous
             if ($arr_unread['tan'] == 'yes') {
@@ -108,9 +108,9 @@ if ($count == 0) {
             }
             $topicpic = ($arr_unread['post_count'] < 30 ? ($locked ? 'lockednew' : 'topicnew') : ($locked ? 'lockednew' : 'hot_topic_new'));
             $rpic = ($arr_unread['num_ratings'] != 0 ? ratingpic_forums(ROUND($arr_unread['rating_sum'] / $arr_unread['num_ratings'], 1)) : '');
-            $did_i_post_here = sql_query('SELECT user_id FROM posts WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($arr_unread['topic_id']));
+            $did_i_post_here = sql_query('SELECT user_id FROM ".TBL_POSTS." WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($arr_unread['topic_id']));
             $posted = (mysqli_num_rows($did_i_post_here) > 0 ? 1 : 0);
-            $sub = sql_query('SELECT user_id FROM subscriptions WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($arr_unread['topic_id']));
+            $sub = sql_query('SELECT user_id FROM '.TBL_SUBSCRIPTIONS.' WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($arr_unread['topic_id']));
             $subscriptions = (mysqli_num_rows($sub) > 0 ? 1 : 0);
             $icon = ($arr_unread['icon'] == '' ? '<img src="' . $INSTALLER09['pic_base_url'] . 'forums/topic_normal.gif" alt="Topic" title="Topic" />' : '<img src="' . $INSTALLER09['pic_base_url'] . 'smilies/' . htmlsafechars($arr_unread['icon']) . '.gif" alt="Unread" title="Unread" />');
             $first_post_text = tool_tip(' <img src="' . $INSTALLER09['pic_base_url'] . 'forums/mg.gif" height="14" alt="Preview" title="Preview" />', format_comment($arr_unread['body'], true, false, false) , 'Last Post Preview');

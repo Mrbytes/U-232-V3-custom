@@ -13,7 +13,7 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 function docleanup($data)
 {
@@ -24,7 +24,7 @@ function docleanup($data)
     $limit = 25 * 1024 * 1024 * 1024;
     $minratio = 1.05;
     $maxdt = (TIME_NOW - 86400 * 28);
-    $res = sql_query("SELECT id, uploaded, downloaded, invites, modcomment FROM users WHERE class = ".UC_USER." AND uploaded >= $limit AND uploaded / downloaded >= $minratio AND enabled='yes' AND added < $maxdt") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT id, uploaded, downloaded, invites, modcomment FROM ".TBL_USERS." WHERE class = ".UC_USER." AND uploaded >= $limit AND uploaded / downloaded >= $minratio AND enabled='yes' AND added < $maxdt") or sqlerr(__FILE__, __LINE__);
     $msgs_buffer = $users_buffer = array();
     if (mysqli_num_rows($res) > 0) {
         $subject = "Auto Promotion";
@@ -59,8 +59,8 @@ function docleanup($data)
         }
         $count = count($users_buffer);
         if ($count > 0) {
-            sql_query("INSERT INTO messages (sender,receiver,added,msg,subject) VALUES ".implode(', ', $msgs_buffer)) or sqlerr(__FILE__, __LINE__);
-            sql_query("INSERT INTO users (id, class, invites, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE class=values(class), invites = invites+values(invites), modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_MESSAGES." (sender,receiver,added,msg,subject) VALUES ".implode(', ', $msgs_buffer)) or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_USERS." (id, class, invites, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE class=values(class), invites = invites+values(invites), modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
             write_log("Cleanup: Promoted ".$count." member(s) from User to Power User");
         }
         unset($users_buffer, $msgs_buffer, $update, $count);

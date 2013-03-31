@@ -22,15 +22,15 @@ function stealth($id, $stealth = true)
         
     }
     // update perms
-    if ($setbits || $clrbits) sql_query('UPDATE users SET perms = ((perms | ' . $setbits . ') & ~' . $clrbits . ') 
+    if ($setbits || $clrbits) sql_query('UPDATE '.TBL_USERS.' SET perms = ((perms | ' . $setbits . ') & ~' . $clrbits . ') 
                  WHERE id = ' . sqlesc($id)) or sqlerr(__file__, __line__);
     // grab current data
-    $res = sql_query('SELECT username, perms, modcomment FROM users 
+    $res = sql_query('SELECT username, perms, modcomment FROM '.TBL_USERS.' 
                      WHERE id = ' . sqlesc($id) . ' LIMIT 1') or sqlerr(__file__, __line__);
     $row = mysqli_fetch_assoc($res);
     $row['perms'] = (int)$row['perms'];
     $modcomment = get_date(TIME_NOW, '', 1) . ' - ' . $display . ' in Stealth Mode thanks to ' . $CURUSER['username'] . "\n" . $row['modcomment'];
-    sql_query('UPDATE users SET modcomment = ' . sqlesc($modcomment) . ' WHERE id = ' . sqlesc($id)) or sqlerr(__file__, __line__);
+    sql_query('UPDATE '.TBL_USERS.' SET modcomment = ' . sqlesc($modcomment) . ' WHERE id = ' . sqlesc($id)) or sqlerr(__file__, __line__);
     // update caches
     $mc1->begin_transaction('user' . $id);
     $mc1->update_row(false, array(

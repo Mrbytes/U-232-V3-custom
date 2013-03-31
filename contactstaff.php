@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $returnto = isset($_POST['returnto']) ? htmlsafechars($_POST['returnto']) : $_SERVER['PHP_SELF'];
     if (empty($msg)) stderr($lang['contactstaff_error'], $lang['contactstaff_no_msg']);
     if (empty($subject)) stderr($lang['contactstaff_error'], $lang['contactstaff_no_sub']);
-    if (sql_query('INSERT INTO staffmessages (sender, added, msg, subject) VALUES('.$CURUSER['id'].', '.TIME_NOW.', '.sqlesc($msg).', '.sqlesc($subject).')')) {
+    if (sql_query('INSERT INTO '.TBL_STAFFMESSAGES.' (sender, added, msg, subject) VALUES('.$CURUSER['id'].', '.TIME_NOW.', '.sqlesc($msg).', '.sqlesc($subject).')')) {
         $mc1->delete_value('staff_mess_');
         header('Refresh: 3; url='.urldecode($returnto)); //redirect but wait 3 seconds
         stderr($lang['contactstaff_success'], $lang['contactstaff_success_msg']);

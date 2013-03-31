@@ -21,26 +21,26 @@ $edit_mood['image'] = (isset($edit_params['image']) ? $edit_params['image'] : 0)
 $edit_mood['bonus'] = (isset($edit_params['bonus']) ? (int)$edit_params['bonus'] : 0);
 if ($edit_mood['action'] == 'added') {
     if ($edit_mood['name'] && $edit_mood['name'] && $edit_mood['name'] && ($edit_mood['name'] != 'is example mood' && $edit_mood['image'] != 'smile1.gif')) {
-        sql_query('INSERT INTO moods (name, image, bonus) VALUES ('.sqlesc($edit_mood['name']).', '.sqlesc($edit_mood['image']).', '.$edit_mood['bonus'].')') or sqlerr(__FILE__, __LINE__);
+        sql_query('INSERT INTO '.TBL_MOODS.' (name, image, bonus) VALUES ('.sqlesc($edit_mood['name']).', '.sqlesc($edit_mood['image']).', '.$edit_mood['bonus'].')') or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('topmoods');
         write_log('<b>Mood Added</b> '.$CURUSER['username'].' '.$edit_mood['name'].'<img src="'.$INSTALLER09['pic_base_url'].'smilies/'.$edit_mood['image'].'" alt="" />');
     }
 } elseif ($edit_mood['action'] == 'edited') {
     if ($edit_mood['name'] && $edit_mood['name'] && $edit_mood['name']) {
-        sql_query('UPDATE moods SET name = '.sqlesc($edit_mood['name']).', image = '.sqlesc($edit_mood['image']).', bonus = '.$edit_mood['bonus'].' WHERE id = '.$edit_mood['id']) or sqlerr(__FILE__, __LINE__);
+        sql_query('UPDATE '.TBL_MOODS.' SET name = '.sqlesc($edit_mood['name']).', image = '.sqlesc($edit_mood['image']).', bonus = '.$edit_mood['bonus'].' WHERE id = '.$edit_mood['id']) or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('topmoods');
         write_log('<b>Mood Edited</b> '.$CURUSER['username'].' '.$edit_mood['name'].'<img src="'.$INSTALLER09['pic_base_url'].'smilies/'.$edit_mood['image'].'" alt="" />');
     }
 }
 /*
 elseif ($edit_mood['action'] == 'remove') {
-   sql_query('DELETE FROM moods WHERE id = '.$edit_mood['id'].' LIMIT 1') or sqlerr(__FILE__, __LINE__);
+   sql_query('DELETE FROM '.TBL_MOODS.' WHERE id = '.$edit_mood['id'].' LIMIT 1') or sqlerr(__FILE__, __LINE__);
    $mc1->del_value('topmoods');
    write_log2('<b>Mood Deleted</b> '.$CURUSER['username'].' '.$edit_mood['id']);
 }
 */
 if ($edit_mood['action'] == 'edit' && $edit_mood['id']) {
-    $edit_mood['res'] = sql_query('SELECT * FROM moods WHERE id = '.$edit_mood['id']) or sqlerr(__FILE__, __LINE__);
+    $edit_mood['res'] = sql_query('SELECT * FROM '.TBL_MOODS.' WHERE id = '.$edit_mood['id']) or sqlerr(__FILE__, __LINE__);
     if (mysqli_num_rows($edit_mood['res'])) {
         $edit_mood['arr'] = mysqli_fetch_assoc($edit_mood['res']);
         $HTMLOUT.= "<h1>Edit Mood</h1>
@@ -82,7 +82,7 @@ $HTMLOUT.= "<table border='1' width='85%' cellspacing='0' cellpadding='5'>
       <td class='colhead'>Edit</td>".
 //<td class='colhead'>Remove</td>
 "</tr>";
-$res = sql_query('SELECT * FROM moods ORDER BY id ASC') or sqlerr(__FILE__, __LINE__);
+$res = sql_query('SELECT * FROM '.TBL_MOODS.' ORDER BY id ASC') or sqlerr(__FILE__, __LINE__);
 if (mysqli_num_rows($res)) {
     $color = true;
     while ($arr = mysqli_fetch_assoc($res)) {

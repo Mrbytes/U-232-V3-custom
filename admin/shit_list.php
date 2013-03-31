@@ -49,9 +49,9 @@ case 'new':
     $mc1->delete_value('shit_list_'.$CURUSER['id']);
     if ($shit_list_id == $CURUSER["id"]) stderr("Error", "Cant add yerself");
     if (!is_valid_id($shit_list_id)) stderr('Error', 'Invalid ID');
-    $res_name = sql_query('SELECT username FROM users WHERE id='.sqlesc($shit_list_id));
+    $res_name = sql_query('SELECT username FROM '.TBL_USERS.' WHERE id='.sqlesc($shit_list_id));
     $arr_name = mysqli_fetch_assoc($res_name);
-    $check_if_there = sql_query('SELECT suspect FROM shit_list WHERE userid='.sqlesc($CURUSER['id']).' AND suspect='.sqlesc($shit_list_id));
+    $check_if_there = sql_query('SELECT suspect FROM '.TBL_SHIT_LIST.' WHERE userid='.sqlesc($CURUSER['id']).' AND suspect='.sqlesc($shit_list_id));
     if (mysqli_num_rows($check_if_there) == 1) stderr('Error', 'The member '.htmlsafechars($arr_name['username']).' is already on your shit list!');
     $level_of_shittyness = '';
     $level_of_shittyness.= '<select name="shittyness"><option value="0">level of shittyness</option>';
@@ -94,9 +94,9 @@ case 'add':
     $shittyness = (isset($_POST['shittyness']) ? intval($_POST['shittyness']) : 0);
     $return_to = str_replace('&amp;', '&', htmlsafechars($_POST['return_to']));
     if (!is_valid_id($shit_list_id) || !is_valid_id($shittyness)) stderr('Error', 'Invalid ID');
-    $check_if_there = sql_query('SELECT suspect FROM shit_list WHERE userid='.sqlesc($CURUSER['id']).' AND suspect='.sqlesc($shit_list_id));
+    $check_if_there = sql_query('SELECT suspect FROM '.TBL_SHIT_LIST.' WHERE userid='.sqlesc($CURUSER['id']).' AND suspect='.sqlesc($shit_list_id));
     if (mysqli_num_rows($check_if_there) == 1) stderr('Error', 'That user is already on your shit list.');
-    sql_query('INSERT INTO shit_list VALUES ('.$CURUSER['id'].','.$shit_list_id.', '.$shittyness.', '.TIME_NOW.', '.sqlesc($_POST['text']).')');
+    sql_query('INSERT INTO '.TBL_SHIT_LIST.' VALUES ('.$CURUSER['id'].','.$shit_list_id.', '.$shittyness.', '.TIME_NOW.', '.sqlesc($_POST['text']).')');
     $mc1->delete_value('shit_list_'.$shit_list_id);
     $message = '<h1>Success! Member added to your personal shitlist!</h1><a class="altlink" href="'.$return_to.'">go back to where you were?</a>';
     break;
@@ -106,11 +106,11 @@ case 'delete':
     $shit_list_id = (isset($_GET['shit_list_id']) ? intval($_GET['shit_list_id']) : 0);
     $sure = (isset($_GET['sure']) ? intval($_GET['sure']) : '');
     if (!is_valid_id($shit_list_id)) stderr('Error', 'Invalid ID');
-    $res_name = sql_query('SELECT username FROM users WHERE id='.$shit_list_id);
+    $res_name = sql_query('SELECT username FROM '.TBL_USERS.' WHERE id='.$shit_list_id);
     $arr_name = mysqli_fetch_assoc($res_name);
     if (!$sure) stderr('Delete '.htmlsafechars($arr_name['username']).' from shit list', 'Do you really want to delete <b>'.htmlsafechars($arr_name['username']).'</b> from your shit list?  
          <a class="altlink" href="staffpanel.php?tool=shit_list&amp;action=shit_list&amp;action2=delete&amp;shit_list_id='.$shit_list_id.'&amp;sure=1">here</a> if you are sure.');
-    sql_query('DELETE FROM shit_list WHERE userid='.$CURUSER['id'].' AND suspect='.$shit_list_id);
+    sql_query('DELETE FROM '.TBL_SHIT_LIST.' WHERE userid='.$CURUSER['id'].' AND suspect='.$shit_list_id);
     if (mysqli_affected_rows($GLOBALS["___mysqli_ston"]) == 0) stderr('Error', 'No member found to delete!');
     $mc1->delete_value('shit_list_'.$shit_list_id);
     $message = '<h1>Success! <b>'.htmlsafechars($arr_name['username']).'</b> deleted from your shit list!</h1>';
@@ -119,8 +119,8 @@ case 'delete':
 //=== get stuff ready for page
 $res = sql_query('SELECT s.suspect as suspect_id, s.text, s.shittyness, s.added AS shit_list_added, 
                   u.username, u.id, u.added, u.class, u.leechwarn, u.chatpost, u.pirate, u.king, u.avatar, u.donor, u.warned, u.enabled, u.suspended, u.last_access, u.offensive_avatar, u.avatar_rights
-                  FROM shit_list AS s 
-                  LEFT JOIN users as u ON s.suspect = u.id 
+                  FROM '.TBL_SHIT_LIST.' AS s 
+                  LEFT JOIN '.TBL_USERS.' as u ON s.suspect = u.id 
                   WHERE s.userid='.sqlesc($CURUSER['id']).' 
                   ORDER BY shittyness DESC');
 //=== default page

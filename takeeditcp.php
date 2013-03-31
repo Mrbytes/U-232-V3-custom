@@ -63,7 +63,7 @@ if ($action == "avatar") {
         $img_size = @GetImageSize($avatar);
         if ($img_size == FALSE || !in_array($img_size['mime'], $INSTALLER09['allowed_ext'])) stderr($lang['takeeditcp_user_error'], $lang['takeeditcp_image_error']);
         if ($img_size[0] < 5 || $img_size[1] < 5) stderr($lang['takeeditcp_user_error'], $lang['takeeditcp_small_image']);
-        sql_query("UPDATE usersachiev SET avatarset=avatarset+1 WHERE id=" . sqlesc($CURUSER["id"]) . " AND avatarset = '0'") or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_USERSACHIEV." SET avatarset=avatarset+1 WHERE id=" . sqlesc($CURUSER["id"]) . " AND avatarset = '0'") or sqlerr(__FILE__, __LINE__);
         if (($img_size[0] > $INSTALLER09['av_img_width']) OR ($img_size[1] > $INSTALLER09['av_img_height'])) {
             $image = resize_image(array(
                 'max_width' => $INSTALLER09['av_img_width'],
@@ -114,7 +114,7 @@ elseif ($action == "signature") {
         $img_size = @GetImageSize($signature);
         if ($img_size == FALSE || !in_array($img_size['mime'], $INSTALLER09['allowed_ext'])) stderr('USER ERROR', 'Not an image or unsupported image!');
         if ($img_size[0] < 5 || $img_size[1] < 5) stderr('USER ERROR', 'Image is too small');
-        sql_query("UPDATE usersachiev SET sigset=sigset+1 WHERE id=" . sqlesc($CURUSER["id"]) . " AND sigset = '0'") or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_USERSACHIEV." SET sigset=sigset+1 WHERE id=" . sqlesc($CURUSER["id"]) . " AND sigset = '0'") or sqlerr(__FILE__, __LINE__);
         if (($img_size[0] > $INSTALLER09['sig_img_width']) OR ($img_size[1] > $INSTALLER09['sig_img_height'])) {
             $image = resize_image(array(
                 'max_width' => $INSTALLER09['sig_img_width'],
@@ -162,7 +162,7 @@ elseif ($action == "security") {
     }
     if ($email != $CURUSER["email"]) {
         if (!validemail($email)) stderr("Error", $lang['takeeditcp_not_valid_email']);
-        $r = sql_query("SELECT id FROM users WHERE email=".sqlesc($email)) or sqlerr(__FILE__, __LINE__);
+        $r = sql_query("SELECT id FROM ".TBL_USERS." WHERE email=".sqlesc($email)) or sqlerr(__FILE__, __LINE__);
         if (mysqli_num_rows($r) > 0 || ($CURUSER["passhash"] != make_passhash($CURUSER['secret'], md5($chmailpass)))) stderr("Error", $lang['takeeditcp_address_taken']);
         $changedemail = 1;
     }
@@ -230,13 +230,13 @@ elseif ($action == "security") {
             "{$INSTALLER09['baseurl']}/confirmemail.php?uid={$CURUSER['id']}&key=$hash&email=$obemail"
         ) , $lang['takeeditcp_email_body']);
         mail($email, "$thisdomain {$lang['takeeditcp_confirm']}", $body, "From: {$INSTALLER09['site_email']}");
-        $emailquery = sql_query("SELECT id, username, email FROM users WHERE id=".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+        $emailquery = sql_query("SELECT id, username, email FROM ".TBL_USERS." WHERE id=".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
         $spm = mysqli_fetch_assoc($emailquery);
         $dt = TIME_NOW;
         $subject = sqlesc("Email Alert");
         $msg = sqlesc("User [url={$INSTALLER09['baseurl']}/userdetails.php?id=".(int)$spm['id']."][b]".htmlsafechars($spm['username'])."[/b][/url] changed email address : Old email was ".htmlsafechars($spm['email'])." new email is $email, please check this was for a legitimate reason");
-        $pmstaff = sql_query('SELECT id FROM users WHERE class = '.UC_ADMINISTRATOR) or sqlerr(__FILE__, __LINE__);
-        while ($arr = mysqli_fetch_assoc($pmstaff)) sql_query("INSERT INTO messages(sender, receiver, added, msg, subject) VALUES(0, ".sqlesc($arr['id']).", $dt, $msg, $subject)") or sqlerr(__FILE__, __LINE__);
+        $pmstaff = sql_query('SELECT id FROM '.TBL_USERS.' WHERE class = '.UC_ADMINISTRATOR) or sqlerr(__FILE__, __LINE__);
+        while ($arr = mysqli_fetch_assoc($pmstaff)) sql_query("INSERT INTO ".TBL_MESSAGES."(sender, receiver, added, msg, subject) VALUES(0, ".sqlesc($arr['id']).", $dt, $msg, $subject)") or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('inbox_new_'.$arr['id']);
         $mc1->delete_value('inbox_new_sb_'.$arr['id']);
         $urladd.= "&mailsent=1";
@@ -323,7 +323,7 @@ elseif ($action == "personal") {
             'status' => $CURUSER['last_status'],
             'date' => $CURUSER['last_update']
         );
-        sql_query('INSERT INTO ustatus(userid,last_status,last_update,archive) VALUES('.sqlesc($CURUSER['id']).','.sqlesc($status).','.TIME_NOW.','.sqlesc(serialize($status_archive)).') ON DUPLICATE KEY UPDATE last_status=values(last_status),last_update=values(last_update),archive=values(archive)') or sqlerr(__FILE__, __LINE__);
+        sql_query('INSERT INTO '.TBL_USTATUS.'(userid,last_status,last_update,archive) VALUES('.sqlesc($CURUSER['id']).','.sqlesc($status).','.TIME_NOW.','.sqlesc(serialize($status_archive)).') ON DUPLICATE KEY UPDATE last_status=values(last_status),last_update=values(last_update),archive=values(archive)') or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('userstatus_'.$CURUSER['id']);
         $mc1->delete_value('user_status_'.$CURUSER['id']);
     }
@@ -454,6 +454,6 @@ if ($user_cache) {
     $mc1->update_row(false, $user_cache);
     $mc1->commit_transaction($INSTALLER09['expires']['user_cache']);
 }
-if (sizeof($updateset) > 0) sql_query("UPDATE users SET ".implode(",", $updateset)." WHERE id = ".sqlesc($CURUSER["id"])) or sqlerr(__FILE__, __LINE__);
+if (sizeof($updateset) > 0) sql_query("UPDATE ".TBL_USERS." SET ".implode(",", $updateset)." WHERE id = ".sqlesc($CURUSER["id"])) or sqlerr(__FILE__, __LINE__);
 header("Location: {$INSTALLER09['baseurl']}/usercp.php?edited=1&action=$action".$urladd);
 ?>

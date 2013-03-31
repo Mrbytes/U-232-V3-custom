@@ -8,13 +8,13 @@ if (!defined('IN_REQUESTS')) exit('No direct script access allowed');
  *   Project Leaders: Mindless, putyn.
  *
  */
-$res2 = sql_query('select count(voted_requests.id) AS c from voted_requests inner join users on voted_requests.userid = users.id inner join requests on voted_requests.requestid = requests.id WHERE voted_requests.requestid ='.$id) or sqlerr(__FILE__, __LINE__);
+$res2 = sql_query('select count('.TBL_REQUEST_VOTES.'.id) AS c from '.TBL_REQUEST_VOTES.' inner join '.TBL_USERS.' on '.TBL_REQUEST_VOTES.'.userid = '.TBL_USERS.'.id inner join '.TBL_REQUESTS.' on '.TBL_REQUEST_VOTES.'.requestid = '.TBL_REQUESTS.'.id WHERE '.TBL_REQUEST_VOTES.'.requestid ='.$id) or sqlerr(__FILE__, __LINE__);
 $row = mysqli_fetch_assoc($res2);
 $count = (int)$row['c'];
 if ($count > 0) {
     $pager = pager(25, $count, 'viewrequests.php?');
-    $res = sql_query('select users.id as userid,users.username, users.downloaded, users.title, users.class, users.donor, users.warned, users.leechwarn, users.chatpost, users.pirate, users.king, users.enabled, users.uploaded, requests.id as requestid, requests.request, requests.added from voted_requests inner join users on voted_requests.userid = users.id inner join requests on voted_requests.requestid = requests.id WHERE voted_requests.requestid ='.$id.' '.$pager['limit']) or sqlerr(__FILE__, __LINE__);
-    $res2 = sql_query("select request from requests where id=$id");
+    $res = sql_query('select '.TBL_USERS.'.id as userid, '.TBL_USERS.'.username, '.TBL_USERS.'.downloaded, '.TBL_USERS.'.title, '.TBL_USERS.'.class, '.TBL_USERS.'.donor, '.TBL_USERS.'.warned, '.TBL_USERS.'.leechwarn, '.TBL_USERS.'.chatpost, '.TBL_USERS.'.pirate, '.TBL_USERS.'.king, '.TBL_USERS.'.enabled, '.TBL_USERS.'.uploaded, '.TBL_REQUESTS.'.id as requestid, '.TBL_REQUESTS.'.request, '.TBL_REQUESTS.'.added from '.TBL_REQUEST_VOTES.' inner join '.TBL_USERS.' on '.TBL_REQUEST_VOTES.'.userid = '.TBL_USERS.'.id inner join '.TBL_REQUESTS.' on '.TBL_REQUEST_VOTES.'.requestid = '.TBL_REQUESTS.'.id WHERE '.TBL_REQUEST_VOTES.'.requestid ='.$id.' '.$pager['limit']) or sqlerr(__FILE__, __LINE__);
+    $res2 = sql_query("select request from ".TBL_REQUESTS." where id=$id");
     $arr2 = mysqli_fetch_assoc($res2);
     $HTMLOUT.= "<h1>{$lang['view_voters']}<a class='altlink' href='viewrequests.php?id=$id&amp;req_details'><b>".htmlspecialchars($arr2['request'])."</b></a></h1>";
     $HTMLOUT.= "<p>{$lang['view_vote_this']}<a class='altlink' href='viewrequests.php?id=$id&amp;req_vote'><b>{$lang['view_req']}</b></a></p>";

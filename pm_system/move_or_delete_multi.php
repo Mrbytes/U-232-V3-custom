@@ -30,9 +30,9 @@ snuggs
 $pm_messages = $_POST['pm'];
 if (isset($_POST['move'])) {
     if (is_valid_id($pm_messages)) {
-        sql_query('UPDATE messages SET saved = \'yes\', location = '.sqlesc($mailbox).' WHERE id = '.sqlesc($pm_messages).' AND receiver ='.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+        sql_query('UPDATE '.TBL_MESSAGES.' SET saved = \'yes\', location = '.sqlesc($mailbox).' WHERE id = '.sqlesc($pm_messages).' AND receiver ='.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
     } else {
-        sql_query('UPDATE messages SET saved = \'yes\', location = '.sqlesc($mailbox).' WHERE id IN ('.implode(', ', array_map('sqlesc', $pm_messages)).') AND receiver ='.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+        sql_query('UPDATE '.TBL_MESSAGES.' SET saved = \'yes\', location = '.sqlesc($mailbox).' WHERE id IN ('.implode(', ', array_map('sqlesc', $pm_messages)).') AND receiver ='.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
     }
     //=== Check if messages were moved
     if (mysqli_affected_rows($GLOBALS["___mysqli_ston"]) === 0) stderr('Error', 'Messages couldn\'t be moved!');
@@ -44,21 +44,21 @@ if (isset($_POST['delete'])) {
     //=== Delete multiple messages
     $pm_messages = $_POST['pm'];
     foreach ($pm_messages as $id) {
-        $res = sql_query('SELECT * FROM messages WHERE id='.sqlesc($id));
+        $res = sql_query('SELECT * FROM '.TBL_MESSAGES.' WHERE id='.sqlesc($id));
         $message = mysqli_fetch_assoc($res);
         //=== make sure they aren't deleting a staff message...
         if ($message['receiver'] == $CURUSER['id'] && $message['urgent'] == 'yes' && $message['unread'] == 'yes') stderr('Error', 'You MUST read this message before you delete it!!!  <a class="altlink" href="pm_system.php?action=view_message&id='.$pm_id.'">BACK</a> to message.');
         //=== make sure message isn't saved before deleting it, or just update location
         if ($message['receiver'] == $CURUSER['id'] /*&& $message['saved'] == 'no' */ || $message['sender'] == $CURUSER['id'] && $message['location'] == PM_DELETED) {
-            sql_query('DELETE FROM messages WHERE id='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+            sql_query('DELETE FROM '.TBL_MESSAGES.' WHERE id='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
             $mc1->delete_value('inbox_new_'.$id);
             $mc1->delete_value('inbox_new_sb_'.$id);
         } elseif ($message['receiver'] == $CURUSER['id'] /* && $message['saved'] == 'yes'*/) {
-            sql_query('UPDATE messages SET location=0, unread=\'no\' WHERE id='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+            sql_query('UPDATE '.TBL_MESSAGES.' SET location=0, unread=\'no\' WHERE id='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
             $mc1->delete_value('inbox_new_'.$id);
             $mc1->delete_value('inbox_new_sb_'.$id);
         } elseif ($message['sender'] == $CURUSER['id'] && $message['location'] != PM_DELETED) {
-            sql_query('UPDATE messages SET saved=\'no\' WHERE id='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+            sql_query('UPDATE '.TBL_MESSAGES.' SET saved=\'no\' WHERE id='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
             $mc1->delete_value('inbox_new_'.$id);
             $mc1->delete_value('inbox_new_sb_'.$id);
         }

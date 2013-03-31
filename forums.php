@@ -51,7 +51,7 @@ if ($INSTALLER09['forums_online'] == 0 AND $CURUSER['class'] < UC_STAFF) stderr(
 if (function_exists('parked')) parked();
 $HTMLOUT = '';
 //=== update members last forums access
-sql_query('UPDATE users SET forum_access='.TIME_NOW.' WHERE id='.sqlesc($CURUSER['id']));
+sql_query('UPDATE '.TBL_USERS.' SET forum_access='.TIME_NOW.' WHERE id='.sqlesc($CURUSER['id']));
 /*==============================
 the following is 110% up to you...
 you can set all the configuration stuff here in the forums.php main file,
@@ -88,7 +88,7 @@ use the following and suit to your site:
 //=== get config info from the DB (comment out and use hard coded if you prefer)
 $config_id = 13;
 $config_res = sql_query('SELECT delete_for_real, min_delete_view_class, readpost_expiry, min_upload_class, accepted_file_extension, 
-								accepted_file_types, max_file_size, upload_folder FROM forum_config WHERE id = '.sqlesc($config_id));
+								accepted_file_types, max_file_size, upload_folder FROM '.TBL_FORUM_CONFIG.' WHERE id = '.sqlesc($config_id));
 $config_arr = mysqli_fetch_array($config_res);
 //=== all config stuff:
 $delete_for_real = ($config_arr['delete_for_real'] == 1 ? 1 : 0);
@@ -519,7 +519,7 @@ case 'forum':
     //=== main huge query:
     $res_forums = sql_query('SELECT o_f.id AS over_forum_id, o_f.name AS over_forum_name, o_f.description AS over_forum_description, o_f.min_class_view AS over_forum_min_class_view, 
 				f.id AS real_forum_id, f.name, f.description, f.post_count, f.topic_count,  f.forum_id
-				FROM over_forums AS o_f JOIN forums AS f
+				FROM '.TBL_OVER_FORUMS.' AS o_f JOIN '.TBL_FORUMS.' AS f
 				WHERE o_f.min_class_view <= '.$CURUSER['class'].'
 				AND f.min_class_read <= '.$CURUSER['class'].' AND parent_forum = 0 
 				ORDER BY o_f.sort, f.sort ASC');
@@ -542,7 +542,7 @@ case 'forum':
             //=== Find last post ID
             //=== Find last post ID - cached \0/
             if (($last_post_arr = $mc1->get_value('last_post_' . $forum_id . '_' . $CURUSER['class'])) === false) {
-                $last_post_arr = mysqli_fetch_assoc(sql_query('SELECT t.id AS topic_id, t.topic_name, t.last_post, t.anonymous AS tan, p.added, p.anonymous AS pan, p.user_id, u.id, u.username, u.class, u.donor, u.suspended, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king, u.avatar_rights FROM topics AS t LEFT JOIN posts AS p ON p.topic_id = t.id RIGHT JOIN users AS u ON u.id = p.user_id WHERE ' . ($CURUSER['class'] < UC_STAFF ? 'p.status = \'ok\' AND t.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? ' t.status != \'deleted\' AND p.status != \'deleted\' AND' : '')) . ' t.forum_id = ' . sqlesc($forum_id) . ' ORDER BY p.id DESC LIMIT 1'));
+                $last_post_arr = mysqli_fetch_assoc(sql_query('SELECT t.id AS topic_id, t.topic_name, t.last_post, t.anonymous AS tan, p.added, p.anonymous AS pan, p.user_id, u.id, u.username, u.class, u.donor, u.suspended, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king, u.avatar_rights FROM '.TBL_TOPICS.' AS t LEFT JOIN '.TBL_POSTS.' AS p ON p.topic_id = t.id RIGHT JOIN ".TBL_USERS." AS u ON u.id = p.user_id WHERE ' . ($CURUSER['class'] < UC_STAFF ? 'p.status = \'ok\' AND t.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? ' t.status != \'deleted\' AND p.status != \'deleted\' AND' : '')) . ' t.forum_id = ' . sqlesc($forum_id) . ' ORDER BY p.id DESC LIMIT 1'));
                 //==
                 $mc1->cache_value('last_post_' . $forum_id . '_' . $CURUSER['class'], $last_post_arr, $INSTALLER09['expires']['last_post']);
             }
@@ -551,7 +551,7 @@ case 'forum':
                 $last_post_id = (int)$last_post_arr['last_post'];
                 //=== get the last post read by CURUSER (with Retro's $readpost_expiry thingie) - cached \0/
                 if (($last_read_post_arr = $mc1->get_value('last_read_post_' . $last_post_arr['topic_id'] . '_' . $CURUSER['id'])) === false) {
-                    $last_read_post_arr = mysqli_fetch_row(sql_query('SELECT last_post_read FROM read_posts WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($last_post_arr['topic_id'])));
+                    $last_read_post_arr = mysqli_fetch_row(sql_query('SELECT last_post_read FROM '.TBL_READ_POSTS.' WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($last_post_arr['topic_id'])));
                     $mc1->cache_value('last_read_post_' . $last_post_arr['topic_id'] . '_' . $CURUSER['id'], $last_read_post_arr, $INSTALLER09['expires']['last_read_post']);
                 }
                 $image_to_use = ($last_post_arr['added'] > (TIME_NOW - $readpost_expiry)) ? (!$last_read_post_arr OR $last_post_id > $last_read_post_arr[0]) : 0;
@@ -568,7 +568,7 @@ case 'forum':
                 if (($child_boards_cache = $mc1->get_value($keys['child_boards'])) === false) {
                     $child_boards = '';
                     $child_boards_cache = array();
-                    $res = sql_query('SELECT name, id FROM forums WHERE parent_forum = ' . sqlesc($arr_forums['real_forum_id']) . ' AND min_class_read <= ' . sqlesc($CURUSER['class']) . ' ORDER BY sort ASC') or sqlerr(__FILE__, __LINE__);
+                    $res = sql_query('SELECT name, id FROM '.TBL_FORUMS.' WHERE parent_forum = ' . sqlesc($arr_forums['real_forum_id']) . ' AND min_class_read <= ' . sqlesc($CURUSER['class']) . ' ORDER BY sort ASC') or sqlerr(__FILE__, __LINE__);
                     while ($arr = mysqli_fetch_assoc($res)) {
                         if ($child_boards) $child_boards.= ', ';
                         $child_boards.= '<a href="' . $INSTALLER09['baseurl'] . '/forums.php?action=view_forum&amp;forum_id=' . (int)$arr['id'] . '" title="click to view!" class="altlink">' . htmlsafechars($arr['name'], ENT_QUOTES) . '</a>';
@@ -614,7 +614,7 @@ case 'forum':
     if (($forum_users_cache = $mc1->get_value($keys['now_viewing'])) === false) {
         $forumusers = '';
         $forum_users_cache = array();
-        $res = sql_query('SELECT n_v.user_id, u.id, u.username, u.class, u.donor, u.suspended, u.perms, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king, u.avatar_rights, u.perms FROM now_viewing AS n_v LEFT JOIN users AS u ON n_v.user_id = u.id') or sqlerr(__FILE__, __LINE__);
+        $res = sql_query('SELECT n_v.user_id, u.id, u.username, u.class, u.donor, u.suspended, u.perms, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king, u.avatar_rights, u.perms FROM '.TBL_NOW_VIEWING.' AS n_v LEFT JOIN '.TBL_USERS.' AS u ON n_v.user_id = u.id') or sqlerr(__FILE__, __LINE__);
         $actcount = mysqli_num_rows($res);
         while ($arr = mysqli_fetch_assoc($res)) {
             if ($forumusers) $forumusers.= ",\n";
@@ -658,7 +658,7 @@ function insert_quick_jump_menu($current_forum = 0, $staff = false)
 {
     global $CURUSER, $INSTALLER09, $mc1;
     if (($quick_jump_menu = $mc1->get_value('f_insertJumpTo' . $CURUSER['id'])) === false) {
-        $res = sql_query('SELECT f.id, f.name, f.parent_forum, f.min_class_read, of.name AS over_forum_name FROM forums AS f LEFT JOIN over_forums AS of ON f.forum_id = of.id ORDER BY of.sort, f.parent_forum, f.sort ASC');
+        $res = sql_query('SELECT f.id, f.name, f.parent_forum, f.min_class_read, of.name AS over_forum_name FROM '.TBL_FORUMS.' AS f LEFT JOIN '.TBL_OVER_FORUMS.' AS of ON f.forum_id = of.id ORDER BY of.sort, f.parent_forum, f.sort ASC');
         $switch = '';
         $quick_jump_menu = ($staff === false ? '
 				<table><tr><td>

@@ -10,7 +10,7 @@
 if (!defined('IN_LOTTERY')) die('You can\'t access this file directly!');
 if ($CURUSER['class'] < UC_MODERATOR) stderr('Err', 'What you doing here dude?');
 //get the config from db
-$lconf = sql_query('SELECT * FROM lottery_config') or sqlerr(__FILE__, __LINE__);
+$lconf = sql_query('SELECT * FROM '.TBL_LOTTERY_CONFIG.'') or sqlerr(__FILE__, __LINE__);
 while ($ac = mysqli_fetch_assoc($lconf)) $lottery_config[$ac['name']] = $ac['value'];
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     //can't be 0
@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (isset($_POST[$key]) && ($type == 0 && $_POST[$key] == 0 || $type == 1 && count($_POST[$key]) == 0)) stderr('Err', 'You forgot to fill some data');
     }
     foreach ($lottery_config as $c_name => $c_value) if (isset($_POST[$c_name]) && $_POST[$c_name] != $c_value) $update[] = '('.sqlesc($c_name).','.sqlesc(is_array($_POST[$c_name]) ? join('|', $_POST[$c_name]) : $_POST[$c_name]).')';
-    if (sql_query('INSERT INTO lottery_config(name,value) VALUES '.join(',', $update).' ON DUPLICATE KEY update value=values(value)')) stderr('Success', 'Lottery configuration was saved! Click <a href=\'lottery.php?do=config\'>here to get back</a>');
+    if (sql_query('INSERT INTO '.TBL_LOTTERY_CONFIG.'(name,value) VALUES '.join(',', $update).' ON DUPLICATE KEY update value=values(value)')) stderr('Success', 'Lottery configuration was saved! Click <a href=\'lottery.php?do=config\'>here to get back</a>');
     else stderr('Error', 'There was an error while executing the update query. Mysql error: '.((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
     exit;
 }

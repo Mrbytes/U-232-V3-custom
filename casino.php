@@ -51,22 +51,22 @@ if ($CURUSER["game_access"] == 0 || $CURUSER["game_access"] > 1 || $CURUSER['sus
     stderr("Error", "Your gaming rights have been disabled.");
     exit();
 }
-$sql = sql_query('SELECT uploaded, downloaded '.'FROM users '.'WHERE id = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+$sql = sql_query('SELECT uploaded, downloaded '.'FROM '.TBL_USERS.' '.'WHERE id = '.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
 $User = mysqli_fetch_assoc($sql);
 $User['uploaded'] = (float)$User['uploaded'];
 $User['downloaded'] = (float)$User['downloaded'];
 //== Reset user gamble stats!
 $hours = 2; //== Hours to wait after using all tries, until they will be restarted
 $dt = TIME_NOW - $hours * 3600;
-$res = sql_query("SELECT userid, trys, date, enableplay FROM casino WHERE date < $dt AND trys >= '51' AND enableplay = 'yes'");
+$res = sql_query("SELECT userid, trys, date, enableplay FROM ".TBL_CASINO." WHERE date < $dt AND trys >= '51' AND enableplay = 'yes'");
 while ($arr = mysqli_fetch_assoc($res)) {
-    sql_query("UPDATE casino SET trys='0' WHERE userid=".sqlesc($arr['userid'])) or sqlerr(__FILE__, __LINE__);
+    sql_query("UPDATE ".TBL_CASINO." SET trys='0' WHERE userid=".sqlesc($arr['userid'])) or sqlerr(__FILE__, __LINE__);
 }
 if ($CURUSER['class'] < $player) stderr("Sorry", "".htmlsafechars($CURUSER["username"])." The Moderators do not allow your class ".get_user_class_name($player)." to play casino");
-$query = "SELECT * from casino where userid = ".sqlesc($CURUSER['id'])."";
+$query = "SELECT * FROM ".TBL_CASINO." WHERE userid = ".sqlesc($CURUSER['id'])."";
 $result = sql_query($query) or sqlerr(__FILE__, __LINE__);
 if (mysqli_affected_rows($GLOBALS["___mysqli_ston"]) != 1) {
-    sql_query("INSERT INTO casino (userid, win, lost, trys, date, started) VALUES(".sqlesc($CURUSER["id"]).", 0, 0, 0,".TIME_NOW.",1)") or ((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false));
+    sql_query("INSERT INTO ".TBL_CASINO." (userid, win, lost, trys, date, started) VALUES(".sqlesc($CURUSER["id"]).", 0, 0, 0,".TIME_NOW.",1)") or ((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false));
     $result = sql_query($query) or sqlerr(__FILE__, __LINE__);
 }
 $row = mysqli_fetch_assoc($result);
@@ -82,7 +82,7 @@ if ($CURUSER["downloaded"] > 0) $ratio = number_format($CURUSER["uploaded"] / $C
 else if ($CURUSER["uploaded"] > 0) $ratio = 999;
 else $ratio = 0;
 if ($INSTALLER09['ratio_free'] === false && $ratio < $required_ratio) stderr("Sorry", "".htmlsafechars($CURUSER["username"])." your ratio is under {$required_ratio}");
-$global_down2 = sql_query("SELECT (sum(win)-sum(lost)) AS globaldown,(sum(deposit)) AS globaldeposit, sum(win) AS win, sum(lost) AS lost FROM casino") or sqlerr(__FILE__, __LINE__);
+$global_down2 = sql_query("SELECT (sum(win)-sum(lost)) AS globaldown,(sum(deposit)) AS globaldeposit, sum(win) AS win, sum(lost) AS lost FROM ".TBL_CASINO."") or sqlerr(__FILE__, __LINE__);
 $row = mysqli_fetch_assoc($global_down2);
 $global_down = (float)$row["globaldown"];
 $global_win = (float)$row["win"];
@@ -138,8 +138,8 @@ if (isset($color_options[$post_color]) && isset($number_options[$post_number]) |
     $win = $win_amount * $betmb;
     if ($CURUSER["uploaded"] < $betmb) stderr("Sorry", "".htmlsafechars($CURUSER["username"])." but you have not uploaded ".htmlsafechars(mksize($betmb)));
     if (rand(0, $cheat_value) == $cheat_value) {
-        sql_query("UPDATE users SET uploaded = uploaded + ".sqlesc($win)." WHERE id=".sqlesc($CURUSER["id"])) or sqlerr(__FILE__, __LINE__);
-        sql_query("UPDATE casino SET date = '".TIME_NOW."', trys = trys + 1, win = win + ".sqlesc($win)."  WHERE userid=".sqlesc($CURUSER["id"])) or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_USERS." SET uploaded = uploaded + ".sqlesc($win)." WHERE id=".sqlesc($CURUSER["id"])) or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_CASINO." SET date = '".TIME_NOW."', trys = trys + 1, win = win + ".sqlesc($win)."  WHERE userid=".sqlesc($CURUSER["id"])) or sqlerr(__FILE__, __LINE__);
         $update['uploaded'] = ($User['uploaded'] + $win);
         //==stats
         $mc1->begin_transaction('userstats_'.$CURUSER['id']);
@@ -162,8 +162,8 @@ if (isset($color_options[$post_color]) && isset($number_options[$post_number]) |
             if ($_POST["color"] == "black") $fake_winner = "red";
             else $fake_winner = "black";
         }
-        sql_query("UPDATE users SET uploaded = uploaded - ".sqlesc($betmb)." WHERE id=".sqlesc($CURUSER["id"])) or sqlerr(__FILE__, __LINE__);
-        sql_query("UPDATE casino SET date = ".TIME_NOW.", trys = trys + 1 ,lost = lost + ".sqlesc($betmb)." WHERE userid=".sqlesc($CURUSER["id"])) or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_USERS." SET uploaded = uploaded - ".sqlesc($betmb)." WHERE id=".sqlesc($CURUSER["id"])) or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_CASINO." SET date = ".TIME_NOW.", trys = trys + 1 ,lost = lost + ".sqlesc($betmb)." WHERE userid=".sqlesc($CURUSER["id"])) or sqlerr(__FILE__, __LINE__);
         $update['uploaded_loser'] = ($User['uploaded'] - $betmb);
         //==stats
         $mc1->begin_transaction('userstats_'.$CURUSER['id']);
@@ -180,7 +180,7 @@ if (isset($color_options[$post_color]) && isset($number_options[$post_number]) |
     }
 } else {
     //== Get user stats
-    $betsp = sql_query("SELECT challenged FROM casino_bets WHERE proposed =".sqlesc($CURUSER['username']));
+    $betsp = sql_query("SELECT challenged FROM ".TBL_CASINO."_bets WHERE proposed =".sqlesc($CURUSER['username']));
     $openbet = 0;
     while ($tbet2 = mysqli_fetch_assoc($betsp)) {
         if ($tbet2['challenged'] == 'empty') $openbet++;
@@ -197,7 +197,7 @@ if (isset($color_options[$post_color]) && isset($number_options[$post_number]) |
     if (isset($_GET["takebet"])) {
         $betid = 0 + $_GET["takebet"];
         $random = rand(0, 1);
-        $loc = sql_query("SELECT * FROM casino_bets WHERE id = ".sqlesc($betid));
+        $loc = sql_query("SELECT * FROM ".TBL_CASINO_BETS." WHERE id = ".sqlesc($betid));
         $tbet = mysqli_fetch_assoc($loc);
         $nogb = mksize($tbet['amount']);
         if ($CURUSER['id'] == $tbet['userid']) stderr("Sorry", "You want to bet against yourself lol ?&nbsp;&nbsp;&nbsp;$goback");
@@ -208,8 +208,8 @@ if (isset($color_options[$post_color]) && isset($number_options[$post_number]) |
         }
         if (isset($debt) && $alwdebt != 1) stderr("Sorry", "<h2>You are ".htmlsafechars(mksize(($nobits - $CURUSER['uploaded'])))." short of making that bet !</h2>&nbsp;&nbsp;&nbsp;$goback");
         if ($random == 1) {
-            sql_query("UPDATE users SET uploaded = uploaded+".sqlesc($tbet['amount'])." WHERE id = ".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
-            sql_query("UPDATE casino SET deposit = deposit-".sqlesc($tbet['amount'])." WHERE userid = ".sqlesc($tbet['userid'])) or sqlerr(__FILE__, __LINE__);
+            sql_query("UPDATE ".TBL_USERS." SET uploaded = uploaded+".sqlesc($tbet['amount'])." WHERE id = ".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+            sql_query("UPDATE ".TBL_CASINO." SET deposit = deposit-".sqlesc($tbet['amount'])." WHERE userid = ".sqlesc($tbet['userid'])) or sqlerr(__FILE__, __LINE__);
             $update['uploaded'] = ($User['uploaded'] + $tbet['amount']);
             //==stats
             $mc1->begin_transaction('userstats_'.$CURUSER['id']);
@@ -222,23 +222,23 @@ if (isset($color_options[$post_color]) && isset($number_options[$post_number]) |
                 'uploaded' => $update['uploaded']
             ));
             $mc1->commit_transaction($INSTALLER09['expires']['user_stats']);
-            if (mysqli_affected_rows($GLOBALS["___mysqli_ston"]) == 0) sql_query("INSERT INTO casino (userid, date, deposit) VALUES (".sqlesc($tbet['userid']).", $time, -".sqlesc($tbet['amount']).")") or sqlerr(__FILE__, __LINE__);
-            sql_query("UPDATE casino_bets SET challenged = ".sqlesc($CURUSER['username']).", winner = ".sqlesc($CURUSER['username'])." WHERE id =".sqlesc($betid)) or sqlerr(__FILE__, __LINE__);
+            if (mysqli_affected_rows($GLOBALS["___mysqli_ston"]) == 0) sql_query("INSERT INTO ".TBL_CASINO." (userid, date, deposit) VALUES (".sqlesc($tbet['userid']).", $time, -".sqlesc($tbet['amount']).")") or sqlerr(__FILE__, __LINE__);
+            sql_query("UPDATE ".TBL_CASINO_BETS." SET challenged = ".sqlesc($CURUSER['username']).", winner = ".sqlesc($CURUSER['username'])." WHERE id =".sqlesc($betid)) or sqlerr(__FILE__, __LINE__);
             $subject = sqlesc("Casino Results");
             $msg = sqlesc("You lost a bet ! ".htmlsafechars($CURUSER['username'])." just won ".htmlsafechars($nogb)." of your upload credit !");
-            sql_query("INSERT INTO messages (subject, sender, receiver, added, msg, unread, poster) VALUES ($subject, $sendfrom, ".sqlesc($tbet['userid']).", $time, $msg, 'yes', $sendfrom)") or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_MESSAGES." (subject, sender, receiver, added, msg, unread, poster) VALUES ($subject, $sendfrom, ".sqlesc($tbet['userid']).", $time, $msg, 'yes', $sendfrom)") or sqlerr(__FILE__, __LINE__);
             $mc1->delete_value('inbox_new_'.$tbet['userid']);
             $mc1->delete_value('inbox_new_sb_'.$tbet['userid']);
             if ($writelog == 1) write_log($CURUSER['username']." won $nogb of upload credit off ".htmlsafechars($tbet['proposed']));
-            if ($delold == 1) sql_query("DELETE FROM casino_bets WHERE id =".sqlesc($tbet['id'])) or sqlerr(__FILE__, __LINE__);
+            if ($delold == 1) sql_query("DELETE FROM ".TBL_CASINO_BETS." WHERE id =".sqlesc($tbet['id'])) or sqlerr(__FILE__, __LINE__);
             stderr("You got it", "<h2>You won the bet, ".htmlsafechars($nogb)." has been credited to your account, at <a href='userdetails.php?id=".(int)$tbet['userid']."'>".htmlsafechars($tbet['proposed'])."'s</a> expense !</h2>&nbsp;&nbsp;&nbsp;$goback");
             exit();
         } else {
             if (empty($newup)) $newup = $User['uploaded'] - $tbet['amount'];
             $newup2 = $tbet['amount'] * 2;
-            sql_query("UPDATE users SET uploaded = ".sqlesc($newup)." WHERE id =".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
-            sql_query("UPDATE users SET uploaded = uploaded + ".sqlesc($newup2)." WHERE id = ".sqlesc($tbet['userid'])) or sqlerr(__FILE__, __LINE__);
-            sql_query("UPDATE casino SET deposit = deposit-".sqlesc($tbet['amount'])." WHERE userid = ".sqlesc($tbet['userid']));
+            sql_query("UPDATE ".TBL_USERS." SET uploaded = ".sqlesc($newup)." WHERE id =".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+            sql_query("UPDATE ".TBL_USERS." SET uploaded = uploaded + ".sqlesc($newup2)." WHERE id = ".sqlesc($tbet['userid'])) or sqlerr(__FILE__, __LINE__);
+            sql_query("UPDATE ".TBL_CASINO." SET deposit = deposit-".sqlesc($tbet['amount'])." WHERE userid = ".sqlesc($tbet['userid']));
             $update['uploaded'] = ($newup);
             //==stats
             $mc1->begin_transaction('userstats_'.$CURUSER['id']);
@@ -263,21 +263,21 @@ if (isset($color_options[$post_color]) && isset($number_options[$post_number]) |
                 'uploaded' => $update['uploaded_2']
             ));
             $mc1->commit_transaction($INSTALLER09['expires']['user_stats']);
-            if (mysqli_affected_rows($GLOBALS["___mysqli_ston"]) == 0) sql_query("INSERT INTO casino (userid, date, deposit) VALUES (".sqlesc($tbet['userid']).", $time, -".sqlesc($tbet['amount']).")") or sqlerr(__FILE__, __LINE__);
-            sql_query("UPDATE casino_bets SET challenged = ".sqlesc($CURUSER['username']).", winner = ".sqlesc($tbet['proposed'])." WHERE id = ".sqlesc($betid)) or sqlerr(__FILE__, __LINE__);
+            if (mysqli_affected_rows($GLOBALS["___mysqli_ston"]) == 0) sql_query("INSERT INTO ".TBL_CASINO." (userid, date, deposit) VALUES (".sqlesc($tbet['userid']).", $time, -".sqlesc($tbet['amount']).")") or sqlerr(__FILE__, __LINE__);
+            sql_query("UPDATE ".TBL_CASINO_BETS." SET challenged = ".sqlesc($CURUSER['username']).", winner = ".sqlesc($tbet['proposed'])." WHERE id = ".sqlesc($betid)) or sqlerr(__FILE__, __LINE__);
             $subject = sqlesc("Casino Results");
             $msg = sqlesc("You just won ".htmlsafechars($nogb)." of upload credit from ".$CURUSER['username']." !");
-            sql_query("INSERT INTO messages (subject, sender, receiver, added, msg, unread, poster) VALUES ($subject, $sendfrom, ".sqlesc($tbet['userid']).", $time, $msg, 'yes', $sendfrom)") or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_MESSAGES." (subject, sender, receiver, added, msg, unread, poster) VALUES ($subject, $sendfrom, ".sqlesc($tbet['userid']).", $time, $msg, 'yes', $sendfrom)") or sqlerr(__FILE__, __LINE__);
             $mc1->delete_value('inbox_new_'.$tbet['userid']);
             $mc1->delete_value('inbox_new_sb_'.$tbet['userid']);
             if ($writelog == 1) write_log("".htmlsafechars($tbet['proposed'])." won $nogb of upload credit off ".$CURUSER['username']);
-            if ($delold == 1) sql_query("DELETE FROM casino_bets WHERE id =".sqlesc($tbet['id'])) or sqlerr(__FILE__, __LINE__);
+            if ($delold == 1) sql_query("DELETE FROM ".TBL_CASINO_BETS." WHERE id =".sqlesc($tbet['id'])) or sqlerr(__FILE__, __LINE__);
             stderr("Damn it", "<h2>You lost the bet <a href='userdetails.php?id=".(int)$tbet['userid']."'>".htmlsafechars($tbet['proposed'])."</a> has won ".htmlsafechars($nogb)." of your hard earnt upload credit !</h2> &nbsp;&nbsp;&nbsp;$goback");
         }
         exit();
     }
     //== Add a new bet
-    $loca = sql_query("SELECT * FROM casino_bets WHERE challenged ='empty'") or sqlerr(__FILE__, __LINE__);
+    $loca = sql_query("SELECT * FROM ".TBL_CASINO_BETS." WHERE challenged ='empty'") or sqlerr(__FILE__, __LINE__);
     $totbets = mysqli_num_rows($loca);
     if (isset($_POST['unit'])) {
         if (0 + $_POST["unit"] == '1') $nobits = 0 + $_POST["amnt"] * $mb_basic;
@@ -292,16 +292,16 @@ if (isset($color_options[$post_color]) && isset($number_options[$post_number]) |
         if ($CURUSER['uploaded'] < $nobits) {
             if ($alwdebt != 1) stderr("Sorry", "<h2>Thats ".htmlsafechars(mksize($debt))." more than you got!</h2>$goback");
         }
-        $betsp = sql_query("SELECT id, amount FROM casino_bets WHERE userid = ".sqlesc($CURUSER['id'])." ORDER BY time ASC") or sqlerr(__FILE__, __LINE__);
+        $betsp = sql_query("SELECT id, amount FROM ".TBL_CASINO_BETS." WHERE userid = ".sqlesc($CURUSER['id'])." ORDER BY time ASC") or sqlerr(__FILE__, __LINE__);
         $tbet2 = mysqli_fetch_row($betsp);
         $dummy = "<h2>Bet added, you will receive a PM notifying you of the results when someone has taken it</h2>";
         $user = $CURUSER['username'];
         $bet = mksize($nobits);
         $message = "[color=green][b]{$user}[/b][/color] has just placed a [color=red][b]{$bet}[/b][/color] bet in the Casino";
         //$message1 = "\002\0034,1{$user} has just placed a {$bet} bet in the Casino";
-        sql_query("INSERT INTO casino_bets ( userid, proposed, challenged, amount, time) VALUES (".sqlesc($CURUSER['id']).",".sqlesc($CURUSER['username']).", 'empty', $nobits, $time)") or sqlerr(__FILE__, __LINE__);
-        sql_query("UPDATE users SET uploaded = ".sqlesc($newups)." WHERE id = ".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
-        sql_query("UPDATE casino SET deposit = deposit + ".sqlesc($nobits)." WHERE userid = ".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+        sql_query("INSERT INTO ".TBL_CASINO_BETS." ( userid, proposed, challenged, amount, time) VALUES (".sqlesc($CURUSER['id']).",".sqlesc($CURUSER['username']).", 'empty', $nobits, $time)") or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_USERS." SET uploaded = ".sqlesc($newups)." WHERE id = ".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_CASINO." SET deposit = deposit + ".sqlesc($nobits)." WHERE userid = ".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
         $update['uploaded'] = ($newups);
         //==stats
         $mc1->begin_transaction('userstats_'.$CURUSER['id']);
@@ -319,9 +319,9 @@ if (isset($color_options[$post_color]) && isset($number_options[$post_number]) |
             $mc1->delete_value('shoutbox_');
         }
         //ircbot($message1);
-        if (mysqli_affected_rows($GLOBALS["___mysqli_ston"]) == 0) sql_query("INSERT INTO casino (userid, date, deposit) VALUES (".sqlesc($CURUSER['id']).", $time, ".sqlesc($nobits).")") or sqlerr(__FILE__, __LINE__);
+        if (mysqli_affected_rows($GLOBALS["___mysqli_ston"]) == 0) sql_query("INSERT INTO ".TBL_CASINO." (userid, date, deposit) VALUES (".sqlesc($CURUSER['id']).", $time, ".sqlesc($nobits).")") or sqlerr(__FILE__, __LINE__);
     }
-    $loca = sql_query("SELECT * FROM casino_bets WHERE challenged ='empty'");
+    $loca = sql_query("SELECT * FROM ".TBL_CASINO_BETS." WHERE challenged ='empty'");
     $totbets = mysqli_num_rows($loca);
     //== Output html begin
     $HTMLOUT = '';

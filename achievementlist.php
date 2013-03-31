@@ -22,14 +22,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $CURUSER['class'] >= UC_MAX) {
     $notes = htmlsafechars($_POST["notes"]);
     $clienticon = htmlsafechars($clienticon);
     $achievname = htmlsafechars($achievname);
-    sql_query("INSERT INTO achievementist (achievname, notes, clienticon) VALUES(" . sqlesc($achievname) . ", " . sqlesc($notes) . ", " . sqlesc($clienticon) . ")") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_ACHIEVEMENTIST." (achievname, notes, clienticon) VALUES(" . sqlesc($achievname) . ", " . sqlesc($notes) . ", " . sqlesc($clienticon) . ")") or sqlerr(__FILE__, __LINE__);
     $message = "A New achievment has been added. Achievement: [{$achievname}]";
     autoshout($message);
     //$doUpdate = true;
     
 }
 // == Query update by Putyn
-$res = sql_query("SELECT a1.*, (SELECT COUNT(a2.id) FROM achievements AS a2 WHERE a2.achievement = a1.achievname) as count FROM achievementist AS a1 ORDER BY a1.id ") or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT a1.*, (SELECT COUNT(a2.id) FROM ".TBL_ACHIEVEMENTS." AS a2 WHERE a2.achievement = a1.achievname) as count FROM ".TBL_ACHIEVEMENTIST." AS a1 ORDER BY a1.id ") or sqlerr(__FILE__, __LINE__);
 $HTMLOUT = '';
 $HTMLOUT.= "<h1>Achievements List</h1>\n";
 if (mysqli_num_rows($res) == 0) {

@@ -8,7 +8,7 @@ if (!defined('IN_OFFERS')) exit('No direct script access allowed');
  *   Project Leaders: Mindless, putyn.
  *
  */
-$res = sql_query("SELECT userid, cat FROM offers WHERE id = $id") or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT userid, cat FROM ".TBL_OFFERS." WHERE id = $id") or sqlerr(__FILE__, __LINE__);
 $num = mysqli_fetch_assoc($res);
 if ($CURUSER['id'] != $num['userid'] && $CURUSER['class'] < UC_MODERATOR) stderr('Error', 'Access denied.');
 $offer = (isset($_POST['offertitle']) ? htmlspecialchars($_POST['offertitle']) : '');
@@ -39,12 +39,12 @@ if ($filled) {
     //stderr('Error', 'ID is your own. Cannot fill your own Requests.');
     //$filledby = 0;
     //else {
-    $res = sql_query("SELECT id FROM users WHERE id = ".$filledby);
+    $res = sql_query("SELECT id FROM ".TBL_USERS." WHERE id = ".$filledby);
     if (mysqli_num_rows($res) == 0) stderr('Error', 'ID doesn\'t match any users, try again');
     //  }
-    $res = sql_query("SELECT id FROM torrents WHERE id = ".$torrentid);
+    $res = sql_query("SELECT id FROM ".TBL_TORRENTS." WHERE id = ".$torrentid);
     if (mysqli_num_rows($res) == 0) stderr('Error', 'ID doesn\'t match any torrents, try again');
-    sql_query("UPDATE offers SET cat = $cat, offer = $offer, descr = $descr, acceptedby = $acceptedby, torrentid=$torrentid WHERE id = $id") or sqlerr(__FILE__, __LINE__);
-} else sql_query("UPDATE offers SET cat = $cat, acceptedby = 0, offer = $offer, descr = $descr, torrentid = 0 WHERE id = $id") or sqlerr(__FILE__, __LINE__);
+    sql_query("UPDATE ".TBL_OFFERS." SET cat = $cat, offer = $offer, descr = $descr, acceptedby = $acceptedby, torrentid=$torrentid WHERE id = $id") or sqlerr(__FILE__, __LINE__);
+} else sql_query("UPDATE ".TBL_OFFERS." SET cat = $cat, acceptedby = 0, offer = $offer, descr = $descr, torrentid = 0 WHERE id = $id") or sqlerr(__FILE__, __LINE__);
 header("Refresh: 0; url=viewoffers.php?id=$id&offer_details");
 ?>

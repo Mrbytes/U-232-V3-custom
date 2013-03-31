@@ -13,7 +13,7 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 function tables($no_data = "")
 {
@@ -40,7 +40,7 @@ function docleanup($data)
     $mysql_db = $INSTALLER09['mysql_db'];
     $bdir = $_SERVER["DOCUMENT_ROOT"]."/include/backup";
     $c1 = "mysqldump -h ".$mysql_host." -u ".$mysql_user." -p".$mysql_pass." ".$mysql_db." -d > ".$bdir."/db_structure.sql";
-    $c = "mysqldump -h ".$mysql_host." -u ".$mysql_user." -p".$mysql_pass." ".$mysql_db." ".tables("peers|messages|sitelog")." | bzip2 -cq9 > ".$bdir."/db_".date("m_d_y", TIME_NOW).".sql.bz2";
+    $c = "mysqldump -h ".$mysql_host." -u ".$mysql_user." -p".$mysql_pass." ".$mysql_db." ".tables("peers|".TBL_MESSAGES."|".TBL_SITELOG."")." | bzip2 -cq9 > ".$bdir."/db_".date("m_d_y", TIME_NOW).".sql.bz2";
     system($c1);
     system($c);
     $files = glob($bdir."/db_*");
@@ -48,7 +48,7 @@ function docleanup($data)
         if ((TIME_NOW - filemtime($file)) > 3 * 86400) unlink($file);
     }
     $ext = "db_".date("m_d_y", TIME_NOW).".sql.bz2";
-    sql_query("INSERT INTO dbbackup (name, added, userid) VALUES (".sqlesc($ext).", ".TIME_NOW.", ".$INSTALLER09['site']['owner'].")") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_DBBACKUP." (name, added, userid) VALUES (".sqlesc($ext).", ".TIME_NOW.", ".$INSTALLER09['site']['owner'].")") or sqlerr(__FILE__, __LINE__);
     if ($queries > 0) write_log("Auto-dbbackup----------------------Auto Back Up Complete using $queries queries---------------------");
     if (false !== mysqli_affected_rows($GLOBALS["___mysqli_ston"])) {
         $data['clean_desc'] = mysqli_affected_rows($GLOBALS["___mysqli_ston"])." items deleted/updated";

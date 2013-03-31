@@ -31,14 +31,14 @@ $lang = array_merge($lang, load_language('ad_banemail'));
 $HTMLOUT = '';
 $remove = isset($_GET['remove']) ? (int)$_GET['remove'] : 0;
 if (is_valid_id($remove)) {
-    sql_query("DELETE FROM bannedemails WHERE id = ".sqlesc($remove)) or sqlerr(__FILE__, __LINE__);
+    sql_query("DELETE FROM ".TBL_BANNEDEMAILS." WHERE id = ".sqlesc($remove)) or sqlerr(__FILE__, __LINE__);
     write_log("{$lang['ad_banemail_log1']} $remove {$lang['ad_banemail_log2']} {$CURUSER['username']}");
 }
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = htmlsafechars(trim($_POST["email"]));
     $comment = htmlsafechars(trim($_POST["comment"]));
     if (!$email || !$comment) stderr("{$lang['ad_banemail_error']}", "{$lang['ad_banemail_missing']}");
-    sql_query("INSERT INTO bannedemails (added, addedby, comment, email) VALUES(".TIME_NOW.", ".sqlesc($CURUSER['id']).", ".sqlesc($comment).", ".sqlesc($email).")") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_BANNEDEMAILS." (added, addedby, comment, email) VALUES(".TIME_NOW.", ".sqlesc($CURUSER['id']).", ".sqlesc($comment).", ".sqlesc($email).")") or sqlerr(__FILE__, __LINE__);
     header("Location: staffpanel.php?tool=bannedemails");
     die;
 }
@@ -54,10 +54,10 @@ $HTMLOUT.= "<form method=\"post\" action=\"staffpanel.php?tool=bannedemails\">
 <input type=\"submit\" value=\"{$lang['ad_banemail_ok']}\" class=\"btn\"/></td></tr>
 </table></form>\n";
 $HTMLOUT.= end_frame();
-$count1 = get_row_count('bannedemails');
+$count1 = get_row_count(TBL_BANNEDEMAILS);
 $perpage = 15;
 $pager = pager($perpage, $count1, 'staffpanel.php?tool=bannedemails&amp;');
-$res = sql_query("SELECT b.id, b.added, b.addedby, b.comment, b.email, u.username FROM bannedemails AS b LEFT JOIN users AS u ON b.addedby=u.id ORDER BY added DESC ".$pager['limit']) or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT b.id, b.added, b.addedby, b.comment, b.email, u.username FROM ".TBL_BANNEDEMAILS." AS b LEFT JOIN ".TBL_USERS." AS u ON b.addedby=u.id ORDER BY added DESC ".$pager['limit']) or sqlerr(__FILE__, __LINE__);
 $HTMLOUT.= begin_frame("{$lang['ad_banemail_current']}", true);
 if ($count1 > $perpage) $HTMLOUT.= $pager['pagertop'];
 if (mysqli_num_rows($res) == 0) $HTMLOUT.= "<p align='center'><b>{$lang['ad_banemail_nothing']}</b></p>\n";

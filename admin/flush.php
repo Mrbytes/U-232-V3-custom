@@ -30,10 +30,10 @@ $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if (!is_valid_id($id)) stderr("Error", "Invalid ID.");
 if ($CURUSER['class'] >= UC_STAFF) {
     $dt = TIME_NOW;
-    $res = sql_query("SELECT username FROM users WHERE id=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT username FROM ".TBL_USERS." WHERE id=".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_assoc($res);
     $username = htmlsafechars($arr['username']);
-    sql_query("DELETE FROM peers WHERE userid=".sqlesc($id));
+    sql_query("DELETE FROM ".TBL_PEERS." WHERE userid=".sqlesc($id));
     $effected = mysqli_affected_rows($GLOBALS["___mysqli_ston"]);
     //=== write to log
     write_log("Staff flushed ".$username."'s ghost torrents at ".get_date($dt, 'LONG', 0, 1).". $effected torrents where sucessfully cleaned.");

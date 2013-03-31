@@ -11,7 +11,7 @@ function genrelist2()
 {
     global $mc1, $INSTALLER09;
     if (!($cats = $mc1->get_value('categories'))) {
-        $row = sql_query("SELECT id, name, image, parent_id, tabletype FROM categories ORDER BY name");
+        $row = sql_query("SELECT id, name, image, parent_id, tabletype FROM ".TBL_CATEGORIES." ORDER BY name");
         while ($mysqlicats = mysqli_fetch_assoc($row)) $allcats[] = $mysqlicats;
         $allcats2 = $allcats;
         $i = 0;

@@ -20,7 +20,7 @@ $lang = array_merge(load_language('global'));
 $HTMLOUT = $amount = "";
 $HTMLOUT.= begin_main_frame();
 //get the config from db
-$pconf = sql_query('SELECT name, value FROM paypal_config') or sqlerr(__FILE__, __LINE__);
+$pconf = sql_query('SELECT name, value FROM '.TBL_PAYPAL_CONFIG.'') or sqlerr(__FILE__, __LINE__);
 while ($ac = mysqli_fetch_assoc($pconf)) $paypal_config[$ac['name']] = $ac['value'];
 $email = $paypal_config['email'];
 $enable = $paypal_config['enable'];

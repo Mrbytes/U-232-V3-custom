@@ -174,7 +174,7 @@ $dict['comment'] = ("In using this torrent you are bound by the {$INSTALLER09['s
 // Replace punctuation characters with spaces
 $torrent = str_replace("_", " ", $torrent);
 $vip = (isset($_POST["vip"]) ? "1" : "0");
-$ret = sql_query("INSERT INTO torrents (search_text, filename, owner, username, visible, vip, release_group, newgenre, poster, anonymous, allow_comments, info_hash, name, size, numfiles, type, offer, request, url, subs, descr, ori_descr, description, category, free, silver, save_as, youtube, tags, added, last_action, nfo, client_created_by) VALUES (".implode(",", array_map("sqlesc", array(
+$ret = sql_query("INSERT INTO ".TBL_TORRENTS." (search_text, filename, owner, username, visible, vip, release_group, newgenre, poster, anonymous, allow_comments, info_hash, name, size, numfiles, type, offer, request, url, subs, descr, ori_descr, description, category, free, silver, save_as, youtube, tags, added, last_action, nfo, client_created_by) VALUES (".implode(",", array_map("sqlesc", array(
     searchfield("$shortfname $dname $torrent") ,
     $fname,
     $CURUSER["id"],
@@ -218,13 +218,13 @@ $mc1->delete_value('scroll_tor_');
 if (isset($_POST['uplver']) && $_POST['uplver'] == 'yes') $message = "New Torrent : [url={$INSTALLER09['baseurl']}/details.php?id=$id] ".htmlsafechars($torrent)."[/url] Uploaded - Anonymous User";
 else $message = "New Torrent : [url={$INSTALLER09['baseurl']}/details.php?id=$id] ".htmlsafechars($torrent)."[/url] Uploaded by ".htmlsafechars($CURUSER["username"])."";
 //$messages = "{$INSTALLER09['site_name']} New Torrent: $torrent Uploaded By: $anon ".mksize($totallen)." {$INSTALLER09['baseurl']}/details.php?id=$id";
-sql_query("DELETE FROM files WHERE torrent = ".sqlesc($id));
+sql_query("DELETE FROM ".TBL_FILES." WHERE torrent = ".sqlesc($id));
 function file_list($arr, $id)
 {
     foreach ($arr as $v) $new[] = "($id,".sqlesc($v[0]).",".$v[1].")";
     return join(",", $new);
 }
-sql_query("INSERT INTO files (torrent, filename, size) VALUES ".file_list($filelist, $id));
+sql_query("INSERT INTO ".TBL_FILES." (torrent, filename, size) VALUES ".file_list($filelist, $id));
 //==
 $dir = $INSTALLER09['torrent_dir'].'/'.$id.'.torrent';
 if (!bencdec::encode_file($dir, $dict)) stderr('Error', 'Could not properly encode file');
@@ -233,7 +233,7 @@ chmod($dir, 0664);
 //==
 if ($INSTALLER09['seedbonus_on'] == 1) {
     //===add karma
-    sql_query("UPDATE users SET seedbonus=seedbonus+15.0, numuploads=numuploads+1 WHERE id = " . sqlesc($CURUSER["id"])) or sqlerr(__FILE__, __LINE__);
+    sql_query("UPDATE ".TBL_USERS." SET seedbonus=seedbonus+15.0, numuploads=numuploads+1 WHERE id = " . sqlesc($CURUSER["id"])) or sqlerr(__FILE__, __LINE__);
     //===end
     $update['seedbonus'] = ($CURUSER['seedbonus'] + 15);
     $mc1->begin_transaction('userstats_' . $CURUSER["id"]);
@@ -254,11 +254,11 @@ if ($INSTALLER09['autoshout_on'] == 1) {
 }
 //=== if it was an offer notify the folks who liked it :D
 if ($offer > 0) {
-    $res_offer = sql_query('SELECT user_id FROM offer_votes WHERE vote = \'yes\' AND user_id != '.sqlesc($CURUSER['id']).' AND offer_id = '.sqlesc($offer)) or sqlerr(__FILE__, __LINE__);
+    $res_offer = sql_query('SELECT user_id FROM '.TBL_OFFER_VOTES.' WHERE vote = \'yes\' AND user_id != '.sqlesc($CURUSER['id']).' AND offer_id = '.sqlesc($offer)) or sqlerr(__FILE__, __LINE__);
     $subject = sqlesc('An offer you voted for has been uploaded!');
     $message = sqlesc("Hi, \n An offer you were interested in has been uploaded!!! \n\n Click  [url=".$INSTALLER09['baseurl']."/details.php?id=".$id."]".htmlsafechars($torrent, ENT_QUOTES)."[/url] to see the torrent page!");
     while ($arr_offer = mysqli_fetch_assoc($res_offer)) {
-        sql_query('INSERT INTO messages (sender, receiver, added, msg, subject, saved, location) 
+        sql_query('INSERT INTO '.TBL_MESSAGES.' (sender, receiver, added, msg, subject, saved, location) 
     VALUES(0, '.sqlesc($arr_offer['user_id']).', '.TIME_NOW.', '.$message.', '.$subject.', \'yes\', 1)') or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('inbox_new_'.$arr_offer['user_id']);
         $mc1->delete_value('inbox_new_sb_'.$arr_offer['user_id']);
@@ -269,17 +269,17 @@ if ($offer > 0) {
 $filled = 0;
 //=== if it was a request notify the folks who voted :D
 if ($request > 0) {
-    $res_req = sql_query('SELECT user_id FROM request_votes WHERE vote = \'yes\' AND request_id = '.sqlesc($request)) or sqlerr(__FILE__, __LINE__);
+    $res_req = sql_query('SELECT user_id FROM '.TBL_REQUEST_VOTES.' WHERE vote = \'yes\' AND request_id = '.sqlesc($request)) or sqlerr(__FILE__, __LINE__);
     $subject = sqlesc('A  request you were interested in has been uploaded!');
     $message = sqlesc("Hi :D \n A request you were interested in has been uploaded!!! \n\n Click  [url=".$INSTALLER09['baseurl']."/details.php?id=".$id."]".htmlsafechars($torrent, ENT_QUOTES)."[/url] to see the torrent page!");
     while ($arr_req = mysqli_fetch_assoc($res_req)) {
-        sql_query('INSERT INTO messages (sender, receiver, added, msg, subject, saved, location) 
+        sql_query('INSERT INTO '.TBL_MESSAGES.' (sender, receiver, added, msg, subject, saved, location) 
     VALUES(0, '.sqlesc($arr_req['user_id']).', '.TIME_NOW.', '.$message.', '.$subject.', \'yes\', 1)') or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('inbox_new_'.$arr_req['user_id']);
         $mc1->delete_value('inbox_new_sb_'.$arr_req['user_id']);
     }
-    sql_query('UPDATE requests SET filled_by_user_id = '.sqlesc($CURUSER['id']).', filled_torrent_id = '.sqlesc($id).' WHERE id = '.sqlesc($request)) or sqlerr(__FILE__, __LINE__);
-    sql_query("UPDATE usersachiev SET reqfilled = reqfilled + 1 WHERE id =".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+    sql_query('UPDATE '.TBL_REQUESTS.' SET filled_by_user_id = '.sqlesc($CURUSER['id']).', filled_torrent_id = '.sqlesc($id).' WHERE id = '.sqlesc($request)) or sqlerr(__FILE__, __LINE__);
+    sql_query("UPDATE ".TBL_USERSACHIEV." SET reqfilled = reqfilled + 1 WHERE id =".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
     write_log('Request for torrent '.$id.' ('.htmlspeciachars($torrent).') was filled by '.$CURUSER['username']);
     $filled = 1;
 }
@@ -287,12 +287,12 @@ if ($filled == 0) write_log(sprintf($lang['takeupload_log'], $id, $torrent, $CUR
 /* RSS feeds */
 if (($fd1 = @fopen("rss.xml", "w")) && ($fd2 = fopen("rssdd.xml", "w"))) {
     $cats = "";
-    $res = sql_query("SELECT id, name FROM categories");
+    $res = sql_query("SELECT id, name FROM ".TBL_CATEGORIES."");
     while ($arr = mysqli_fetch_assoc($res)) $cats[$arr["id"]] = $arr["name"];
     $s = "<?xml version=\"1.0\" encoding=\"iso-8859-1\" ?>\n<rss version=\"0.91\">\n<channel>\n"."<title>{$INSTALLER09['site_name']}</title>\n<description>Installer09 is the best!</description>\n<link>{$INSTALLER09['baseurl']}/</link>\n";
     @fwrite($fd1, $s);
     @fwrite($fd2, $s);
-    $r = sql_query("SELECT id,name,descr,filename,category FROM torrents ORDER BY added DESC LIMIT 15") or sqlerr(__FILE__, __LINE__);
+    $r = sql_query("SELECT id,name,descr,filename,category FROM ".TBL_TORRENTS." ORDER BY added DESC LIMIT 15") or sqlerr(__FILE__, __LINE__);
     while ($a = mysqli_fetch_assoc($r)) {
         $cat = $cats[$a["category"]];
         $s = "<item>\n<title>".htmlsafechars($a["name"]." ($cat)")."</title>\n"."<description>".htmlsafechars($a["descr"])."</description>\n";
@@ -311,10 +311,10 @@ if (($fd1 = @fopen("rss.xml", "w")) && ($fd2 = fopen("rssdd.xml", "w"))) {
 /* Email notifs */
 /*******************
 
-    $res = sql_query("SELECT name FROM categories WHERE id=".sqlesc($catid)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT name FROM ".TBL_CATEGORIES." WHERE id=".sqlesc($catid)) or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_assoc($res);
     $cat = htmlsafechars($arr["name"]);
-    $res = sql_query("SELECT email FROM users WHERE enabled='yes' AND notifs LIKE '%[cat$catid]%'") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT email FROM ".TBL_USERS." WHERE enabled='yes' AND notifs LIKE '%[cat$catid]%'") or sqlerr(__FILE__, __LINE__);
     $uploader = $CURUSER['username'];
 
     $size = mksize($totallen);

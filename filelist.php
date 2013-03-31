@@ -16,7 +16,7 @@ loggedinorreturn();
 $lang = array_merge(load_language('global') , load_language('filelist'));
 $id = isset($_GET["id"]) ? (int)$_GET["id"] : 0;
 if (!is_valid_id($id)) stderr('USER ERROR', 'Bad id');
-$res = sql_query("SELECT COUNT(id) FROM files WHERE torrent =".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT COUNT(id) FROM ".TBL_FILES." WHERE torrent =".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
 $row = mysqli_fetch_row($res);
 $count = $row[0];
 $perpage = 100;
@@ -24,7 +24,7 @@ $pager = pager($perpage, $count, "filelist.php?id=$id&amp;");
 $HTMLOUT = '';
 if ($count > $perpage) $HTMLOUT.= $pager['pagertop'];
 $HTMLOUT.= "<a name='top'></a><table class='main' border='1' cellspacing='0' cellpadding='5'>\n";
-$subres = sql_query("SELECT * FROM files WHERE torrent = ".sqlesc($id)." ORDER BY id ".$pager['limit']);
+$subres = sql_query("SELECT * FROM ".TBL_FILES." WHERE torrent = ".sqlesc($id)." ORDER BY id ".$pager['limit']);
 $HTMLOUT.= "<tr><td class='colhead'>{$lang["filelist_type"]}</td><td class='colhead'>{$lang["filelist_path"]}</td><td class='colhead' align='right'>{$lang["filelist_size"]}</td></tr>\n";
 $counter = 0;
 while ($subrow = mysqli_fetch_assoc($subres)) {

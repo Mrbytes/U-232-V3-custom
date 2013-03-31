@@ -39,21 +39,21 @@ function validate($id)
 //==Actions
 if ($mode == 'ban') {
     validate($id);
-    sql_query("UPDATE failedlogins SET banned = 'yes' WHERE id=".sqlesc($id)."");
+    sql_query("UPDATE ".TBL_FAILEDLOGINS." SET banned = 'yes' WHERE id=".sqlesc($id)."");
     header('Refresh: 2; url='.$INSTALLER09['baseurl'].'/staffpanel.php?tool=failedlogins');
     stderr($lang['failed_success'], "{$lang['failed_message_ban']}");
     exit();
 }
 if ($mode == 'removeban') {
     validate($id);
-    sql_query("UPDATE failedlogins SET banned = 'no' WHERE id=".sqlesc($id)."");
+    sql_query("UPDATE ".TBL_FAILEDLOGINS." SET banned = 'no' WHERE id=".sqlesc($id)."");
     header('Refresh: 2; url='.$INSTALLER09['baseurl'].'/staffpanel.php?tool=failedlogins');
     stderr($lang['failed_success'], "{$lang['failed_message_unban']}");
     exit();
 }
 if ($mode == 'delete') {
     validate($id);
-    sql_query("DELETE FROM failedlogins WHERE id=".sqlesc($id)."");
+    sql_query("DELETE FROM ".TBL_FAILEDLOGINS." WHERE id=".sqlesc($id)."");
     header('Refresh: 2; url='.$INSTALLER09['baseurl'].'/staffpanel.php?tool=failedlogins');
     stderr($lang['failed_success'], "{$lang['failed_message_deleted']}");
     exit();
@@ -64,7 +64,7 @@ $where = '';
 $search = isset($_POST['search']) ? strip_tags($_POST['search']) : '';
 if (!$search) $where = "WHERE attempts LIKE ".sqlesc("%$search%")."";
 else $where = "WHERE attempts LIKE".sqlesc("%$search%")."";
-$res = sql_query("SELECT COUNT(id) FROM failedlogins $where") or sqlerr();
+$res = sql_query("SELECT COUNT(id) FROM ".TBL_FAILEDLOGINS." $where") or sqlerr();
 $row = mysqli_fetch_row($res);
 $count = $row[0];
 $perpage = 15;
@@ -83,7 +83,7 @@ $HTMLOUT.= "<table border='1' cellspacing='0' width='115' cellpadding='5'>\n
 			 </form></td></tr></table>";
 if ($count > $perpage) $HTMLOUT.= $pager['pagertop'];
 $HTMLOUT.= "<table border='1' cellspacing='0' cellpadding='5' width='80%'>\n";
-$res = sql_query("SELECT f.*,u.id as uid, u.username FROM failedlogins as f LEFT JOIN users as u ON u.ip = f.ip $where ORDER BY f.added DESC ".$pager['limit']."") or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT f.*,u.id as uid, u.username FROM ".TBL_FAILEDLOGINS." as f LEFT JOIN ".TBL_USERS." as u ON u.ip = f.ip $where ORDER BY f.added DESC ".$pager['limit']."") or sqlerr(__FILE__, __LINE__);
 if (mysqli_num_rows($res) == 0) $HTMLOUT.= "<tr><td colspan='2'><b>{$lang['failed_message_nothing']}</b></td></tr>\n";
 else {
     $HTMLOUT.= "<tr><td class='colhead'>ID</td><td class='colhead' align='left'>{$lang['failed_main_ip']}</td><td class='colhead' align='left'>{$lang['failed_main_added']}</td>"."<td class='colhead' align='left'>{$lang['failed_main_attempts']}</td><td class='colhead' align='left'>{$lang['failed_main_status']}</td></tr>\n";

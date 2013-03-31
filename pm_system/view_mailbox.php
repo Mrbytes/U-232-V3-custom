@@ -17,7 +17,7 @@ if (!defined('BUNNY_PM_SYSTEM')) {
 //=== get mailbox name
 if ($mailbox > 1) {
     //== get name of PM box if not in or out
-    $res_box_name = sql_query('SELECT name FROM pmboxes WHERE userid = '.sqlesc($CURUSER['id']).' AND boxnumber='.sqlesc($mailbox).' LIMIT 1') or sqlerr(__FILE__, __LINE__);
+    $res_box_name = sql_query('SELECT name FROM '.TBL_PMBOXES.' WHERE userid = '.sqlesc($CURUSER['id']).' AND boxnumber='.sqlesc($mailbox).' LIMIT 1') or sqlerr(__FILE__, __LINE__);
     $arr_box_name = mysqli_fetch_row($res_box_name);
     if (mysqli_num_rows($res_box_name) === 0) stderr('Error', 'Invalid Mailbox');
     $mailbox_name = htmlsafechars($arr_box_name[0]);
@@ -27,7 +27,7 @@ if ($mailbox > 1) {
 }
 //==== get count from PM boxs & get image & % box full
 //=== get stuff for the pager
-$res_count = sql_query('SELECT COUNT(id) FROM messages WHERE '.($mailbox === PM_INBOX ? 'receiver = '.sqlesc($CURUSER['id']).' AND location = 1' : ($mailbox === PM_SENTBOX ? 'sender = '.sqlesc($CURUSER['id']).' AND (saved = \'yes\' || unread= \'yes\') AND draft = \'no\' ' : 'receiver = '.sqlesc($CURUSER['id'])).' AND location = '.sqlesc($mailbox))) or sqlerr(__FILE__, __LINE__);
+$res_count = sql_query('SELECT COUNT(id) FROM '.TBL_MESSAGES.' WHERE '.($mailbox === PM_INBOX ? 'receiver = '.sqlesc($CURUSER['id']).' AND location = 1' : ($mailbox === PM_SENTBOX ? 'sender = '.sqlesc($CURUSER['id']).' AND (saved = \'yes\' || unread= \'yes\') AND draft = \'no\' ' : 'receiver = '.sqlesc($CURUSER['id'])).' AND location = '.sqlesc($mailbox))) or sqlerr(__FILE__, __LINE__);
 $arr_count = mysqli_fetch_row($res_count);
 $messages = $arr_count[0];
 //==== get count from PM boxs & get image & % box full
@@ -40,10 +40,10 @@ list($menu, $LIMIT) = pager_new($messages, $perpage, $page, $link);
 //=== get message info we need to display then all nice and tidy like \o/
 $res = sql_query('SELECT m.id AS message_id, m.sender, m.receiver, m.added, m.subject, m.unread, m.urgent,
                             u.id, u.username, u.uploaded, u.downloaded, u.warned, u.suspended, u.enabled, u.donor, u.class, u.avatar, u.offensive_avatar, u.leechwarn, u.chatpost, u.pirate, u.king, f.id AS friend, b.id AS blocked
-                            FROM messages AS m 
-                            LEFT JOIN users AS u ON u.id=m.'.($mailbox === PM_SENTBOX ? 'receiver' : 'sender').' 
-                            LEFT JOIN friends AS f ON f.userid = '.$CURUSER['id'].' AND f.friendid = m.sender
-                            LEFT JOIN blocks AS b ON b.userid = '.$CURUSER['id'].' AND b.blockid = m.sender
+                            FROM '.TBL_MESSAGES.' AS m 
+                            LEFT JOIN '.TBL_USERS.' AS u ON u.id=m.'.($mailbox === PM_SENTBOX ? 'receiver' : 'sender').' 
+                            LEFT JOIN '.TBL_FRIENDS.' AS f ON f.userid = '.$CURUSER['id'].' AND f.friendid = m.sender
+                            LEFT JOIN '.TBL_BLOCKS.' AS b ON b.userid = '.$CURUSER['id'].' AND b.blockid = m.sender
                             WHERE '.($mailbox === PM_INBOX ? 'receiver = '.$CURUSER['id'].' AND location = 1' : ($mailbox === PM_SENTBOX ? 'sender = '.$CURUSER['id'].' AND (saved = \'yes\' || unread= \'yes\') AND draft = \'no\' ' : 'receiver = '.$CURUSER['id'].' AND location = '.sqlesc($mailbox))).' 
                             ORDER BY '.$order_by.(isset($_GET['ASC']) ? ' ASC ' : ' DESC ').$LIMIT) or sqlerr(__FILE__, __LINE__);
 //=== Start Page

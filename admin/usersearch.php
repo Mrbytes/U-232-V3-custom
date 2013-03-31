@@ -695,7 +695,7 @@ if (count($_POST) > 0); //&& isset($_POST['n']))
     $disabled = isset($_POST['dip']) ? (int)$_POST['dip'] : '';
     if (!empty($disabled)) {
         $distinct = "DISTINCT ";
-        $join_is.= " LEFT JOIN users AS u2 ON u.ip = u2.ip";
+        $join_is.= " LEFT JOIN ".TBL_USERS." AS u2 ON u.ip = u2.ip";
         $where_is.= ((!empty($where_is)) ? " AND " : "")."u2.enabled = 'no'";
         $q1.= ($q1 ? "&amp;" : "")."dip=$disabled";
     }
@@ -703,10 +703,10 @@ if (count($_POST) > 0); //&& isset($_POST['n']))
     $active = isset($_POST['ac']) ? $_POST['ac'] : '';
     if ($active == "1") {
         $distinct = "DISTINCT ";
-        $join_is.= " LEFT JOIN peers AS p ON u.id = p.userid";
+        $join_is.= " LEFT JOIN ".TBL_PEERS." AS p ON u.id = p.userid";
         $q1.= ($q1 ? "&amp;" : "")."ac=$active";
     }
-    $from_is = isset($join_is) ? "users AS u".$join_is : "users AS u";
+    $from_is = isset($join_is) ? TBL_USERS." AS u".$join_is : TBL_USERS." AS u";
     $distinct = isset($distinct) ? $distinct : "";
     $where_is = !empty($where_is) ? $where_is : "";
     $queryc = "SELECT COUNT(".$distinct."u.id) FROM ".$from_is.(($where_is == "") ? "" : " WHERE $where_is ");
@@ -752,28 +752,28 @@ if (count($_POST) > 0); //&& isset($_POST['n']))
             //$user['last_access'] = '---';
             if ($user['ip']) {
                 $nip = ip2long($user['ip']);
-                $auxres = sql_query("SELECT COUNT(*) FROM bans WHERE $nip >= first AND $nip <= last") or sqlerr(__FILE__, __LINE__);
+                $auxres = sql_query("SELECT COUNT(*) FROM ".TBL_BANS." WHERE $nip >= first AND $nip <= last") or sqlerr(__FILE__, __LINE__);
                 $array = mysqli_fetch_row($auxres);
                 if ($array[0] == 0) $ipstr = $user['ip'];
                 else $ipstr = "<a href='staffpanel.php?tool=testip&amp;action=testip&amp;ip={$user['ip']}'><font color='#FF0000'><b>{$user['ip']}</b></font></a>";
             } else $ipstr = "---";
-            $auxres = sql_query("SELECT SUM(uploaded) AS pul, SUM(downloaded) AS pdl FROM peers WHERE userid = ".$user['id']) or sqlerr(__FILE__, __LINE__);
+            $auxres = sql_query("SELECT SUM(uploaded) AS pul, SUM(downloaded) AS pdl FROM ".TBL_PEERS." WHERE userid = ".$user['id']) or sqlerr(__FILE__, __LINE__);
             $array = mysqli_fetch_array($auxres);
             $pul = $array['pul'];
             $pdl = $array['pdl'];
             if ($pdl > 0) $partial = ratios($pul, $pdl)." (".mksize($pul)."/".mksize($pdl).")";
             else if ($pul > 0) $partial = "Inf. ".mksize($pul)."/".mksize($pdl).")";
             else $partial = "---";
-            //    $auxres = sql_query("SELECT COUNT(id) FROM posts WHERE userid = ".$user['id']) or sqlerr(__FILE__, __LINE__);
+            //    $auxres = sql_query("SELECT COUNT(id) FROM ".TBL_POSTS." WHERE userid = ".$user['id']) or sqlerr(__FILE__, __LINE__);
             $auxres = sql_query("SELECT COUNT(DISTINCT p.id)
-      FROM posts AS p LEFT JOIN topics as t ON p.topic_id = t.id
-      LEFT JOIN forums AS f ON t.forum_id = f.id
+      FROM ".TBL_POSTS." AS p LEFT JOIN ".TBL_TOPICS." as t ON p.topic_id = t.id
+      LEFT JOIN ".TBL_FORUMS." AS f ON t.forum_id = f.id
       WHERE p.user_id = ".$user['id']." AND f.min_class_read <= ".$CURUSER['class']) or sqlerr(__FILE__, __LINE__);
             $n = mysqli_fetch_row($auxres);
             $n_posts = $n[0];
-            $auxres = sql_query("SELECT COUNT(id) FROM comments WHERE user = ".$user['id']) or sqlerr(__FILE__, __LINE__);
+            $auxres = sql_query("SELECT COUNT(id) FROM ".TBL_COMMENTS." WHERE user = ".$user['id']) or sqlerr(__FILE__, __LINE__);
             // Use LEFT JOIN to exclude orphan comments
-            // $auxres = sql_query("SELECT COUNT(c.id) FROM comments AS c LEFT JOIN torrents as t ON c.torrent = t.id WHERE c.user = '".$user['id']."'") or sqlerr(__FILE__, __LINE__);
+            // $auxres = sql_query("SELECT COUNT(c.id) FROM ".TBL_COMMENTS." AS c LEFT JOIN ".TBL_TORRENTS." as t ON c.torrent = t.id WHERE c.user = '".$user['id']."'") or sqlerr(__FILE__, __LINE__);
             $n = mysqli_fetch_row($auxres);
             $n_comments = $n[0];
             $ids.= $user['id'].':';

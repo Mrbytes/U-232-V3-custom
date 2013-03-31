@@ -28,12 +28,12 @@ if ($action == 'viewbug') {
         $status = isset($_POST["status"]) ? htmlsafechars($_POST["status"]) : '';
         if ($status == 'na') stderr("{$lang['stderr_error']}", "{$lang['stderr_no_na']}");
         if (!$id || !is_valid_id($id)) stderr("{$lang['stderr_error']}", "{$lang['stderr_invalid_id']}");
-        $query1 = sql_query("SELECT b.*, u.username, u.uploaded FROM bugs AS b LEFT JOIN users AS u ON b.sender = u.id WHERE b.id = " . sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+        $query1 = sql_query("SELECT b.*, u.username, u.uploaded FROM ".TBL_BUGS." AS b LEFT JOIN ".TBL_USERS." AS u ON b.sender = u.id WHERE b.id = " . sqlesc($id)) or sqlerr(__FILE__, __LINE__);
         while ($q1 = mysqli_fetch_assoc($query1)) {
             switch ($status) {
             case 'fixed':
                 $msg = sqlesc("Hello " . htmlsafechars($q1['username']) . ".\nYour bug: [b]" . htmlsafechars($q1['title']) . "[/b] has been treated by one of our coder, and is done.\n\nWe would to thank you and therefore we have added [b]2 GB[/b] to your upload total :].\n\nBest regards, {$INSTALLER09['site_name']}'s coders.\n");
-                $uq = "UPDATE users SET uploaded = uploaded +" . 1024 * 1024 * 1024 * 2 . " WHERE id = " . sqlesc($q1['sender']) . "";
+                $uq = "UPDATE ".TBL_USERS." SET uploaded = uploaded +" . 1024 * 1024 * 1024 * 2 . " WHERE id = " . sqlesc($q1['sender']) . "";
                 $update['uploaded'] = ($q1['uploaded'] + 1024 * 1024 * 1024 * 2);
                 $mc1->begin_transaction('userstats_' . $q1['sender']);
                 $mc1->update_row(false, array(
@@ -53,8 +53,8 @@ if ($action == 'viewbug') {
                 break;
             }
             sql_query($uq);
-            sql_query("INSERT INTO messages (sender, receiver, added, msg) VALUES (0, " . sqlesc($q1['sender']) . ", " . TIME_NOW . ", {$msg})");
-            sql_query("UPDATE bugs SET status=" . sqlesc($status) . ", staff=" . sqlesc($CURUSER['id']) . " WHERE id = " . sqlesc($id));
+            sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, added, msg) VALUES (0, " . sqlesc($q1['sender']) . ", " . TIME_NOW . ", {$msg})");
+            sql_query("UPDATE ".TBL_BUGS." SET status=" . sqlesc($status) . ", staff=" . sqlesc($CURUSER['id']) . " WHERE id = " . sqlesc($id));
             $mc1->delete_value('inbox_new_' . $q1['sender']);
             $mc1->delete_value('inbox_new_sb_' . $q1['sender']);
             $mc1->delete_value('bug_mess_');
@@ -64,7 +64,7 @@ if ($action == 'viewbug') {
     $id = isset($_GET["id"]) ? (int)$_GET["id"] : '';
     if (!$id || !is_valid_id($id)) stderr("{$lang['stderr_error']}", "{$lang['stderr_invalid_id']}");
     if ($CURUSER['class'] < UC_STAFF) stderr("{$lang['stderr_error']}", 'Only staff can view bugs.');
-    $as = sql_query("SELECT b.*, u.username, u.class, staff.username AS st, staff.class AS stclass FROM bugs AS b LEFT JOIN users AS u ON b.sender = u.id LEFT JOIN users AS staff ON b.staff = staff.id WHERE b.id =" . sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    $as = sql_query("SELECT b.*, u.username, u.class, staff.username AS st, staff.class AS stclass FROM ".TBL_BUGS." AS b LEFT JOIN ".TBL_USERS." AS u ON b.sender = u.id LEFT JOIN ".TBL_USERS." AS staff ON b.staff = staff.id WHERE b.id =" . sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     while ($a = mysqli_fetch_assoc($as)) {
         $title = htmlsafechars($a['title']);
         $added = get_date($a['added'], '', 0, 1);
@@ -123,13 +123,13 @@ if ($action == 'viewbug') {
     $HTMLOUT.= "</table></form><a href='bugs.php?action=bugs'>{$lang['go_back']}</a>\n";
 } elseif ($action == 'bugs') {
     if ($CURUSER['class'] < UC_STAFF) stderr("{$lang['stderr_error']}", "{$lang['stderr_only_staff_can_view']}");
-    $search_count = sql_query("SELECT COUNT(id) FROM bugs");
+    $search_count = sql_query("SELECT COUNT(id) FROM ".TBL_BUGS."");
     $row = mysqli_fetch_array($search_count);
     $count = $row[0];
     $perpage = 10;
     $pager = pager($perpage, $count, 'bugs.php?action=bugs&amp;');
-    $res = sql_query("SELECT b.*, u.username, staff.username AS staffusername FROM bugs AS b LEFT JOIN users AS u ON b.sender = u.id LEFT JOIN users AS staff ON b.staff = staff.id ORDER BY b.id DESC {$pager['limit']}") or sqlerr(__FILE__, __LINE__);
-    $r = sql_query("SELECT * FROM bugs WHERE status = 'na'");
+    $res = sql_query("SELECT b.*, u.username, staff.username AS staffusername FROM ".TBL_BUGS." AS b LEFT JOIN ".TBL_USERS." AS u ON b.sender = u.id LEFT JOIN ".TBL_USERS." AS staff ON b.staff = staff.id ORDER BY b.id DESC {$pager['limit']}") or sqlerr(__FILE__, __LINE__);
+    $r = sql_query("SELECT * FROM ".TBL_BUGS." WHERE status = 'na'");
     if (mysqli_num_rows($res) > 0) {
         $count = mysqli_num_rows($r);
         $HTMLOUT.= $pager['pagertop'];
@@ -190,7 +190,7 @@ if ($action == 'viewbug') {
         if (empty($title) || empty($priority) || empty($problem)) stderr("{$lang['stderr_error']}", "{$lang['stderr_missing']}");
         if (strlen($problem) < 20) stderr("{$lang['stderr_error']}", "{$lang['stderr_problem_20']}");
         if (strlen($title) < 10) stderr("{$lang['stderr_error']}", "{$lang['stderr_title_10']}");
-        $q1 = sql_query("INSERT INTO bugs (title, priority, problem, sender, added) VALUES (" . sqlesc($title) . ", " . sqlesc($priority) . ", " . sqlesc($problem) . ", " . sqlesc($CURUSER['id']) . ", " . TIME_NOW . ")") or sqlerr(__FILE__, __LINE__);
+        $q1 = sql_query("INSERT INTO ".TBL_BUGS." (title, priority, problem, sender, added) VALUES (" . sqlesc($title) . ", " . sqlesc($priority) . ", " . sqlesc($problem) . ", " . sqlesc($CURUSER['id']) . ", " . TIME_NOW . ")") or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('bug_mess_');
         if ($q1) stderr("{$lang['stderr_sucess']}", sprintf($lang['stderr_sucess_2'], $priority));
         else stderr("{$lang['stderr_error']}", "{$lang['stderr_something_is_wrong']}");

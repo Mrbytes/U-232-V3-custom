@@ -27,9 +27,9 @@ if (!defined('BUNNY_FORUMS')) {
 }
 $colour = $post_status_image = '';
 $ASC_DESC = ((isset($_GET['ASC_DESC']) && $_GET['ASC_DESC'] === 'ASC') ? 'ASC ' : 'DESC ');
-$res_count = sql_query('SELECT COUNT(p.id) FROM posts AS p 
-								LEFT JOIN topics AS t ON p.topic_id = t.id 
-								LEFT JOIN forums AS f ON f.id = t.forum_id 
+$res_count = sql_query('SELECT COUNT(p.id) FROM '.TBL_POSTS.' AS p 
+								LEFT JOIN '.TBL_TOPICS.' AS t ON p.topic_id = t.id 
+								LEFT JOIN '.TBL_FORUMS.' AS f ON f.id = t.forum_id 
 								WHERE ' . ($CURUSER['class'] < UC_STAFF ? 'p.status = \'ok\' AND t.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? 'p.status != \'deleted\' AND t.status != \'deleted\'  AND' : '')) . '
 								p.user_id = ' . $CURUSER['id'] . ' AND f.min_class_read <= ' . $CURUSER['class']);
 $arr_count = mysqli_fetch_row($res_count);
@@ -39,7 +39,7 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
 $perpage = isset($_GET['perpage']) ? (int)$_GET['perpage'] : 20;
 $subscription_on_off = (isset($_GET['s']) ? ($_GET['s'] == 1 ? '<br /><div style="font-weight: bold;">Subscribed to topic <img src="pic/forums/subscribe.gif" alt=" " width="25"></div>' : '<br /><div style="font-weight: bold;">Unsubscribed from topic <img src="pic/forums/unsubscribe.gif" alt=" " width="25"></div>') : '');
 list($menu, $LIMIT) = pager_new($count, $perpage, $page, 'forums.php?action=view_my_posts' . (isset($_GET['perpage']) ? '&amp;perpage=' . $perpage : ''));
-$res = sql_query('SELECT p.id AS post_id, p.topic_id, p.user_id, p.added, p.body, p.edited_by, p.edit_date, p.icon, p.post_title, p.bbcode, p.post_history, p.edit_reason, p.ip, p.status AS post_status, p.anonymous, t.id AS topic_id, t.topic_name, t.forum_id, t.sticky, t.locked, t.poll_id, t.status AS topic_status, f.name AS forum_name, f.description FROM posts AS p LEFT JOIN topics AS t ON p.topic_id = t.id LEFT JOIN forums AS f ON f.id = t.forum_id WHERE  ' . ($CURUSER['class'] < UC_STAFF ? 'p.status = \'ok\' AND t.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? 'p.status != \'deleted\' AND t.status != \'deleted\'  AND' : '')) . ' p.user_id = ' . $CURUSER['id'] . ' AND f.min_class_read <= ' . $CURUSER['class'] . ' ORDER BY p.id ' . $ASC_DESC . $LIMIT);
+$res = sql_query('SELECT p.id AS post_id, p.topic_id, p.user_id, p.added, p.body, p.edited_by, p.edit_date, p.icon, p.post_title, p.bbcode, p.post_history, p.edit_reason, p.ip, p.status AS post_status, p.anonymous, t.id AS topic_id, t.topic_name, t.forum_id, t.sticky, t.locked, t.poll_id, t.status AS topic_status, f.name AS forum_name, f.description FROM '.TBL_POSTS.' AS p LEFT JOIN '.TBL_TOPICS.' AS t ON p.topic_id = t.id LEFT JOIN '.TBL_FORUMS.' AS f ON f.id = t.forum_id WHERE  ' . ($CURUSER['class'] < UC_STAFF ? 'p.status = \'ok\' AND t.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? 'p.status != \'deleted\' AND t.status != \'deleted\'  AND' : '')) . ' p.user_id = ' . $CURUSER['id'] . ' AND f.min_class_read <= ' . $CURUSER['class'] . ' ORDER BY p.id ' . $ASC_DESC . $LIMIT);
 $links = '<span style="text-align: center;"><a class="altlink" href="forums.php">Main Forums</a> |  ' . $mini_menu . '<br /><br /></span>';
 $the_top_and_bottom = '<tr><td class="three" colspan="3" align="center">' . (($count > $perpage) ? $menu : '') . '</td></tr>';
 $HTMLOUT.= '<h1>' . $count . ' Posts by ' . print_user_stuff($CURUSER) . '</h1>' . $links . '
@@ -94,7 +94,7 @@ while ($arr = mysqli_fetch_assoc($res)) {
     $post_title = ($arr['post_title'] !== '' ? ' <span style="font-weight: bold; font-size: x-small;">' . htmlsafechars($arr['post_title'], ENT_QUOTES) . '</span>' : 'Link to Post');
     $edited_by = '';
     if ($arr['edit_date'] > 0) {
-        $res_edited = sql_query('SELECT username FROM users WHERE id=' . sqlesc($arr['edited_by']));
+        $res_edited = sql_query('SELECT username FROM '.TBL_USERS.' WHERE id=' . sqlesc($arr['edited_by']));
         $arr_edited = mysqli_fetch_assoc($res_edited);
         if ($arr['anonymous'] == 'yes') {
             if ($CURUSER['class'] < UC_STAFF && $arr['user_id'] != $CURUSER['id']) $edited_by = '<br /><br /><br /><span style="font-weight: bold; font-size: x-small;">Last edited by <i>Anonymous</i> at ' . get_date($arr['edit_date'], '') . ' GMT ' . ($arr['edit_reason'] !== '' ? ' </span>[ Reason: ' . htmlsafechars($arr['edit_reason']) . ' ] <span style="font-weight: bold; font-size: x-small;">' : '') . '' . (($CURUSER['class'] >= UC_STAFF && $arr['post_history'] !== '') ? ' <a class="altlink" href="forums.php?action=view_post_history&amp;post_id=' . (int)$arr['post_id'] . '&amp;forum_id=' . (int)$arr['forum_id'] . '&amp;topic_id=' . (int)$arr['topic_id'] . '">read post history</a></span><br />' : '');

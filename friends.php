@@ -26,11 +26,11 @@ if ($action == 'add') {
         stderr("Error", "Ye cant add yerself nugget.");
     }
     if ($type == 'friend') {
-        $table_is = $frag = 'friends';
+        $table_is = $frag = '.TBL_FRIENDS.';
         $field_is = 'friendid';
         $confirmed = 'confirmed';
     } elseif ($type == 'block') {
-        $table_is = $frag = 'blocks';
+        $table_is = $frag = '.TBL_BLOCKS.';
         $field_is = 'blockid';
     } else stderr("Error", "Unknown type.");
     if ($type == 'friend') {
@@ -38,7 +38,7 @@ if ($action == 'add') {
         $q = mysqli_fetch_assoc($r);
         $subject = sqlesc("New Friend Request!");
         $body = sqlesc("[url={$INSTALLER09['baseurl']}/userdetails.php?id=$userid][b]This person[/b][/url] has added you to their Friends List. See all Friend Requests [url={$INSTALLER09['baseurl']}/friends.php#pending][b]Here[/b][/url]\n ");
-        sql_query("INSERT INTO messages (sender, receiver, added, subject, msg) VALUES (0, ".sqlesc($targetid).", '".TIME_NOW."', $subject, $body)") or sqlerr(__FILE__, __LINE__);
+        sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, added, subject, msg) VALUES (0, ".sqlesc($targetid).", '".TIME_NOW."', $subject, $body)") or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('inbox_new_'.$targetid);
         $mc1->delete_value('inbox_new_sb_'.$targetid);
         if (mysqli_num_rows($r) == 1) stderr("Error", "User ID is already in your ".htmlsafechars($table_is)." list.");
@@ -70,8 +70,8 @@ if ($action == 'confirm') {
     if (!$sure) stderr("Confirm Friend", "Do you really want to confirm this person? Click\n<a href='?id=$userid&amp;action=confirm&amp;type=$type&amp;targetid=$targetid&amp;sure=1&amp;h=$hash'><b>here</b></a> if you are sure.", FALSE);
     if ($_GET['h'] != $hash) stderr('Error', 'what are you doing?');
     if ($type == 'friend') {
-        sql_query("INSERT INTO friends VALUES (0, ".sqlesc($userid).", ".sqlesc($targetid).", 'yes') ON DUPLICATE KEY UPDATE userid=".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
-        sql_query("UPDATE friends SET confirmed = 'yes' WHERE userid=".sqlesc($targetid)." AND friendid=".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+        sql_query("INSERT INTO ".TBL_FRIENDS." VALUES (0, ".sqlesc($userid).", ".sqlesc($targetid).", 'yes') ON DUPLICATE KEY UPDATE userid=".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_FRIENDS." SET confirmed = 'yes' WHERE userid=".sqlesc($targetid)." AND friendid=".sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('Blocks_'.$userid);
         $mc1->delete_value('Friends_'.$userid);
         $mc1->delete_value('Blocks_'.$targetid);
@@ -80,7 +80,7 @@ if ($action == 'confirm') {
         $mc1->delete_value('user_friends_'.$userid);
         $subject = sqlesc("You have a new friend!");
         $body = sqlesc("[url={$INSTALLER09['baseurl']}/userdetails.php?id=$userid][b]This person[/b][/url] has just confirmed your Friendship Request. See your Friends  [url={$INSTALLER09['baseurl']}/friends.php][b]Here[/b][/url]\n ");
-        sql_query("INSERT INTO messages (sender, receiver, added, subject, msg) VALUES (0, ".sqlesc($targetid).", '".TIME_NOW."', $subject, $body)") or sqlerr(__FILE__, __LINE__);
+        sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, added, subject, msg) VALUES (0, ".sqlesc($targetid).", '".TIME_NOW."', $subject, $body)") or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('inbox_new_'.$targetid);
         $mc1->delete_value('inbox_new_sb_'.$targetid);
         $frag = "friends";
@@ -98,7 +98,7 @@ elseif ($action == 'delpending') {
     if (!$sure) stderr("Delete $type Request", "Do you really want to delete this friend request? Click\n<a href='?id=$userid&amp;action=delpending&amp;type=$type&amp;targetid=$targetid&amp;sure=1&amp;h=$hash'><b>here</b></a> if you are sure.", FALSE);
     if ($_GET['h'] != $hash) stderr('Error', 'what are you doing?');
     if ($type == 'friend') {
-        sql_query("DELETE FROM friends WHERE userid=".sqlesc($targetid)." AND friendid=".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
+        sql_query("DELETE FROM ".TBL_FRIENDS." WHERE userid=".sqlesc($targetid)." AND friendid=".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('Friends_'.$userid);
         $mc1->delete_value('Friends_'.$targetid);
         $mc1->delete_value('user_friends_'.$userid);
@@ -118,8 +118,8 @@ elseif ($action == 'delete') {
     if (!$sure) stderr("Delete $type", "Do you really want to delete a $type? Click\n<a href='?id=$userid&amp;action=delete&amp;type=$type&amp;targetid=$targetid&amp;sure=1&amp;h=$hash'><b>here</b></a> if you are sure.", FALSE);
     if ($_GET['h'] != $hash) stderr('Error', 'what are you doing?');
     if ($type == 'friend') {
-        sql_query("DELETE FROM friends WHERE userid=".sqlesc($userid)." AND friendid=".sqlesc($targetid)) or sqlerr(__FILE__, __LINE__);
-        sql_query("DELETE FROM friends WHERE userid=".sqlesc($targetid)." AND friendid=".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
+        sql_query("DELETE FROM ".TBL_FRIENDS." WHERE userid=".sqlesc($userid)." AND friendid=".sqlesc($targetid)) or sqlerr(__FILE__, __LINE__);
+        sql_query("DELETE FROM ".TBL_FRIENDS." WHERE userid=".sqlesc($targetid)." AND friendid=".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('Friends_'.$userid);
         $mc1->delete_value('Friends_'.$targetid);
         $mc1->delete_value('user_friends_'.$userid);
@@ -128,7 +128,7 @@ elseif ($action == 'delete') {
         header("Refresh: 3; url=friends.php?id=$userid#$frag");
         mysqli_affected_rows($GLOBALS["___mysqli_ston"]) == 1 ? stderr("Success", "Friend was deleted successfully.") : stderr("oopss", "No friend request found with ID !! .");
     } elseif ($type == 'block') {
-        sql_query("DELETE FROM blocks WHERE userid=".sqlesc($userid)." AND blockid=".sqlesc($targetid)) or sqlerr(__FILE__, __LINE__);
+        sql_query("DELETE FROM ".TBL_BLOCKS." WHERE userid=".sqlesc($userid)." AND blockid=".sqlesc($targetid)) or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('Blocks_'.$userid);
         $mc1->delete_value('Blocks_'.$targetid);
         $frag = "blocks";
@@ -139,12 +139,12 @@ elseif ($action == 'delete') {
     die;
 }
 //== Main body shit
-$res = sql_query("SELECT * FROM users WHERE id=".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT * FROM ".TBL_USERS." WHERE id=".sqlesc($userid)) or sqlerr(__FILE__, __LINE__);
 $user = mysqli_fetch_assoc($res) or stderr($lang['friends_error'], $lang['friends_no_user']);
 $HTMLOUT = '';
 //== Pending
 $i = 0;
-$res = sql_query("SELECT f.userid as id, u.username, u.class, u.avatar, u.title, u.donor, u.warned, u.enabled, u.leechwarn, u.chatpost, u.pirate, u.king, u.last_access, u.perms FROM friends AS f LEFT JOIN users as u ON f.userid = u.id WHERE friendid=".sqlesc($CURUSER['id'])." AND f.confirmed='no' AND NOT f.userid IN (SELECT blockid FROM blocks WHERE blockid=f.userid) ORDER BY username") or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT f.userid as id, u.username, u.class, u.avatar, u.title, u.donor, u.warned, u.enabled, u.leechwarn, u.chatpost, u.pirate, u.king, u.last_access, u.perms FROM ".TBL_FRIENDS." AS f LEFT JOIN ".TBL_USERS." as u ON f.userid = u.id WHERE friendid=".sqlesc($CURUSER['id'])." AND f.confirmed='no' AND NOT f.userid IN (SELECT blockid FROM ".TBL_BLOCKS." WHERE blockid=f.userid) ORDER BY username") or sqlerr(__FILE__, __LINE__);
 $friendsp = '';
 if (mysqli_num_rows($res) == 0) $friendsp = "<em>{$lang['friends_pending_empty']}.</em>";
 else while ($friendp = mysqli_fetch_assoc($res)) {
@@ -162,7 +162,7 @@ else while ($friendp = mysqli_fetch_assoc($res)) {
 }
 //== Pending ends
 //== Awaiting start
-$res = sql_query("SELECT f.friendid as id, u.username, u.donor, u.class, u.warned, u.enabled, u.leechwarn, u.chatpost, u.pirate, u.king, u.last_access FROM friends AS f LEFT JOIN users as u ON f.friendid = u.id WHERE userid=".sqlesc($userid)." AND f.confirmed='no' ORDER BY username") or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT f.friendid as id, u.username, u.donor, u.class, u.warned, u.enabled, u.leechwarn, u.chatpost, u.pirate, u.king, u.last_access FROM ".TBL_FRIENDS." AS f LEFT JOIN ".TBL_USERS." as u ON f.friendid = u.id WHERE userid=".sqlesc($userid)." AND f.confirmed='no' ORDER BY username") or sqlerr(__FILE__, __LINE__);
 $friendreqs = '';
 if (mysqli_num_rows($res) == 0) $friendreqs = "<em>Your requests list is empty.</em>";
 else {
@@ -179,7 +179,7 @@ else {
 //== Awaiting ends
 //== Friends block
 $i = 0;
-$res = sql_query("SELECT f.friendid as id, u.username, u.class, u.avatar, u.title, u.donor, u.warned, u.enabled, u.leechwarn, u.chatpost, u.pirate, u.king, u.last_access, u.uploaded, u.downloaded, u.country, u.perms FROM friends AS f LEFT JOIN users as u ON f.friendid = u.id WHERE userid=".sqlesc($userid)." AND f.confirmed='yes' ORDER BY username") or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT f.friendid as id, u.username, u.class, u.avatar, u.title, u.donor, u.warned, u.enabled, u.leechwarn, u.chatpost, u.pirate, u.king, u.last_access, u.uploaded, u.downloaded, u.country, u.perms FROM ".TBL_FRIENDS." AS f LEFT JOIN ".TBL_USERS." as u ON f.friendid = u.id WHERE userid=".sqlesc($userid)." AND f.confirmed='yes' ORDER BY username") or sqlerr(__FILE__, __LINE__);
 $friends = '';
 if (mysqli_num_rows($res) == 0) $friends = "<em>Your friends list is empty.</em>";
 else while ($friend = mysqli_fetch_assoc($res)) {
@@ -197,7 +197,7 @@ else while ($friend = mysqli_fetch_assoc($res)) {
 }
 //== Friends block end
 //== Enemies block
-$res = sql_query("SELECT b.blockid as id, u.username, u.donor, u.class, u.warned, u.enabled, u.leechwarn, u.chatpost, u.pirate, u.king, u.last_access FROM blocks AS b LEFT JOIN users as u ON b.blockid = u.id WHERE userid=".sqlesc($userid)." ORDER BY username") or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT b.blockid as id, u.username, u.donor, u.class, u.warned, u.enabled, u.leechwarn, u.chatpost, u.pirate, u.king, u.last_access FROM ".TBL_BLOCKS." AS b LEFT JOIN ".TBL_USERS." as u ON b.blockid = u.id WHERE userid=".sqlesc($userid)." ORDER BY username") or sqlerr(__FILE__, __LINE__);
 $blocks = '';
 if (mysqli_num_rows($res) == 0) {
     $blocks = "{$lang['friends_blocks_empty']}<em>.</em>";
@@ -215,7 +215,7 @@ function countries()
 {
     global $mc1, $INSTALLER09;
     if (($ret = $mc1->get_value('countries::arr')) === false) {
-        $res = sql_query("SELECT id, name, flagpic FROM countries ORDER BY name ASC") or sqlerr(__FILE__, __LINE__);
+        $res = sql_query("SELECT id, name, flagpic FROM ".TBL_COUNTRIES." ORDER BY name ASC") or sqlerr(__FILE__, __LINE__);
         while ($row = mysqli_fetch_assoc($res)) $ret[] = $row;
         $mc1->cache_value('countries::arr', $ret, $INSTALLER09['expires']['user_flag']);
     }

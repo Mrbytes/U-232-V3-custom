@@ -55,14 +55,14 @@ if (isset($_GET['sort']) && isset($_GET['type'])) {
         $linkascdesc = "desc";
         break;
     }
-    $orderby = "ORDER BY torrents.".$column." ".$ascdesc;
+    $orderby = "ORDER BY ".TBL_TORRENTS.".".$column." ".$ascdesc;
     $pagerlink = "sort=".intval($_GET['sort'])."&amp;type=".$linkascdesc."&amp;";
 } else {
-    $orderby = "ORDER BY torrents.sticky ASC, torrents.id DESC";
+    $orderby = "ORDER BY ".TBL_TORRENTS.".sticky ASC, ".TBL_TORRENTS.".id DESC";
     $pagerlink = "";
 }
 $where = "WHERE owner = {$CURUSER["id"]} AND banned != 'yes'";
-$res = sql_query("SELECT COUNT(id) FROM torrents $where");
+$res = sql_query("SELECT COUNT(id) FROM ".TBL_TORRENTS." $where");
 $row = mysqli_fetch_array($res, MYSQLI_NUM);
 $count = $row[0];
 if (!$count) {
@@ -70,7 +70,7 @@ if (!$count) {
     $HTMLOUT.= "{$lang['mytorrents_no_uploads']}";
 } else {
     $pager = pager(20, $count, "mytorrents.php?{$pagerlink}");
-    $res = sql_query("SELECT type, sticky, vip, descr, nuked, bump, nukereason, release_group, free, silver, comments, leechers, seeders, IF(num_ratings < {$INSTALLER09['minvotes']}, NULL, ROUND(rating_sum / num_ratings, 1)) AS rating, id, name, save_as, numfiles, added, size, views, visible, hits, times_completed, category, description, username FROM torrents $where $orderby ".$pager['limit']);
+    $res = sql_query("SELECT type, sticky, vip, descr, nuked, bump, nukereason, release_group, free, silver, comments, leechers, seeders, IF(num_ratings < {$INSTALLER09['minvotes']}, NULL, ROUND(rating_sum / num_ratings, 1)) AS rating, id, name, save_as, numfiles, added, size, views, visible, hits, times_completed, category, description, username FROM ".TBL_TORRENTS." $where $orderby ".$pager['limit']);
     $HTMLOUT.= $pager['pagertop'];
     $HTMLOUT.= "<br />";
     $HTMLOUT.= torrenttable($res, "mytorrents");

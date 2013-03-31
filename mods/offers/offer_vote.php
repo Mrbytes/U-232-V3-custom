@@ -18,7 +18,7 @@ if ($arr) {
 <a class='altlink' href='viewoffers.php'><b>all offers</b></a></p>
 <br /><br />";
 } else {
-    sql_query('UPDATE offers SET hits = hits+1 WHERE id='.$id) or sqlerr(__FILE__, __LINE__);
+    sql_query('UPDATE '.TBL_OFFERS.' SET hits = hits+1 WHERE id='.$id) or sqlerr(__FILE__, __LINE__);
     if (mysqli_affected_rows($GLOBALS["___mysqli_ston"])) {
         sql_query('INSERT INTO voted_offers VALUES(0, '.$id.', '.$CURUSER['id'].')') or sqlerr(__FILE__, __LINE__);
         $HTMLOUT.= "

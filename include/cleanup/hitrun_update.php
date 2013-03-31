@@ -13,7 +13,7 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 function docleanup($data)
 {
@@ -24,12 +24,12 @@ function docleanup($data)
     //=== hit and run part... after 3 days, add the mark of Cain... adjust $secs value if you wish
     $secs = 3 * 86400;
     $hnr = TIME_NOW - $secs;
-    $res = sql_query('SELECT id FROM snatched WHERE hit_and_run <> \'0\' AND hit_and_run < '.sqlesc($hnr).'') or sqlerr(__FILE__, __LINE__);
+    $res = sql_query('SELECT id FROM '.TBL_SNATCHED.' WHERE hit_and_run <> \'0\' AND hit_and_run < '.sqlesc($hnr).'') or sqlerr(__FILE__, __LINE__);
     while ($arr = mysqli_fetch_assoc($res)) {
-        sql_query('UPDATE snatched SET mark_of_cain = \'yes\' WHERE id='.sqlesc($arr['id'])) or sqlerr(__FILE__, __LINE__);
+        sql_query('UPDATE '.TBL_SNATCHED.' SET mark_of_cain = \'yes\' WHERE id='.sqlesc($arr['id'])) or sqlerr(__FILE__, __LINE__);
     }
     //=== hit and run... disable Downloading rights if they have 3 marks of cain
-    $res_fuckers = sql_query('SELECT COUNT(*) AS poop, snatched.userid, users.username, users.modcomment, users.hit_and_run_total, users.downloadpos FROM snatched LEFT JOIN users ON snatched.userid = users.id WHERE snatched.mark_of_cain = \'yes\' AND users.hnrwarn = \'no\' AND users.immunity = \'0\' GROUP BY snatched.userid') or sqlerr(__FILE__, __LINE__);
+    $res_fuckers = sql_query('SELECT COUNT(*) AS poop, '.TBL_SNATCHED.'.userid, '.TBL_USERS.'.username, '.TBL_USERS.'.modcomment, '.TBL_USERS.'.hit_and_run_total, '.TBL_USERS.'.downloadpos FROM '.TBL_SNATCHED.' LEFT JOIN '.TBL_USERS.' ON '.TBL_SNATCHED.'.userid = '.TBL_USERS.'.id WHERE '.TBL_SNATCHED.'.mark_of_cain = \'yes\' AND '.TBL_USERS.'.hnrwarn = \'no\' AND '.TBL_USERS.'.immunity = \'0\' GROUP BY '.TBL_SNATCHED.'.userid') or sqlerr(__FILE__, __LINE__);
     while ($arr_fuckers = mysqli_fetch_assoc($res_fuckers)) {
         if ($arr_fuckers['poop'] > 3 && $arr_fuckers['downloadpos'] == 1) {
             //=== set them to no DLs
@@ -38,8 +38,8 @@ function docleanup($data)
             $modcomment = $arr_fuckers['modcomment'];
             $modcomment = get_date(TIME_NOW, 'DATE', 1)." - Download rights removed for H and R - AutoSystem.\n".$modcomment;
             $modcom = sqlesc($modcomment);
-            sql_query("INSERT INTO messages (sender, receiver, added, msg, subject, poster) VALUES(0, {$arr_fuckers['userid']}, ".TIME_NOW.", $msg, $subject, 0)") or sqlerr(__FILE__, __LINE__);
-            sql_query('UPDATE users SET hit_and_run_total = hit_and_run_total + '.$arr_fuckers['poop'].', downloadpos = \'0\', hnrwarn = \'yes\', modcomment = '.$modcom.'  WHERE downloadpos = \'1\' AND id='.sqlesc($arr_fuckers['userid'])) or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, added, msg, subject, poster) VALUES(0, {$arr_fuckers['userid']}, ".TIME_NOW.", $msg, $subject, 0)") or sqlerr(__FILE__, __LINE__);
+            sql_query('UPDATE '.TBL_USERS.' SET hit_and_run_total = hit_and_run_total + '.$arr_fuckers['poop'].', downloadpos = \'0\', hnrwarn = \'yes\', modcomment = '.$modcom.'  WHERE downloadpos = \'1\' AND id='.sqlesc($arr_fuckers['userid'])) or sqlerr(__FILE__, __LINE__);
             $update['hit_and_run_total'] = ($arr_fuckers['hit_and_run_total'] + $arr_fuckers['poop']);
             $mc1->begin_transaction('user'.$arr_fuckers['userid']);
             $mc1->update_row(false, array(
@@ -65,9 +65,9 @@ function docleanup($data)
         }
     }
     //=== hit and run... turn their DLs back on if they start seeding again
-    $res_good_boy = sql_query('SELECT id, username, modcomment FROM users WHERE hnrwarn = \'yes\' AND downloadpos = \'0\'') or sqlerr(__FILE__, __LINE__);
+    $res_good_boy = sql_query('SELECT id, username, modcomment FROM '.TBL_USERS.' WHERE hnrwarn = \'yes\' AND downloadpos = \'0\'') or sqlerr(__FILE__, __LINE__);
     while ($arr_good_boy = mysqli_fetch_assoc($res_good_boy)) {
-        $res_count = sql_query('SELECT COUNT(*) FROM snatched WHERE userid = '.sqlesc($arr_good_boy['id']).' AND mark_of_cain = \'yes\'') or sqlerr(__FILE__, __LINE__);
+        $res_count = sql_query('SELECT COUNT(*) FROM '.TBL_SNATCHED.' WHERE userid = '.sqlesc($arr_good_boy['id']).' AND mark_of_cain = \'yes\'') or sqlerr(__FILE__, __LINE__);
         $arr_count = mysqli_fetch_row($res_count);
         if ($arr_count[0] < 3) {
             //=== set them to yes DLs
@@ -76,8 +76,8 @@ function docleanup($data)
             $modcomment = $arr_good_boy['modcomment'];
             $modcomment = get_date(TIME_NOW, 'DATE', 1)." - Download rights restored from H and R - AutoSystem.\n".$modcomment;
             $modcom = sqlesc($modcomment);
-            sql_query("INSERT INTO messages (sender, receiver, added, msg, subject, poster) VALUES(0, ".sqlesc($arr_good_boy['id']).", ".TIME_NOW.", $msg, $subject, 0)") or sqlerr(__FILE__, __LINE__);
-            sql_query('UPDATE users SET downloadpos = \'1\', hnrwarn = \'no\', modcomment = '.$modcom.'  WHERE id = '.sqlesc($arr_good_boy['id'])) or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, added, msg, subject, poster) VALUES(0, ".sqlesc($arr_good_boy['id']).", ".TIME_NOW.", $msg, $subject, 0)") or sqlerr(__FILE__, __LINE__);
+            sql_query('UPDATE '.TBL_USERS.' SET downloadpos = \'1\', hnrwarn = \'no\', modcomment = '.$modcom.'  WHERE id = '.sqlesc($arr_good_boy['id'])) or sqlerr(__FILE__, __LINE__);
             $mc1->begin_transaction('user'.$arr_good_boy['id']);
             $mc1->update_row(false, array(
                 'downloadpos' => 1,

@@ -40,7 +40,7 @@ $newpage->create('taud');
 $HTMLOUT = $offers = $subs_list = $request = $descr = '';
 if ($CURUSER['class'] < UC_UPLOADER OR $CURUSER["uploadpos"] == 0 || $CURUSER["uploadpos"] > 1 || $CURUSER['suspended'] == 'yes') stderr($lang['upload_sorry'], $lang['upload_no_auth']);
 //==== request dropdown
-$res_request = sql_query('SELECT id, request_name FROM requests WHERE filled_by_user_id = 0 ORDER BY request_name ASC');
+$res_request = sql_query('SELECT id, request_name FROM '.TBL_REQUESTS.' WHERE filled_by_user_id = 0 ORDER BY request_name ASC');
 $request = '
     <tr>
     <td  valign="middle" align="right"><span style="font-weight: bold;">Request:</span></td>
@@ -57,7 +57,7 @@ if ($res_request) {
 $request.= '</select> If you are filling a request please select it here so interested members can be notified.</td>
     </tr>';
 //=== offers list if member has made any offers
-$res_offer = sql_query('SELECT id, offer_name FROM offers WHERE offered_by_user_id = '.sqlesc($CURUSER['id']).' AND status = \'approved\' ORDER BY offer_name ASC');
+$res_offer = sql_query('SELECT id, offer_name FROM '.TBL_OFFERS.' WHERE offered_by_user_id = '.sqlesc($CURUSER['id']).' AND status = \'approved\' ORDER BY offer_name ASC');
 if (mysqli_num_rows($res_offer) > 0) {
     $offers = '  
     <tr>  

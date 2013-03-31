@@ -46,7 +46,7 @@ $reply = isset($_POST['reply']) && $_POST['reply'] == 1 ? true : false;
 switch ($do) {
 case 'delete':
     if ($id > 0) {
-        if (sql_query('DELETE FROM staffmessages WHERE id IN ('.join(',', $id).')')) {
+        if (sql_query('DELETE FROM '.TBL_STAFFMESSAGES.' WHERE id IN ('.join(',', $id).')')) {
             $mc1->delete_value('staff_mess_');
             header('Refresh: 2; url='.$_SERVER['PHP_SELF']);
             stderr($lang['staffbox_success'], $lang['staffbox_delete_ids']);
@@ -60,14 +60,14 @@ case 'setanswered':
             stderr($lang['staffbox_err'], $lang['staffbox_no_message']);
             exit;
         }
-        $q1 = sql_query('SELECT s.msg,s.sender,s.subject,u.username FROM staffmessages as s LEFT JOIN users as u ON s.sender=u.id WHERE s.id IN ('.join(',', $id).')') or sqlerr(__FILE__, __LINE__);
+        $q1 = sql_query('SELECT s.msg,s.sender,s.subject,u.username FROM '.TBL_STAFFMESSAGES.' as s LEFT JOIN '.TBL_USERS.' as u ON s.sender=u.id WHERE s.id IN ('.join(',', $id).')') or sqlerr(__FILE__, __LINE__);
         $a = mysqli_fetch_assoc($q1);
         $response = htmlsafechars($message)."\n---".htmlsafechars($a['username'])." wrote ---\n".htmlsafechars($a['msg']);
-        sql_query('INSERT INTO messages(sender,receiver,added,subject,msg) VALUES('.sqlesc($CURUSER['id']).','.sqlesc($a['sender']).','.TIME_NOW.','.sqlesc('RE: '.$a['subject']).','.sqlesc($response).')') or sqlerr(__FILE__, __LINE__);
+        sql_query('INSERT INTO '.TBL_MESSAGES.'(sender,receiver,added,subject,msg) VALUES('.sqlesc($CURUSER['id']).','.sqlesc($a['sender']).','.TIME_NOW.','.sqlesc('RE: '.$a['subject']).','.sqlesc($response).')') or sqlerr(__FILE__, __LINE__);
         $mc1->delete_value('inbox_new_'.$a['sender']);
         $mc1->delete_value('inbox_new_sb_'.$a['sender']);
         $message = ', answer='.sqlesc($message);
-        if (sql_query('UPDATE staffmessages SET answered=\'1\', answeredby='.sqlesc($CURUSER['id']).' '.$message.' WHERE id IN ('.join(',', $id).')')) {
+        if (sql_query('UPDATE '.TBL_STAFFMESSAGES.' SET answered=\'1\', answeredby='.sqlesc($CURUSER['id']).' '.$message.' WHERE id IN ('.join(',', $id).')')) {
             $mc1->delete_value('staff_mess_');
             header('Refresh: 2; url='.$_SERVER['PHP_SELF']);
             stderr($lang['staffbox_success'], $lang['staffbox_setanswered_ids']);
@@ -78,9 +78,9 @@ case 'setanswered':
 case 'view':
     if ($id > 0) {
         $q2 = sql_query('SELECT s.id, s.added, s.msg, s.subject, s.answered, s.answer, s.answeredby, s.sender, s.answer, u.username , u2.username as username2 
-						FROM staffmessages  as s
-						LEFT JOIN users as u ON s.sender = u.id 
-						LEFT JOIN users as u2 ON s.answeredby = u2.id 
+						FROM '.TBL_STAFFMESSAGES.'  as s
+						LEFT JOIN '.TBL_USERS.' as u ON s.sender = u.id 
+						LEFT JOIN '.TBL_USERS.' as u2 ON s.answeredby = u2.id 
 						WHERE s.id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
         if (mysqli_num_rows($q2) == 1) {
             $a = mysqli_fetch_assoc($q2);
@@ -118,7 +118,7 @@ case 'view':
 
 case 'restart':
     if ($id > 0) {
-        if (sql_query('UPDATE staffmessages SET answered=\'0\', answeredby=\'0\' WHERE id IN ('.join(',', $id).')')) {
+        if (sql_query('UPDATE '.TBL_STAFFMESSAGES.' SET answered=\'0\', answeredby=\'0\' WHERE id IN ('.join(',', $id).')')) {
             $mc1->delete_value('staff_mess_');
             header('Refresh: 2; url='.$_SERVER['PHP_SELF']);
             stderr($lang['staffbox_success'], $lang['staffbox_restart_ids']);
@@ -127,7 +127,7 @@ case 'restart':
     break;
 
 default:
-    $count_msgs = get_row_count('staffmessages');
+    $count_msgs = get_row_count(TBL_STAFFMESSAGES);
     $perpage = 4;
     $pager = pager($perpage, $count_msgs, 'staffbox.php?');
     if (!$count_msgs) stderr($lang['staffbox_err'], $lang['staffbox_no_msgs']);
@@ -147,9 +147,9 @@ default:
                  <td class='colhead' align='center'><input type='checkbox' name='t' onclick=\"checkbox('staffbox')\" /></td>
                 </tr>";
         $r = sql_query('SELECT s.id, s.added, s.subject, s.answered, s.answeredby, s.sender, s.answer, u.username , u2.username as username2 
-						FROM staffmessages  as s
-						LEFT JOIN users as u ON s.sender = u.id 
-						LEFT JOIN users as u2 ON s.answeredby = u2.id 
+						FROM '.TBL_STAFFMESSAGES.'  as s
+						LEFT JOIN '.TBL_USERS.' as u ON s.sender = u.id 
+						LEFT JOIN '.TBL_USERS.' as u2 ON s.answeredby = u2.id 
 						ORDER BY id desc '.$pager['limit']) or sqlerr(__FILE__, __LINE__);
         while ($a = mysqli_fetch_assoc($r)) $HTMLOUT.= "<tr>
                    <td align='center'><a href='".$_SERVER['PHP_SELF']."?do=view&amp;id=".(int)$a['id']."'>".htmlsafechars($a['subject'])."</a></td>

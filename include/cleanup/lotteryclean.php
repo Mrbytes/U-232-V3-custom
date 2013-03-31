@@ -13,17 +13,17 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 function docleanup($data)
 {
     global $INSTALLER09, $queries;
     set_time_limit(0);
     ignore_user_abort(1);
-    $lconf = sql_query('SELECT * FROM lottery_config') or sqlerr(__FILE__, __LINE__);
+    $lconf = sql_query('SELECT * FROM '.TBL_LOTTERY_CONFIG.'') or sqlerr(__FILE__, __LINE__);
     while ($aconf = mysqli_fetch_assoc($lconf)) $lottery_config[$aconf['name']] = $aconf['value'];
     if ($lottery_config['enable'] && TIME_NOW > $lottery_config['end_date']) {
-        $q = mysqli_query($GLOBALS["___mysqli_ston"], 'SELECT t.user as uid, u.seedbonus, u.modcomment FROM tickets as t LEFT JOIN users as u ON u.id = t.user ORDER BY RAND() ') or sqlerr(__FILE__, __LINE__);
+        $q = mysqli_query($GLOBALS["___mysqli_ston"], 'SELECT t.user as uid, u.seedbonus, u.modcomment FROM '.TBL_TICKETS.' as t LEFT JOIN '.TBL_USERS.' as u ON u.id = t.user ORDER BY RAND() ') or sqlerr(__FILE__, __LINE__);
         while ($a = mysqli_fetch_assoc($q)) $tickets[] = $a;
         shuffle($tickets);
         $lottery['winners'] = array();
@@ -47,10 +47,10 @@ function docleanup($data)
             '(\'lottery_winners_amount\','.$lottery['user_pot'].')',
             '(\'lottery_winners\',\''.join('|', array_keys($lottery['winners'])).'\')'
         );
-        if (count($_userq)) sql_query('INSERT INTO users(id,seedbonus,modcomment) VALUES '.join(',', $_userq).' ON DUPLICATE KEY UPDATE seedbonus = values(seedbonus), modcomment = values(modcomment)') or die(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
-        if (count($_pms)) sql_query('INSERT INTO messages(sender, receiver, subject, msg, added) VALUES '.join(',', $_pms)) or die(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
-        sql_query('INSERT INTO lottery_config(name,value) VALUES '.join(',', $lconfig_update).' ON DUPLICATE KEY UPDATE value=values(value)') or die(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
-        sql_query('DELETE FROM tickets') or die(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
+        if (count($_userq)) sql_query('INSERT INTO '.TBL_USERS.'(id,seedbonus,modcomment) VALUES '.join(',', $_userq).' ON DUPLICATE KEY UPDATE seedbonus = values(seedbonus), modcomment = values(modcomment)') or die(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
+        if (count($_pms)) sql_query('INSERT INTO '.TBL_MESSAGES.'(sender, receiver, subject, msg, added) VALUES '.join(',', $_pms)) or die(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
+        sql_query('INSERT INTO '.TBL_LOTTERY_CONFIG.'(name,value) VALUES '.join(',', $lconfig_update).' ON DUPLICATE KEY UPDATE value=values(value)') or die(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
+        sql_query('DELETE FROM '.TBL_TICKETS.'') or die(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
     }
     //==End 09 seedbonus lottery by putyn
     if ($queries > 0) write_log("Lottery clean-------------------- lottery Complete using $queries queries --------------------");

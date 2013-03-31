@@ -13,7 +13,7 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 function docleanup($data)
 {
@@ -23,18 +23,18 @@ function docleanup($data)
     //==delete torrents by putyn
     $days = 30;
     $dt = (TIME_NOW - ($days * 86400));
-    $res = sql_query("SELECT id, name FROM torrents WHERE added < $dt AND seeders='0' AND leechers='0'");
+    $res = sql_query("SELECT id, name FROM ".TBL_TORRENTS." WHERE added < $dt AND seeders='0' AND leechers='0'");
     while ($arr = mysqli_fetch_assoc($res)) {
-        sql_query("DELETE peers.*, files.*,comments.*,snatched.*, thanks.*, bookmarks.*, coins.*, rating.*, torrents.* FROM torrents 
-				 LEFT JOIN peers ON peers.torrent = torrents.id
-				 LEFT JOIN files ON files.torrent = torrents.id
-				 LEFT JOIN comments ON comments.torrent = torrents.id
-				 LEFT JOIN thanks ON thanks.torrentid = torrents.id
-				 LEFT JOIN bookmarks ON bookmarks.torrentid = torrents.id
-				 LEFT JOIN coins ON coins.torrentid = torrents.id
-				 LEFT JOIN rating ON rating.torrent = torrents.id
-				 LEFT JOIN snatched ON snatched.torrentid = torrents.id
-				 WHERE torrents.id = {$arr['id']}") or sqlerr(__FILE__, __LINE__);
+        sql_query("DELETE ".TBL_PEERS.".*, ".TBL_FILES.".*,".TBL_COMMENTS.".*,".TBL_SNATCHED.".*, ".TBL_THANKS.".*, ".TBL_BOOKMARKS.".*, ".TBL_COINS.".*, ".TBL_RATING.".*, ".TBL_TORRENTS.".* FROM ".TBL_TORRENTS." 
+				 LEFT JOIN ".TBL_PEERS." ON ".TBL_PEERS.".torrent = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_FILES." ON ".TBL_FILES.".torrent = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_COMMENTS." ON ".TBL_COMMENTS.".torrent = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_THANKS." ON ".TBL_THANKS.".torrentid = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_BOOKMARKS." ON ".TBL_BOOKMARKS.".torrentid = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_COINS." ON ".TBL_COINS.".torrentid = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_RATING." ON  ".TBL_RATING.".torrent = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_SNATCHED." ON ".TBL_SNATCHED.".torrentid = ".TBL_TORRENTS.".id
+				 WHERE ".TBL_TORRENTS.".id = {$arr['id']}") or sqlerr(__FILE__, __LINE__);
         @unlink("{$INSTALLER09['torrent_dir']}/{$arr['id']}.torrent");
         write_log("Torrent {$arr['id']} ({$arr['name']}) was deleted by system (older than $days days and no seeders)");
     }

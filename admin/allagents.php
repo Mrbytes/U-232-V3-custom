@@ -61,7 +61,7 @@ class_check(UC_MODERATOR);
 //error_reporting(E_ALL);
 $lang = array_merge($lang);
 $HTMLOUT = '';
-$res = sql_query("SELECT agent, peer_id FROM peers GROUP BY agent") or sqlerr();
+$res = sql_query("SELECT agent, peer_id FROM ".TBL_PEERS." GROUP BY agent") or sqlerr();
 $HTMLOUT.= "<table align='center' border='3' cellspacing='0' cellpadding='5'>
 	<tr><td class='colhead'>Client</td><td class='colhead'>Peer ID</td></tr>";
 while ($arr = mysqli_fetch_assoc($res)) {

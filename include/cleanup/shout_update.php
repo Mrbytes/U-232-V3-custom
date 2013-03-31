@@ -13,7 +13,7 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 function docleanup($data)
 {
@@ -23,7 +23,7 @@ function docleanup($data)
     //== Delete shout
     $secs = 2 * 86400;
     $dt = sqlesc(TIME_NOW - $secs);
-    sql_query("DELETE FROM shoutbox WHERE ".TIME_NOW." - date > $secs") or sqlerr(__FILE__, __LINE__);
+    sql_query("DELETE FROM ".TBL_SHOUTBOX." WHERE ".TIME_NOW." - date > $secs") or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('shoutbox_');
     $mc1->delete_value('staff_shoutbox_');
     if ($queries > 0) write_log("Shout Clean -------------------- Shout Clean Complete using $queries queries--------------------");

@@ -15,7 +15,7 @@ $stdfoot = array(
     )
 );
 $res = sql_query('SELECT o.*, o.added as utadded, u.username 
-                  FROM offers AS o LEFT JOIN users AS u ON (u.id=o.userid) 
+                  FROM '.TBL_OFFERS.' AS o LEFT JOIN '.TBL_USERS.' AS u ON (u.id=o.userid) 
                   WHERE o.id = '.$id) or sqlerr(__FILE__, __LINE__);
 if (!mysqli_num_rows($res)) stderr('Error', 'Invalid Offer ID');
 $num = mysqli_fetch_assoc($res);
@@ -54,7 +54,7 @@ if ($num['torrentid'] == 0) $HTMLOUT.= "<tr><td align='right' valign='top'><b>Ac
 else $HTMLOUT.= "<tr><td align='right' valign='top'><b>This Offer was accepted:</b></td><td><a class='altlink' href='details.php?id=".$num['torrentid']."'><b>".$INSTALLER09['baseurl']."/details.php?id=".$num['torrentid']."</b></a></td></tr>";
 $HTMLOUT.= "<tr><td class='embedded' colspan='2'><p><a name='startcomments'></a></p>\n";
 $commentbar = "<p align='center'><a class='index' href='comment.php?action=add&amp;tid=$id&amp;type=offer'>Add Comment</a></p>\n";
-$subres = sql_query("SELECT COUNT(*) FROM comments WHERE offer = $id");
+$subres = sql_query("SELECT COUNT(*) FROM ".TBL_COMMENTS." WHERE offer = $id");
 $subrow = mysqli_fetch_array($subres);
 $count = $subrow[0];
 $HTMLOUT.= '</td></tr></table>';
@@ -63,13 +63,13 @@ else {
     $pager = pager(25, $count, "viewoffers.php?id=$id&amp;offer_details&amp;", array(
         'lastpagedefault' => 1
     ));
-    $subres = sql_query("SELECT comments.id, comments.text, comments.user, comments.editedat, 
-                      comments.editedby, comments.ori_text, comments.offer AS offer, 
-                      comments.added, comments.anonymous, users.avatar, users.av_w ,users.av_h,
-                      users.warned, users.username, users.title, users.class, users.last_access, 
-                      users.enabled, users.reputation, users.donor, users.downloaded, users.uploaded 
-                      FROM comments LEFT JOIN users ON comments.user = users.id 
-                      WHERE offer = $id ORDER BY comments.id") or sqlerr(__FILE__, __LINE__);
+    $subres = sql_query("SELECT ".TBL_COMMENTS.".id, ".TBL_COMMENTS.".text, ".TBL_COMMENTS.".user, ".TBL_COMMENTS.".editedat, 
+                      ".TBL_COMMENTS.".editedby, ".TBL_COMMENTS.".ori_text, ".TBL_COMMENTS.".offer AS offer, 
+                      ".TBL_COMMENTS.".added, ".TBL_COMMENTS.".anonymous, ".TBL_USERS.".avatar, ".TBL_USERS.".av_w , ".TBL_USERS.".av_h,
+                      ".TBL_USERS.".warned, ".TBL_USERS.".username, ".TBL_USERS.".title, ".TBL_USERS.".class, ".TBL_USERS.".last_access, 
+                      ".TBL_USERS.".enabled, ".TBL_USERS.".reputation, ".TBL_USERS.".donor, ".TBL_USERS.".downloaded, ".TBL_USERS.".uploaded 
+                      FROM ".TBL_COMMENTS." LEFT JOIN ".TBL_USERS." ON ".TBL_COMMENTS.".user = ".TBL_USERS.".id 
+                      WHERE offer = $id ORDER BY ".TBL_COMMENTS.".id") or sqlerr(__FILE__, __LINE__);
     $allrows = array();
     while ($subrow = mysqli_fetch_assoc($subres)) $allrows[] = $subrow;
     $HTMLOUT.= $commentbar;

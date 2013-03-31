@@ -38,7 +38,7 @@ if (isset($_POST['ids'])) {
     $ids = $_POST["ids"];
     foreach ($ids as $id) if (!is_valid_id($id)) stderr('Error...', 'Invalid ID!');
     $do = isset($_POST["do"]) ? htmlsafechars(trim($_POST["do"])) : '';
-    if ($do == 'enabled') sql_query("UPDATE users SET enabled = 'yes' WHERE ID IN(".join(', ', $ids).") AND enabled = 'no'") or sqlerr(__FILE__, __LINE__);
+    if ($do == 'enabled') sql_query("UPDATE ".TBL_USERS." SET enabled = 'yes' WHERE ID IN(".join(', ', $ids).") AND enabled = 'no'") or sqlerr(__FILE__, __LINE__);
     $mc1->begin_transaction('MyUser_'.$ids);
     $mc1->update_row(false, array(
         'enabled' => 'yes'
@@ -50,7 +50,7 @@ if (isset($_POST['ids'])) {
     ));
     $mc1->commit_transaction($INSTALLER09['expires']['user_cache']);
     //else
-    if ($do == 'confirm') sql_query("UPDATE users SET status = 'confirmed' WHERE ID IN(".join(', ', $ids).") AND status = 'pending'") or sqlerr(__FILE__, __LINE__);
+    if ($do == 'confirm') sql_query("UPDATE ".TBL_USERS." SET status = 'confirmed' WHERE ID IN(".join(', ', $ids).") AND status = 'pending'") or sqlerr(__FILE__, __LINE__);
     $mc1->begin_transaction('MyUser_'.$ids);
     $mc1->update_row(false, array(
         'status' => 'confirmed'
@@ -62,18 +62,18 @@ if (isset($_POST['ids'])) {
     ));
     $mc1->commit_transaction($INSTALLER09['expires']['user_cache']);
     //else
-    if ($do == 'delete') sql_query("DELETE FROM users WHERE ID IN(".join(', ', $ids).") AND class < 3") or sqlerr(__FILE__, __LINE__);
+    if ($do == 'delete') sql_query("DELETE FROM ".TBL_USERS." WHERE ID IN(".join(', ', $ids).") AND class < 3") or sqlerr(__FILE__, __LINE__);
     else {
         header('Location: '.$_SERVER['PHP_SELF']);
         exit;
     }
 }
-$disabled = number_format(get_row_count("users", "WHERE enabled='no'"));
-$pending = number_format(get_row_count("users", "WHERE status='pending'"));
-$count = number_format(get_row_count("users", "WHERE enabled='no' OR status='pending' ORDER BY username DESC"));
+$disabled = number_format(get_row_count(TBL_USERS, "WHERE enabled='no'"));
+$pending = number_format(get_row_count(TBL_USERS, "WHERE status='pending'"));
+$count = number_format(get_row_count(TBL_USERS, "WHERE enabled='no' OR status='pending' ORDER BY username DESC"));
 $perpage = 25;
 $pager = pager($perpage, $count, "staffpanel.php?tool=acpmanage&amp;action=acpmanage&amp;");
-$res = sql_query("SELECT id, username, added, downloaded, uploaded, last_access, class, donor, warned, enabled, status FROM users WHERE enabled='no' OR status='pending' ORDER BY username DESC {$pager['limit']}");
+$res = sql_query("SELECT id, username, added, downloaded, uploaded, last_access, class, donor, warned, enabled, status FROM ".TBL_USERS." WHERE enabled='no' OR status='pending' ORDER BY username DESC {$pager['limit']}");
 $HTMLOUT.= begin_main_frame("Disabled Users: [$disabled] | Pending Users: [$pending]");
 if (mysqli_num_rows($res) != 0) {
     if ($count > $perpage) $HTMLOUT.= $pager['pagertop'];

@@ -16,7 +16,7 @@ function docleanup($data)
     //==   Updated and optimized by pdq :)
     //=== Using this will work for multiple torrents UP TO 5!... change the 5 to whatever... 1 to give the karma for only 1 torrent at a time, or 100 to make it unlimited (almost) your choice :P
     ///====== Seeding bonus per torrent
-    $res = sql_query('SELECT COUNT(torrent) As tcount, userid, seedbonus FROM peers LEFT JOIN users ON users.id = userid WHERE seeder = "yes" AND connectable = "yes" GROUP BY userid') or sqlerr(__FILE__, __LINE__);
+    $res = sql_query('SELECT COUNT(torrent) As tcount, userid, seedbonus FROM '.TBL_PEERS.' LEFT JOIN '.TBL_USERS.' ON '.TBL_USERS.'.id = userid WHERE seeder = "yes" AND connectable = "yes" GROUP BY userid') or sqlerr(__FILE__, __LINE__);
     if (mysqli_num_rows($res) > 0) {
         while ($arr = mysqli_fetch_assoc($res)) {
             if ($arr['tcount'] >= 1000) $arr['tcount'] = 5;
@@ -35,7 +35,7 @@ function docleanup($data)
         }
         $count = count($users_buffer);
         if ($count > 0) {
-            sql_query("INSERT INTO users (id,seedbonus) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE seedbonus=seedbonus+values(seedbonus)") or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_USERS." (id,seedbonus) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE seedbonus=seedbonus+values(seedbonus)") or sqlerr(__FILE__, __LINE__);
             write_log("Cleanup - ".$count." users received seedbonus");
         }
         unset($users_buffer, $update, $count);
@@ -55,6 +55,6 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 ?>

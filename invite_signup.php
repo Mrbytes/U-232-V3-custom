@@ -26,7 +26,7 @@ $stdfoot = array(
 $lang = array_merge(load_language('global') , load_language('signup'));
 $newpage = new page_verify();
 $newpage->create('tkIs');
-$res = sql_query("SELECT COUNT(*) FROM users") or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT COUNT(*) FROM ".TBL_USERS."") or sqlerr(__FILE__, __LINE__);
 $arr = mysqli_fetch_row($res);
 if ($arr[0] >= $INSTALLER09['inviteusers']) stderr("Sorry", "The current user account limit (".number_format($INSTALLER09['inviteusers']).") has been reached. Inactive accounts are pruned all the time, please check back again later...");
 if (!$INSTALLER09['openreg_invites']) stderr('Sorry', 'Invite Signups are closed presently');

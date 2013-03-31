@@ -15,21 +15,21 @@ function docleanup($data)
     /** sync torrent counts - pdq **/
     $tsql = 'SELECT t.id, t.seeders, (
     SELECT COUNT(*)
-    FROM peers
+    FROM '.TBL_PEERS.'
     WHERE torrent = t.id AND seeder = "yes"
     ) AS seeders_num,
     t.leechers, (
     SELECT COUNT(*)
-    FROM peers
+    FROM '.TBL_PEERS.'
     WHERE torrent = t.id
     AND seeder = "no"
     ) AS leechers_num,
     t.comments, (
     SELECT COUNT(*)
-    FROM comments
+    FROM '.TBL_COMMENTS.'
     WHERE torrent = t.id
     ) AS comments_num
-    FROM torrents AS t
+    FROM '.TBL_TORRENTS.' AS t
     ORDER BY t.id ASC';
     $updatetorrents = array();
     $tq = sql_query($tsql);
@@ -37,7 +37,7 @@ function docleanup($data)
         if ($t['seeders'] != $t['seeders_num'] || $t['leechers'] != $t['leechers_num'] || $t['comments'] != $t['comments_num']) $updatetorrents[] = '('.$t['id'].', '.$t['seeders_num'].', '.$t['leechers_num'].', '.$t['comments_num'].')';
     }
     ((mysqli_free_result($tq) || (is_object($tq) && (get_class($tq) == "mysqli_result"))) ? true : false);
-    if (count($updatetorrents)) sql_query('INSERT INTO torrents (id, seeders, leechers, comments) VALUES '.implode(', ', $updatetorrents).' ON DUPLICATE KEY UPDATE seeders = VALUES(seeders), leechers = VALUES(leechers), comments = VALUES(comments)');
+    if (count($updatetorrents)) sql_query('INSERT INTO '.TBL_TORRENTS.' (id, seeders, leechers, comments) VALUES '.implode(', ', $updatetorrents).' ON DUPLICATE KEY UPDATE seeders = VALUES(seeders), leechers = VALUES(leechers), comments = VALUES(comments)');
     unset($updatetorrents);
     if ($queries > 0) write_log("Torrent clean-------------------- Torrent cleanup Complete using $queries queries --------------------");
     if (false !== mysqli_affected_rows($GLOBALS["___mysqli_ston"])) {
@@ -53,6 +53,6 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 ?>

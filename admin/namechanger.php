@@ -31,11 +31,11 @@ if (isset($mode) && $mode == 'change') {
     $uid = (int)$_POST["uid"];
     $uname = htmlsafechars($_POST["uname"]);
     if ($_POST["uname"] == "" || $_POST["uid"] == "") stderr("Error", "UserName or ID missing");
-    $nc_sql = sql_query("SELECT class FROM users WHERE id = ".sqlesc($uid)) or sqlerr(__FILE__, __LINE__);
+    $nc_sql = sql_query("SELECT class FROM ".TBL_USERS." WHERE id = ".sqlesc($uid)) or sqlerr(__FILE__, __LINE__);
     if (mysqli_num_rows($nc_sql)) {
         $classuser = mysqli_fetch_assoc($nc_sql);
         if ($classuser['class'] >= UC_STAFF) stderr("Error", "Cannot rename staff accounts, contact coder.");
-        $change = sql_query("UPDATE users SET username=".sqlesc($uname)." WHERE id=".sqlesc($uid)) or sqlerr(__FILE__, __LINE__);
+        $change = sql_query("UPDATE ".TBL_USERS." SET username=".sqlesc($uname)." WHERE id=".sqlesc($uid)) or sqlerr(__FILE__, __LINE__);
         $mc1->begin_transaction('MyUser_'.$uid);
         $mc1->update_row(false, array(
             'username' => $uname
@@ -52,7 +52,7 @@ if (isset($mode) && $mode == 'change') {
         if (!$change) {
             if (((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_errno($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_errno()) ? $___mysqli_res : false)) == 1062) stderr("Borked", "Username already exists!");
         }
-        sql_query("INSERT INTO messages (sender, receiver, msg, subject, added) VALUES(0, $uid, $changed, $subject, $added)") or sqlerr(__FILE__, __LINE__);
+        sql_query("INSERT INTO ".TBL_MESSAGES." (sender, receiver, msg, subject, added) VALUES(0, $uid, $changed, $subject, $added)") or sqlerr(__FILE__, __LINE__);
         header("Refresh: 2; url=staffpanel.php?tool=namechanger");
         stderr("Success", "Username Has Been Changed To ".htmlsafechars($uname)." please wait while you are redirected");
     }

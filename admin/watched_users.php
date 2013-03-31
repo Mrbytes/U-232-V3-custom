@@ -41,10 +41,10 @@ if (isset($_GET['remove'])) {
     if (isset($_GET['wu'])) {
         if (is_valid_id($remove_me_Ive_been_good)) {
             //=== get mod comments for member
-            $res = sql_query('SELECT username, modcomment FROM users WHERE id='.sqlesc($remove_me_Ive_been_good)) or sqlerr(__FILE__, __LINE__);
+            $res = sql_query('SELECT username, modcomment FROM ".TBL_USERS." WHERE id='.sqlesc($remove_me_Ive_been_good)) or sqlerr(__FILE__, __LINE__);
             $user = mysqli_fetch_assoc($res);
             $modcomment = get_date(TIME_NOW, 'DATE', 1)." - Removed from watched users by $CURUSER[username].\n".$user['modcomment'];
-            sql_query('UPDATE users SET watched_user = \'0\', modcomment='.sqlesc($modcomment).' WHERE id='.sqlesc($remove_me_Ive_been_good)) or sqlerr(__FILE__, __LINE__);
+            sql_query('UPDATE '.TBL_USERS.' SET watched_user = \'0\', modcomment='.sqlesc($modcomment).' WHERE id='.sqlesc($remove_me_Ive_been_good)) or sqlerr(__FILE__, __LINE__);
             $mc1->begin_transaction('MyUser_'.$remove_me_Ive_been_good);
             $mc1->update_row(false, array(
                 'watched_user' => 0
@@ -67,10 +67,10 @@ if (isset($_GET['remove'])) {
         foreach ($remove_me_Ive_been_good as $id) {
             if (is_valid_id($id)) {
                 //=== get mod comments for member
-                $res = sql_query('SELECT username, modcomment FROM users WHERE id='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+                $res = sql_query('SELECT username, modcomment FROM '.TBL_USERS.' WHERE id='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
                 $user = mysqli_fetch_assoc($res);
                 $modcomment = get_date(TIME_NOW, 'DATE', 1)." - Removed from watched users by $CURUSER[username].\n".$user['modcomment'];
-                sql_query('UPDATE users SET watched_user = \'0\', modcomment='.sqlesc($modcomment).' WHERE id='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+                sql_query('UPDATE '.TBL_USERS.' SET watched_user = \'0\', modcomment='.sqlesc($modcomment).' WHERE id='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
                 $mc1->begin_transaction('MyUser_'.$id);
                 $mc1->update_row(false, array(
                     'watched_user' => 0
@@ -101,7 +101,7 @@ if (isset($_GET['add'])) {
     $member_whos_been_bad = (int)$_GET['id'];
     if (is_valid_id($member_whos_been_bad)) {
         //=== make sure they are not being watched...
-        $res = sql_query('SELECT modcomment, watched_user, watched_user_reason, username FROM users WHERE id='.sqlesc($member_whos_been_bad)) or sqlerr(__FILE__, __LINE__);
+        $res = sql_query('SELECT modcomment, watched_user, watched_user_reason, username FROM '.TBL_USERS.' WHERE id='.sqlesc($member_whos_been_bad)) or sqlerr(__FILE__, __LINE__);
         $user = mysqli_fetch_assoc($res);
         if ($user['watched_user'] > 0) stderr('Error', htmlsafechars($user['username']).' is on the watched user list already! <a href="userdetails.php?id='.$member_whos_been_bad.'" >back to '.htmlsafechars($user['username']).'\'s profile</a>');
         //== ok they are not watched yet let's add the info part 1
@@ -126,7 +126,7 @@ if (isset($_GET['add'])) {
         //=== all is good, let's enter them \o/
         $watched_user_reason = htmlsafechars($_POST['reason']);
         $modcomment = get_date(TIME_NOW, 'DATE', 1)." - Added to watched users by $CURUSER[username].\n".$user['modcomment'];
-        sql_query('UPDATE users SET watched_user = '.TIME_NOW.', modcomment='.sqlesc($modcomment).', watched_user_reason = '.sqlesc($watched_user_reason).' WHERE id='.sqlesc($member_whos_been_bad)) or sqlerr(__FILE__, __LINE__);
+        sql_query('UPDATE '.TBL_USERS.' SET watched_user = '.TIME_NOW.', modcomment='.sqlesc($modcomment).', watched_user_reason = '.sqlesc($watched_user_reason).' WHERE id='.sqlesc($member_whos_been_bad)) or sqlerr(__FILE__, __LINE__);
         $mc1->begin_transaction('MyUser_'.$member_whos_been_bad);
         $mc1->update_row(false, array(
             'watched_user' => TIME_NOW
@@ -151,7 +151,7 @@ if (isset($_GET['add'])) {
     }
 }
 //=== get number of watched members
-$watched_users = number_format(get_row_count('users', 'WHERE watched_user != \'0\''));
+$watched_users = number_format(get_row_count(TBL_USERS, 'WHERE watched_user != \'0\''));
 //=== get sort / asc desc, and be sure it's safe
 $good_stuff = array(
     'username',
@@ -166,7 +166,7 @@ $HTMLOUT.= $H1_thingie.'<br />
         <h1>Watched Users [ '.$watched_users.' ]</h1>
     <table border="0" cellspacing="5" cellpadding="5" align="center" style="max-width:800px">';
 //=== get the member info...
-$res = sql_query('SELECT id, username, added, watched_user_reason, watched_user, uploaded, downloaded, warned, suspended, enabled, donor, class, leechwarn, chatpost, pirate, king, invitedby FROM users WHERE watched_user != \'0\' ORDER BY '.$ORDER_BY.$ASC) or sqlerr(__FILE__, __LINE__);
+$res = sql_query('SELECT id, username, added, watched_user_reason, watched_user, uploaded, downloaded, warned, suspended, enabled, donor, class, leechwarn, chatpost, pirate, king, invitedby FROM '.TBL_USERS.' WHERE watched_user != \'0\' ORDER BY '.$ORDER_BY.$ASC) or sqlerr(__FILE__, __LINE__);
 $how_many = mysqli_num_rows($res);
 if ($how_many > 0) {
     $div_link_number = 1;
@@ -183,7 +183,7 @@ if ($how_many > 0) {
         //=== change colors
         $count2 = (++$count2) % 2;
         $class = ($count2 == 0 ? 'one' : 'two');
-        $invitor_res = sql_query('SELECT id, username, donor, class, enabled, warned, leechwarn, chatpost, pirate, king, suspended FROM users WHERE id='.sqlesc($arr['invitedby'])) or sqlerr(__FILE__, __LINE__);
+        $invitor_res = sql_query('SELECT id, username, donor, class, enabled, warned, leechwarn, chatpost, pirate, king, suspended FROM '.TBL_USERS.' WHERE id='.sqlesc($arr['invitedby'])) or sqlerr(__FILE__, __LINE__);
         $invitor_arr = mysqli_fetch_assoc($invitor_res);
         $the_flip_box = '
         [ <a id="d'.$div_link_number.'_open" style="font-weight:bold;cursor:pointer;">View reason</a> ]

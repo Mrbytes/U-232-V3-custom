@@ -92,6 +92,6 @@ function happyFile($act)
 function happyLog($userid, $torrentid, $multi)
 {
     $time = sqlesc(TIME_NOW);
-    sql_query("INSERT INTO happylog (userid, torrentid,multi, date) VALUES($userid, $torrentid, $multi, $time)") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_HAPPYLOG." (userid, torrentid,multi, date) VALUES($userid, $torrentid, $multi, $time)") or sqlerr(__FILE__, __LINE__);
 }
 ?>

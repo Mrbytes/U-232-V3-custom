@@ -78,13 +78,13 @@ if (!isset($member_id) || !is_valid_id($member_id)) {
     //=== get stuff for the pager
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
     $perpage = isset($_GET['perpage']) ? (int)$_GET['perpage'] : 20;
-    $res_count = sql_query('SELECT COUNT(id) FROM users WHERE ' . $query) or sqlerr(__FILE__, __LINE__);
+    $res_count = sql_query('SELECT COUNT(id) FROM '.TBL_USERS.' WHERE ' . $query) or sqlerr(__FILE__, __LINE__);
     $arr_count = mysqli_fetch_row($res_count);
     $count = ($arr_count[0] > 0 ? $arr_count[0] : 0);
     list($menu, $LIMIT) = pager_new($count, $perpage, $page, 'forums.php?action=member_post_history&amp;letter=' . $letter);
     $HTMLOUT.= ($arr_count[0] > $perpage) ? '' . $menu . '<br />' : '<br />';
     if ($arr_count[0] > 0) {
-        $res = sql_query('SELECT u.id, u.username, u.class, u.donor, u.suspended, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king, u.added, u.last_access, u.perms, c.name, c.flagpic FROM users AS u FORCE INDEX (username) LEFT JOIN countries AS c ON u.country = c.id WHERE ' . $query . ' ORDER BY u.username ' . $LIMIT) or sqlerr(__FILE__, __LINE__);
+        $res = sql_query('SELECT u.id, u.username, u.class, u.donor, u.suspended, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king, u.added, u.last_access, u.perms, c.name, c.flagpic FROM '.TBL_USERS.' AS u FORCE INDEX (username) LEFT JOIN '.TBL_COUNTRIES.' AS c ON u.country = c.id WHERE ' . $query . ' ORDER BY u.username ' . $LIMIT) or sqlerr(__FILE__, __LINE__);
         $HTMLOUT.= '<table border="0" cellspacing="5" cellpadding="5">
 			<tr><td class="forum_head_dark" align="left">Member</td>
 			<td class="forum_head_dark">Registered</td>
@@ -112,7 +112,7 @@ if (!isset($member_id) || !is_valid_id($member_id)) {
     echo stdhead() . $HTMLOUT . stdfoot();
     die();
 }
-$res_count = sql_query('SELECT COUNT(p.id) AS count FROM posts AS p LEFT JOIN topics AS t ON p.topic_id = t.id LEFT JOIN forums AS f ON f.id = t.forum_id WHERE ' . ($CURUSER['class'] < UC_STAFF ? 'p.status = \'ok\' AND t.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? 'p.status != \'deleted\' AND t.status != \'deleted\'  AND' : '')) . ' p.user_id = ' . sqlesc($member_id) . ' AND f.min_class_read <= ' . $CURUSER['class']);
+$res_count = sql_query('SELECT COUNT(p.id) AS count FROM '.TBL_POSTS.' AS p LEFT JOIN '.TBL_TOPICS.' AS t ON p.topic_id = t.id LEFT JOIN '.TBL_FORUMS.' AS f ON f.id = t.forum_id WHERE ' . ($CURUSER['class'] < UC_STAFF ? 'p.status = \'ok\' AND t.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? 'p.status != \'deleted\' AND t.status != \'deleted\'  AND' : '')) . ' p.user_id = ' . sqlesc($member_id) . ' AND f.min_class_read <= ' . $CURUSER['class']);
 $arr_count = mysqli_fetch_row($res_count);
 $count = $arr_count[0];
 //=== get stuff for the pager
@@ -120,9 +120,9 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
 $perpage = isset($_GET['perpage']) ? (int)$_GET['perpage'] : 20;
 $subscription_on_off = (isset($_GET['s']) ? ($_GET['s'] == 1 ? '<br /><div style="font-weight: bold;">Subscribed to topic <img src="pic/forums/subscribe.gif" alt=" " width="25"></div>' : '<br /><div style="font-weight: bold;">Unsubscribed from topic <img src="pic/forums/unsubscribe.gif" alt=" " width="25"></div>') : '');
 list($menu, $LIMIT) = pager_new($count, $perpage, $page, 'forums.php?action=member_post_history&amp;id=' . $member_id . (isset($_GET['perpage']) ? '&amp;perpage=' . $perpage : ''));
-$res = sql_query('SELECT p.id AS post_id, p.topic_id, p.user_id, p.added, p.body, p.edited_by, p.edit_date, p.icon, p.post_title, p.bbcode, p.post_history, p.edit_reason, p.ip, p.status AS post_status, p.anonymous, t.id AS topic_id, t.topic_name, t.forum_id, t.sticky, t.locked, t.poll_id, t.status AS topic_status, f.name AS forum_name, f.description FROM posts AS p LEFT JOIN topics AS t ON p.topic_id = t.id LEFT JOIN forums AS f ON f.id = t.forum_id WHERE  ' . ($CURUSER['class'] < UC_STAFF ? 'p.status = \'ok\' AND t.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? 'p.status != \'deleted\' AND t.status != \'deleted\'  AND' : '')) . ' p.user_id = ' . sqlesc($member_id) . ' AND f.min_class_read <= ' . $CURUSER['class'] . ' ORDER BY p.id ' . $ASC_DESC . $LIMIT);
+$res = sql_query('SELECT p.id AS post_id, p.topic_id, p.user_id, p.added, p.body, p.edited_by, p.edit_date, p.icon, p.post_title, p.bbcode, p.post_history, p.edit_reason, p.ip, p.status AS post_status, p.anonymous, t.id AS topic_id, t.topic_name, t.forum_id, t.sticky, t.locked, t.poll_id, t.status AS topic_status, f.name AS forum_name, f.description FROM '.TBL_POSTS.' AS p LEFT JOIN '.TBL_TOPICS.' AS t ON p.topic_id = t.id LEFT JOIN '.TBL_FORUMS.' AS f ON f.id = t.forum_id WHERE  ' . ($CURUSER['class'] < UC_STAFF ? 'p.status = \'ok\' AND t.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? 'p.status != \'deleted\' AND t.status != \'deleted\'  AND' : '')) . ' p.user_id = ' . sqlesc($member_id) . ' AND f.min_class_read <= ' . $CURUSER['class'] . ' ORDER BY p.id ' . $ASC_DESC . $LIMIT);
 //== get user info
-$user_res = sql_query('SELECT id, username, class, donor, suspended, warned, enabled, chatpost, leechwarn, pirate, king, title, avatar, offensive_avatar FROM users WHERE id = ' . sqlesc($member_id));
+$user_res = sql_query('SELECT id, username, class, donor, suspended, warned, enabled, chatpost, leechwarn, pirate, king, title, avatar, offensive_avatar FROM '.TBL_USERS.' WHERE id = ' . sqlesc($member_id));
 $user_arr = mysqli_fetch_assoc($user_res);
 if ($count == 0) {
     stderr('Sorry', ($user_arr['username'] <> '' ? print_user_stuff($user_arr) . ' has no posts to look at!' : 'No member with that ID!'));
@@ -181,7 +181,7 @@ while ($arr = mysqli_fetch_assoc($res)) {
     $post_title = ($arr['post_title'] !== '' ? ' <span style="font-weight: bold; font-size: x-small;">' . htmlsafechars($arr['post_title'], ENT_QUOTES) . '</span>' : 'Link to Post');
     $edited_by = '';
     if ($arr['edit_date'] > 0) {
-        $res_edited = sql_query('SELECT username FROM users WHERE id=' . sqlesc($arr['edited_by']));
+        $res_edited = sql_query('SELECT username FROM '.TBL_USERS.' WHERE id=' . sqlesc($arr['edited_by']));
         $arr_edited = mysqli_fetch_assoc($res_edited);
         //== Anonymous
         if ($arr['anonymous'] == 'yes') {

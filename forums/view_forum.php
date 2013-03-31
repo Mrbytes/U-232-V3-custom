@@ -32,10 +32,10 @@ if (!is_valid_id($forum_id)) {
     stderr('Error', 'Bad ID.');
 }
 //=== who is here
-sql_query('DELETE FROM now_viewing WHERE user_id = ' . sqlesc($CURUSER['id']));
-sql_query('INSERT INTO now_viewing (user_id, forum_id, added) VALUES(' . sqlesc($CURUSER['id']) . ', ' . sqlesc($forum_id) . ', ' . TIME_NOW . ')');
+sql_query('DELETE FROM ".TBL_NOW_VIEWING." WHERE user_id = ' . sqlesc($CURUSER['id']));
+sql_query('INSERT INTO ".TBL_NOW_VIEWING." (user_id, forum_id, added) VALUES(' . sqlesc($CURUSER['id']) . ', ' . sqlesc($forum_id) . ', ' . TIME_NOW . ')');
 //=== Get forum data
-$res = sql_query('SELECT name, min_class_read, min_class_write, min_class_create, forum_id, parent_forum FROM forums WHERE min_class_read <= ' . sqlesc($CURUSER['class']) . ' AND id=' . sqlesc($forum_id) . ' LIMIT 1');
+$res = sql_query('SELECT name, min_class_read, min_class_write, min_class_create, forum_id, parent_forum FROM '.TBL_FORUMS.' WHERE min_class_read <= ' . sqlesc($CURUSER['class']) . ' AND id=' . sqlesc($forum_id) . ' LIMIT 1');
 $arr = mysqli_fetch_assoc($res);
 $forum_name = htmlsafechars($arr['name'], ENT_QUOTES);
 $parent_forum_id = (int)$arr['parent_forum'];
@@ -45,7 +45,7 @@ if ($CURUSER['class'] < $arr['min_class_read']) {
 }
 $may_post = ($CURUSER['class'] >= $arr['min_class_write'] && $CURUSER['class'] >= $arr['min_class_create'] && $CURUSER['forum_post'] == 'yes' && $CURUSER['suspended'] == 'no');
 //=== if a sub forum, get the info!
-$res_sub_forums = sql_query('SELECT id AS sub_forum_id, name AS sub_form_name, description AS sub_form_description, min_class_read, post_count AS sub_form_post_count, topic_count AS sub_form_topic_count FROM forums WHERE min_class_read <= ' . sqlesc($CURUSER['class']) . ' AND parent_forum=' . sqlesc($forum_id) . ' ORDER BY sort');
+$res_sub_forums = sql_query('SELECT id AS sub_forum_id, name AS sub_form_name, description AS sub_form_description, min_class_read, post_count AS sub_form_post_count, topic_count AS sub_form_topic_count FROM '.TBL_FORUMS.' WHERE min_class_read <= ' . sqlesc($CURUSER['class']) . ' AND parent_forum=' . sqlesc($forum_id) . ' ORDER BY sort');
 if ($res_sub_forums) {
     //===sub forums
     $sub_forums_stuff = '';
@@ -57,9 +57,9 @@ if ($res_sub_forums) {
         $post_res = sql_query('SELECT t.id AS topic_id, t.topic_name, t.status AS topic_status, t.anonymous AS tan, 
 												p.id AS last_post_id, p.topic_id, p.added, p.anonymous AS pan,
 												u.id, u.username, u.class, u.donor, u.suspended, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king
-												FROM topics AS t 
-												LEFT JOIN posts AS p ON t.id = p.topic_id 
-												LEFT JOIN users AS u ON p.user_id = u.id 
+												FROM '.TBL_TOPICS.' AS t 
+												LEFT JOIN '.TBL_POSTS.' AS p ON t.id = p.topic_id 
+												LEFT JOIN '.TBL_USERS.' AS u ON p.user_id = u.id 
 												WHERE ' . ($CURUSER['class'] < UC_STAFF ? ' p.status = \'ok\' AND t.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? ' p.status != \'deleted\'  AND t.status != \'deleted\'  AND' : '')) . ' 
 												t.forum_id=' . sqlesc($sub_forums_arr['sub_forum_id']) . ' ORDER BY p.id DESC LIMIT 1');
         $post_arr = mysqli_fetch_assoc($post_res);
@@ -100,7 +100,7 @@ if ($res_sub_forums) {
 						' . get_date($post_arr['added'], '') . '<br /></span>';
             }
             //=== last post read in topic
-            $last_unread_post_res = sql_query('SELECT last_post_read FROM read_posts WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($last_post_id));
+            $last_unread_post_res = sql_query('SELECT last_post_read FROM '.TBL_READ_POSTS.' WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($last_post_id));
             $last_unread_post_arr = mysqli_fetch_row($last_unread_post_res);
             $last_unread_post_id = ($last_unread_post_arr[0] >= 0 ? $last_unread_post_arr[0] : $first_post_arr['first_post_id']);
             $image_to_use = ($post_arr['added'] > (TIME_NOW - $readpost_expiry)) ? (!$last_unread_post_arr || $last_post_id > $last_unread_post_arr[0]) : 0;
@@ -133,7 +133,7 @@ if ($res_sub_forums) {
 					<tr><td class="forum_head_dark" align="left" colspan="3">' . $forum_name . ' Child Boards</td>
 					</tr>' . $sub_forums_stuff . '</table>' : '');
     //=== now we need the parent forums name :P I'll try to get this into another query :P
-    $parent_forum_res = sql_query('SELECT name AS parent_forum_name FROM forums WHERE id=' . sqlesc($parent_forum_id) . ' LIMIT 1');
+    $parent_forum_res = sql_query('SELECT name AS parent_forum_name FROM '.TBL_FORUMS.' WHERE id=' . sqlesc($parent_forum_id) . ' LIMIT 1');
     $parent_forum_arr = mysqli_fetch_assoc($parent_forum_res);
     if ($arr['parent_forum'] > 0) {
         $child = '<span style="font-size: x-small;"> [ child-board ]</span>';
@@ -142,7 +142,7 @@ if ($res_sub_forums) {
     }
 }
 //=== Get topic count
-$res = sql_query('SELECT COUNT(id) FROM topics 	WHERE  ' . ($CURUSER['class'] < UC_STAFF ? ' status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? ' status != \'deleted\'  AND' : '')) . '  forum_id=' . sqlesc($forum_id));
+$res = sql_query('SELECT COUNT(id) FROM '.TBL_TOPICS.' 	WHERE  ' . ($CURUSER['class'] < UC_STAFF ? ' status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? ' status != \'deleted\'  AND' : '')) . '  forum_id=' . sqlesc($forum_id));
 $row = mysqli_fetch_row($res);
 $count = $row[0];
 //=== get stuff for the pager
@@ -151,7 +151,7 @@ $perpage = $CURUSER['topicsperpage'] !== 0 ? $CURUSER['topicsperpage'] : (isset(
 //$perpage = max(($CURUSER['topicsperpage'] !== 0 ? $CURUSER['topicsperpage'] :  (isset($_GET['perpage']) ? (int)$_GET['perpage'] : 15)), 15);
 list($menu, $LIMIT) = pager_new($count, $perpage, $page, 'forums.php?action=view_forum&amp;forum_id=' . $forum_id . (isset($_GET['perpage']) ? '&amp;perpage=' . $perpage : ''));
 //=== Get topics data
-$topic_res = sql_query('SELECT * FROM topics WHERE  ' . ($CURUSER['class'] < UC_STAFF ? ' status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? ' status != \'deleted\'  AND' : '')) . '  forum_id=' . $forum_id . ' ORDER BY sticky, last_post DESC ' . $LIMIT);
+$topic_res = sql_query('SELECT * FROM '.TBL_TOPICS.' WHERE  ' . ($CURUSER['class'] < UC_STAFF ? ' status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? ' status != \'deleted\'  AND' : '')) . '  forum_id=' . $forum_id . ' ORDER BY sticky, last_post DESC ' . $LIMIT);
 $location_bar = '<h1><a class="altlink" href="index.php">' . $INSTALLER09['site_name'] . '</a>  <img src="' . $INSTALLER09['pic_base_url'] . 'arrow_next.gif" alt="&#9658;" title="&#9658;" /> 
 			<a class="altlink" href="' . $INSTALLER09['baseurl'] . '/forums.php">Forums</a> ' . $parent_forum_name . ' <img src="' . $INSTALLER09['pic_base_url'] . 'arrow_next.gif" alt="&#9658;" title="&#9658;" />
 			<a class="altlink" href="' . $INSTALLER09['baseurl'] . '/forums.php?action=view_forum&amp;forum_id=' . $forum_id . '">' . $forum_name . $child . '</a></h1>
@@ -181,8 +181,8 @@ if ($count > 0) {
         //=== Get user ID and date of last post
         $res_post_stuff = sql_query('SELECT p.id AS last_post_id, p.added, p.user_id,  p.status, p.anonymous,
 												u.id, u.username, u.class, u.donor, u.suspended, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king
-												FROM posts AS p 
-												LEFT JOIN users AS u ON p.user_id = u.id 
+												FROM '.TBL_POSTS.' AS p 
+												LEFT JOIN '.TBL_USERS.' AS u ON p.user_id = u.id 
 												WHERE  ' . ($CURUSER['class'] < UC_STAFF ? ' p.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? ' p.status != \'deleted\'  AND' : '')) . '  topic_id=' . sqlesc($topic_id) . '
 												ORDER BY p.id DESC LIMIT 1');
         $arr_post_stuff = mysqli_fetch_assoc($res_post_stuff);
@@ -218,8 +218,8 @@ if ($count > 0) {
         //=== Get author / first post info
         $first_post_res = sql_query('SELECT p.id AS first_post_id, p.added, p.icon, p.body, p.anonymous, p.user_id,
 												u.id, u.username, u.class, u.donor, u.suspended, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king
-												FROM posts AS p 
-												LEFT JOIN users AS u ON p.user_id = u.id 
+												FROM '.TBL_POSTS.' AS p 
+												LEFT JOIN '.TBL_USERS.' AS u ON p.user_id = u.id 
 												WHERE  ' . ($CURUSER['class'] < UC_STAFF ? ' p.status = \'ok\' AND' : ($CURUSER['class'] < $min_delete_view_class ? ' p.status != \'deleted\'  AND' : '')) . '  
 												topic_id=' . sqlesc($topic_id) . ' ORDER BY p.id ASC LIMIT 1');
         $first_post_arr = mysqli_fetch_assoc($first_post_res);
@@ -234,13 +234,13 @@ if ($count > 0) {
         $icon = ($first_post_arr['icon'] == '' ? '<img src="' . $INSTALLER09['pic_base_url'] . 'forums/topic_normal.gif" alt="Topic" title="Topic" />' : '<img src="' . $INSTALLER09['pic_base_url'] . 'smilies/' . htmlsafechars($first_post_arr['icon']) . '.gif" alt="' . htmlsafechars($first_post_arr['icon']) . '" />');
         $first_post_text = tool_tip('<img src="' . $INSTALLER09['pic_base_url'] . 'forums/mg.gif" height="14" alt="Preview" title="Preview" />', format_comment($first_post_arr['body'], true, false, false) , 'First Post Preview');
         //=== last post read in topic
-        $last_unread_post_res = sql_query('SELECT last_post_read FROM read_posts WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($topic_id));
+        $last_unread_post_res = sql_query('SELECT last_post_read FROM '.TBL_READ_POSTS.' WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($topic_id));
         $last_unread_post_arr = mysqli_fetch_row($last_unread_post_res);
         $last_unread_post_id = ($last_unread_post_arr[0] > 0 ? $last_unread_post_arr[0] : $first_post_arr['first_post_id']);
-        $did_i_post_here = sql_query('SELECT user_id FROM posts WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($topic_id));
+        $did_i_post_here = sql_query('SELECT user_id FROM '.TBL_POSTS.' WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($topic_id));
         $posted = (mysqli_num_rows($did_i_post_here) > 0 ? 1 : 0);
         //=== add subscribed forum image
-        $sub = sql_query('SELECT user_id FROM subscriptions WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($topic_id));
+        $sub = sql_query('SELECT user_id FROM '.TBL_SUBSCRIPTIONS.' WHERE user_id=' . sqlesc($CURUSER['id']) . ' AND topic_id=' . sqlesc($topic_id));
         $subscriptions = (mysqli_num_rows($sub) > 0 ? 1 : 0);
         //=== make the multi pages thing...
         $total_pages = floor($posts / $perpage);

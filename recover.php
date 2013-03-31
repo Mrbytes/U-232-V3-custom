@@ -36,10 +36,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     $email = trim($_POST["email"]);
     if (!validemail($email)) stderr("{$lang['stderr_errorhead']}", "{$lang['stderr_invalidemail']}");
-    $res = sql_query("SELECT * FROM users WHERE email=".sqlesc($email)." LIMIT 1") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT * FROM ".TBL_USERS." WHERE email=".sqlesc($email)." LIMIT 1") or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_assoc($res) or stderr("{$lang['stderr_errorhead']}", "{$lang['stderr_notfound']}");
     $sec = mksecret();
-    sql_query("UPDATE users SET editsecret=".sqlesc($sec)." WHERE id=".sqlesc($arr["id"])) or sqlerr(__FILE__, __LINE__);
+    sql_query("UPDATE ".TBL_USERS." SET editsecret=".sqlesc($sec)." WHERE id=".sqlesc($arr["id"])) or sqlerr(__FILE__, __LINE__);
     $mc1->begin_transaction('MyUser_'.$arr["id"]);
     $mc1->update_row(false, array(
         'editsecret' => $sec
@@ -59,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $id = 0 + $_GET["id"];
     $md5 = $_GET["secret"];
     if (!$id) die();
-    $res = sql_query("SELECT username, email, passhash, editsecret FROM users WHERE id = ".sqlesc($id));
+    $res = sql_query("SELECT username, email, passhash, editsecret FROM ".TBL_USERS." WHERE id = ".sqlesc($id));
     $arr = mysqli_fetch_assoc($res);
     $email = $arr["email"];
     $sec = $arr['editsecret'];
@@ -67,7 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $newpassword = make_password();
     $sec = mksecret();
     $newpasshash = make_passhash($sec, md5($newpassword));
-    sql_query("UPDATE users SET secret=".sqlesc($sec).", editsecret='', passhash=".sqlesc($newpasshash)." WHERE id=".sqlesc($id)." AND editsecret=".sqlesc($arr["editsecret"])) or sqlerr(__FILE__, __LINE__);
+    sql_query("UPDATE ".TBL_USERS." SET secret=".sqlesc($sec).", editsecret='', passhash=".sqlesc($newpasshash)." WHERE id=".sqlesc($id)." AND editsecret=".sqlesc($arr["editsecret"])) or sqlerr(__FILE__, __LINE__);
     $mc1->begin_transaction('MyUser_'.$id);
     $mc1->update_row(false, array(
         'secret' => $sec,

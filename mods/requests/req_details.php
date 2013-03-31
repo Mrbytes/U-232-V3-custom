@@ -15,7 +15,7 @@ $stdfoot = array(
  *
  */
 $res = sql_query('SELECT r.*, r.added as utadded, u.username 
-                  FROM requests AS r LEFT JOIN users AS u ON (u.id=r.userid) 
+                  FROM '.TBL_REQUESTS.' AS r LEFT JOIN '.TBL_USERS.' AS u ON (u.id=r.userid) 
                   WHERE r.id = '.$id) or sqlerr(__FILE__, __LINE__);
 if (!mysqli_num_rows($res)) stderr("{$lang['error_error']}", "{$lang['error_invalid']}");
 $num = mysqli_fetch_assoc($res);
@@ -54,7 +54,7 @@ if ($num['torrentid'] == 0) $HTMLOUT.= "<tr><td align='right' valign='top'><b>{$
 else $HTMLOUT.= "<tr><td align='right' valign='top'><b>{$lang['details_filled']}</b></td><td><a class='altlink' href='details.php?id=".$num['torrentid']."'><b>".$INSTALLER09['baseurl']."/details.php?id=".$num['torrentid']."</b></a></td></tr>";
 $HTMLOUT.= "<tr><td class='embedded' colspan='2'><p><a name='startcomments'></a></p>\n";
 $commentbar = "<p align='center'><a class='index' href='comment.php?action=add&amp;tid=$id&amp;type=request'>{$lang['details_add_comment']}</a></p>\n";
-$subres = sql_query("SELECT COUNT(*) FROM comments WHERE request = $id");
+$subres = sql_query("SELECT COUNT(*) FROM ".TBL_COMMENTS." WHERE request = $id");
 $subrow = mysqli_fetch_array($subres);
 $count = $subrow[0];
 $HTMLOUT.= '</td></tr></table>';
@@ -63,13 +63,13 @@ else {
     $pager = pager(25, $count, "viewrequests.php?id=$id&amp;req_details&amp;", array(
         'lastpagedefault' => 1
     ));
-    $subres = sql_query("SELECT comments.id, comments.text, comments.user, comments.editedat, 
-                      comments.editedby, comments.ori_text, comments.request AS request, 
-                      comments.added, comments.anonymous, users.avatar, users.av_w ,users.av_h,
-                      users.warned, users.username, users.title, users.class, users.last_access, 
-                      users.enabled, users.reputation, users.donor, users.downloaded, users.uploaded 
-                      FROM comments LEFT JOIN users ON comments.user = users.id 
-                      WHERE request = $id ORDER BY comments.id") or sqlerr(__FILE__, __LINE__);
+    $subres = sql_query("SELECT ".TBL_COMMENTS.".id, ".TBL_COMMENTS.".text, ".TBL_COMMENTS.".user, ".TBL_COMMENTS.".editedat, 
+                      ".TBL_COMMENTS.".editedby, ".TBL_COMMENTS.".ori_text, ".TBL_COMMENTS.".request AS request, 
+                      ".TBL_COMMENTS.".added, ".TBL_COMMENTS.".anonymous, ".TBL_USERS.".avatar, ".TBL_USERS.".av_w, ".TBL_USERS.".av_h,
+                      ".TBL_USERS.".warned, ".TBL_USERS.".username, ".TBL_USERS.".title, ".TBL_USERS.".class, ".TBL_USERS.".last_access, 
+                      ".TBL_USERS.".enabled, ".TBL_USERS.".reputation, ".TBL_USERS.".donor, ".TBL_USERS.".downloaded, ".TBL_USERS.".uploaded 
+                      FROM ".TBL_COMMENTS." LEFT JOIN ".TBL_USERS." ON ".TBL_COMMENTS.".user = ".TBL_USERS.".id 
+                      WHERE request = $id ORDER BY ".TBL_COMMENTS.".id") or sqlerr(__FILE__, __LINE__);
     $allrows = array();
     while ($subrow = mysqli_fetch_assoc($subres)) $allrows[] = $subrow;
     $HTMLOUT.= $commentbar;

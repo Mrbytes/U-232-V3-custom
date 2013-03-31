@@ -11,7 +11,7 @@ function searchcloud($limit = 50)
 {
     global $mc1, $INSTALLER09;
     if (!($return = $mc1->get_value('searchcloud'))) {
-        $search_q = sql_query('SELECT searchedfor,howmuch FROM searchcloud ORDER BY id DESC '.($limit > 0 ? 'LIMIT '.$limit : '')) or sqlerr(__FILE__, __LINE__);
+        $search_q = sql_query('SELECT searchedfor,howmuch FROM '.TBL_SEARCHCLOUD.' ORDER BY id DESC '.($limit > 0 ? 'LIMIT '.$limit : '')) or sqlerr(__FILE__, __LINE__);
         if (mysqli_num_rows($search_q)) {
             $return = array();
             while ($search_a = mysqli_fetch_assoc($search_q)) $return[$search_a['searchedfor']] = $search_a['howmuch'];
@@ -40,7 +40,7 @@ function searchcloud_insert($word)
         ));
         $mc1->commit_transaction(0);
     }
-    sql_query('INSERT INTO searchcloud(searchedfor,howmuch,ip) VALUES ('.sqlesc($word).',1,'.sqlesc($ip).') ON DUPLICATE KEY UPDATE howmuch=howmuch+1') or sqlerr(__FILE__, __LINE__);
+    sql_query('INSERT INTO '.TBL_SEARCHCLOUD.'(searchedfor,howmuch,ip) VALUES ('.sqlesc($word).',1,'.sqlesc($ip).') ON DUPLICATE KEY UPDATE howmuch=howmuch+1') or sqlerr(__FILE__, __LINE__);
 }
 function cloud()
 {

@@ -27,7 +27,7 @@ require_once (CLASS_DIR.'class_check.php');
 class_check(UC_ADMINISTRATOR);
 $lang = array_merge($lang, load_language('bonusmanager'));
 $HTMLOUT = $count = '';
-$res = sql_query("SELECT * FROM bonus") or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT * FROM ".TBL_BONUS."") or sqlerr(__FILE__, __LINE__);
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST["id"]) || isset($_POST["points"]) || isset($_POST["pointspool"]) || isset($_POST["minpoints"]) || isset($_POST["description"]) || isset($_POST["enabled"])) {
         $id = 0 + $_POST["id"];
@@ -39,7 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (isset($_POST["enabled"]) == '') {
             $enabled = "no";
         }
-        $sql = sql_query("UPDATE bonus SET points = '$points', pointspool='$pointspool', minpoints='$minpoints', enabled = '$enabled', description = '$descr' WHERE id = '$id'");
+        $sql = sql_query("UPDATE ".TBL_BONUS." SET points = '$points', pointspool='$pointspool', minpoints='$minpoints', enabled = '$enabled', description = '$descr' WHERE id = '$id'");
         if ($sql) {
             header("Location: {$INSTALLER09['baseurl']}/staffpanel.php?tool=bonusmanage");
         } else {

@@ -38,10 +38,10 @@ function mysql_fetch_all($query, $default_value = Array())
     if (count($result) == 0) return $default_value;
     return $result;
 }
-$count1 = get_row_count('events');
+$count1 = get_row_count(TBL_EVENTS);
 $perpage = 15;
 $pager = pager($perpage, $count1, 'staffpanel.php?tool=events&amp;action=events&amp;');
-$scheduled_events = mysql_fetch_all("SELECT e.id, e.userid, e.startTime, e.endTime, e.overlayText, e.displayDates, e.freeleechEnabled, e.duploadEnabled, e.hdownEnabled, u.id, u.username, u.class, u.chatpost, u.leechwarn, u.warned, u.pirate, u.king, u.donor, u.enabled FROM events AS e LEFT JOIN users AS u ON u.id=e.userid ORDER BY startTime DESC ".$pager['limit'].";", array());
+$scheduled_events = mysql_fetch_all("SELECT e.id, e.userid, e.startTime, e.endTime, e.overlayText, e.displayDates, e.freeleechEnabled, e.duploadEnabled, e.hdownEnabled, u.id, u.username, u.class, u.chatpost, u.leechwarn, u.warned, u.pirate, u.king, u.donor, u.enabled FROM ".TBL_EVENTS." AS e LEFT JOIN ".TBL_USERS." AS u ON u.id=e.userid ORDER BY startTime DESC ".$pager['limit'].";", array());
 if (is_array($scheduled_events)) {
     foreach ($scheduled_events as $scheduled_event) {
         if (is_array($scheduled_event) && array_key_exists('startTime', $scheduled_event) && array_key_exists('endTime', $scheduled_event)) {
@@ -112,7 +112,7 @@ if (!is_array($scheduled_events)) {
         if (gettype($pos = strpos($key, "_")) != 'boolean') {
             $id = (int)substr($key, $pos + 1);
             if (gettype(strpos($key, "removeEvent_")) != 'boolean') {
-                $sql = "DELETE FROM `events` WHERE `id` = $id LIMIT 1;";
+                $sql = "DELETE FROM ".TBL_EVENTS." WHERE `id` = $id LIMIT 1;";
                 $res = sql_query($sql);
                 if (((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)) != 0) $HTMLOUT.= "<p>Error Deleting Event: ".((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false))."<br /> Click <a class='altlink' href='{$INSTALLER09['baseurl']}/staffpanel.php?tool=events'>Here</a> to go back.<br /></p>\n";
                 else {
@@ -150,8 +150,8 @@ if (!is_array($scheduled_events)) {
                     $halfdownload = 0;
                 }
                 if (array_key_exists('editShowDates', $_POST)) $showDates = 1;
-                if ($id == - 1) $sql = "INSERT INTO `events`(`overlayText`, `startTime`, `endTime`, `displayDates`, `freeleechEnabled`, `duploadEnabled`, `hdownEnabled`, `userid`) VALUES ('$text', $start, $end, $showDates, $freeleech, $doubleupload, $halfdownload, $userid);";
-                else $sql = "UPDATE `events` SET `overlayText` = '$text',`startTime` = $start, `endTime` = $end, `displayDates` = $showDates, `freeleechEnabled` = $freeleech, `duploadEnabled` = $doubleupload, `hdownEnabled` = $halfdownload, `userid` = $userid  WHERE `id` = $id;";
+                if ($id == - 1) $sql = "INSERT INTO ".TBL_EVENTS."(`overlayText`, `startTime`, `endTime`, `displayDates`, `freeleechEnabled`, `duploadEnabled`, `hdownEnabled`, `userid`) VALUES ('$text', $start, $end, $showDates, $freeleech, $doubleupload, $halfdownload, $userid);";
+                else $sql = "UPDATE ".TBL_EVENTS." SET `overlayText` = '$text',`startTime` = $start, `endTime` = $end, `displayDates` = $showDates, `freeleechEnabled` = $freeleech, `duploadEnabled` = $doubleupload, `hdownEnabled` = $halfdownload, `userid` = $userid  WHERE `id` = $id;";
                 $res = sql_query($sql);
                 if (((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)) != 0) $HTMLOUT.= "<p>Error Saving Event: ".((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false))."<br /> Click <a class='altlink' href='{$INSTALLER09['baseurl']}/staffpanel.php?tool=events'>Here</a> to go back.<br /></p>\n";
                 else {

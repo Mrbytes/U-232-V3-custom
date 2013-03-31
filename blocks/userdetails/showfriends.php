@@ -3,7 +3,7 @@
 $dt = TIME_NOW - 180;
 $keys['user_friends'] = 'user_friends_'.$id;
 if (($users_friends = $mc1->get_value($keys['user_friends'])) === false) {
-    $fr = sql_query("SELECT f.friendid as uid, f.userid AS userid, u.last_access, u.id, u.ip, u.avatar, u.username, u.class, u.donor, u.title, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king, u.downloaded, u.uploaded, u.perms FROM friends AS f LEFT JOIN users as u ON f.friendid = u.id WHERE userid=".sqlesc($id)." ORDER BY username ASC LIMIT 100") or  sqlerr(__file__, __line__);
+    $fr = sql_query("SELECT f.friendid as uid, f.userid AS userid, u.last_access, u.id, u.ip, u.avatar, u.username, u.class, u.donor, u.title, u.warned, u.enabled, u.chatpost, u.leechwarn, u.pirate, u.king, u.downloaded, u.uploaded, u.perms FROM ".TBL_FRIENDS." AS f LEFT JOIN ".TBL_USERS." as u ON f.friendid = u.id WHERE userid=".sqlesc($id)." ORDER BY username ASC LIMIT 100") or  sqlerr(__file__, __line__);
     while ($user_friends = mysqli_fetch_assoc($fr)) $users_friends[] = $user_friends;
     $mc1->cache_value($keys['user_friends'], $users_friends, 0);
 }

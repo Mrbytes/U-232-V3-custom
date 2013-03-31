@@ -15,7 +15,7 @@ loggedinorreturn();
 $HTMLOUT = '';
 $lang = array_merge(load_language('global') , load_language('index'));
 $dt = TIME_NOW;
-$res = sql_query("SELECT u.id, u.curr_ann_id, u.curr_ann_last_check, u.last_access, ann_main.subject AS curr_ann_subject, ann_main.body AS curr_ann_body "." FROM users AS u "." LEFT JOIN announcement_main AS ann_main "." ON ann_main.main_id = u.curr_ann_id "." WHERE u.id = ".sqlesc($CURUSER['id'])." AND u.enabled='yes' AND u.status = 'confirmed'") or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT u.id, u.curr_ann_id, u.curr_ann_last_check, u.last_access, ann_main.subject AS curr_ann_subject, ann_main.body AS curr_ann_body "." FROM ".TBL_USERS." AS u "." LEFT JOIN ".TBL_ANNOUNCEMENT_MAIN." AS ann_main "." ON ann_main.main_id = u.curr_ann_id "." WHERE u.id = ".sqlesc($CURUSER['id'])." AND u.enabled='yes' AND u.status = 'confirmed'") or sqlerr(__FILE__, __LINE__);
 $row = mysqli_fetch_assoc($res);
 //If curr_ann_id > 0 but curr_ann_body IS NULL, then force a refresh
 if (($row['curr_ann_id'] > 0) AND ($row['curr_ann_body'] == NULL)) {
@@ -26,7 +26,7 @@ if (($row['curr_ann_id'] > 0) AND ($row['curr_ann_body'] == NULL)) {
 if (($row['curr_ann_last_check'] != 0) AND (($row['curr_ann_last_check']) < ($dt - 600))
 /** 10 mins **/) $row['curr_ann_last_check'] == 0;
 if (($row['curr_ann_id'] == 0) AND ($row['curr_ann_last_check'] == 0)) { // Force an immediate check...
-    $query = sprintf('SELECT m.*,p.process_id FROM announcement_main AS m '.'LEFT JOIN announcement_process AS p ON m.main_id = p.main_id '.'AND p.user_id = %s '.'WHERE p.process_id IS NULL '.'OR p.status = 0 '.'ORDER BY m.main_id ASC '.'LIMIT 1', sqlesc($row['id']));
+    $query = sprintf('SELECT m.*,p.process_id FROM '.TBL_ANNOUNCEMENT_MAIN.' AS m '.'LEFT JOIN '.TBL_ANNOUNCEMENT_PROCESS.' AS p ON m.main_id = p.main_id '.'AND p.user_id = %s '.'WHERE p.process_id IS NULL '.'OR p.status = 0 '.'ORDER BY m.main_id ASC '.'LIMIT 1', sqlesc($row['id']));
     $result = sql_query($query);
     if (mysqli_num_rows($result)) { // Main Result set exists
         $ann_row = mysqli_fetch_assoc($result);
@@ -73,10 +73,10 @@ if (($row['curr_ann_id'] == 0) AND ($row['curr_ann_last_check'] == 0)) { // Forc
         // Create or set status of process
         if ($ann_row['process_id'] === NULL) {
             // Insert Process result set status = 1 (Ignore)
-            $query = sprintf('INSERT INTO announcement_process (main_id, '.'user_id, status) VALUES (%s, %s, %s)', sqlesc($ann_row['main_id']) , sqlesc($row['id']) , sqlesc($status));
+            $query = sprintf('INSERT INTO '.TBL_ANNOUNCEMENT_PROCESS.' (main_id, '.'user_id, status) VALUES (%s, %s, %s)', sqlesc($ann_row['main_id']) , sqlesc($row['id']) , sqlesc($status));
         } else {
             // Update Process result set status = 2 (Read)
-            $query = sprintf('UPDATE announcement_process SET status = %s '.'WHERE process_id = %s', sqlesc($status) , sqlesc($ann_row['process_id']));
+            $query = sprintf('UPDATE '.TBL_ANNOUNCEMENT_PROCESS.' SET status = %s '.'WHERE process_id = %s', sqlesc($status) , sqlesc($ann_row['process_id']));
         }
         sql_query($query);
     } else {
@@ -97,7 +97,7 @@ if (($row['curr_ann_id'] == 0) AND ($row['curr_ann_last_check'] == 0)) { // Forc
     unset($ann_row);
 }
 $add_set = (isset($add_set)) ? $add_set : 'curr_ann_last_check = 0';
-sql_query("UPDATE users SET $add_set WHERE id={$row['id']}") or sqlerr(__FILE__, __LINE__);
+sql_query("UPDATE ".TBL_USERS." SET $add_set WHERE id={$row['id']}") or sqlerr(__FILE__, __LINE__);
 // Announcement Code...
 $ann_subject = trim($row['curr_ann_subject']);
 $ann_body = trim($row['curr_ann_body']);

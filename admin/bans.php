@@ -28,7 +28,7 @@ class_check(UC_SYSOP);
 $lang = array_merge($lang, load_language('ad_bans'));
 $remove = isset($_GET['remove']) ? (int)$_GET['remove'] : 0;
 if ($remove > 0) {
-    $banned = sql_query('SELECT first, last FROM bans WHERE id = '.sqlesc($remove)) or sqlerr(__FILE__, __LINE__);
+    $banned = sql_query('SELECT first, last FROM '.TBL_BANS.' WHERE id = '.sqlesc($remove)) or sqlerr(__FILE__, __LINE__);
     if (!mysqli_num_rows($banned)) stderr('Error', 'A Ban with that ID could not be found');
     $ban = mysqli_fetch_assoc($banned);
     $first = 0 + $ban['first'];
@@ -38,7 +38,7 @@ if ($remove > 0) {
         $mc1->delete_value('bans:::'.$ip);
     }
     if (is_valid_id($remove)) {
-        sql_query("DELETE FROM bans WHERE id=".sqlesc($remove)) or sqlerr(__FILE__, __LINE__);
+        sql_query("DELETE FROM ".TBL_BANS." WHERE id=".sqlesc($remove)) or sqlerr(__FILE__, __LINE__);
         $removed = sprintf($lang['text_banremoved'], $remove);
         write_log("{$removed}".$CURUSER['id']." (".$CURUSER['username'].")");
     }
@@ -56,16 +56,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $CURUSER['class'] == UC_MAX) {
         $key = 'bans:::'.long2ip($i);
         $mc1->delete_value($key);
     }
-    sql_query("INSERT INTO bans (added, addedby, first, last, comment) VALUES($added, ".sqlesc($CURUSER['id']).", $first, $last, ".sqlesc($comment).")") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_BANS." (added, addedby, first, last, comment) VALUES($added, ".sqlesc($CURUSER['id']).", $first, $last, ".sqlesc($comment).")") or sqlerr(__FILE__, __LINE__);
     header("Location: {$INSTALLER09['baseurl']}/staffpanel.php?tool=bans");
     die;
 }
-$bc = sql_query('SELECT COUNT(*) FROM bans') or sqlerr(__FILE__, __LINE__);
+$bc = sql_query('SELECT COUNT(*) FROM '.TBL_BANS.'') or sqlerr(__FILE__, __LINE__);
 $bcount = mysqli_fetch_row($bc);
 $count = $bcount[0];
 $perpage = 15;
 $pager = pager($perpage, $count, 'staffpanel.php?tool=bans&amp;');
-$res = sql_query("SELECT b.*, u.username FROM bans b LEFT JOIN users u on b.addedby = u.id ORDER BY added DESC {$pager['limit']}") or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT b.*, u.username FROM ".TBL_BANS." b LEFT JOIN ".TBL_USERS." u on b.addedby = u.id ORDER BY added DESC {$pager['limit']}") or sqlerr(__FILE__, __LINE__);
 $HTMLOUT = '';
 $HTMLOUT.= "<h1>{$lang['text_current']}</h1>\n";
 if (mysqli_num_rows($res) == 0) {

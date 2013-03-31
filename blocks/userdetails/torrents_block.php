@@ -110,7 +110,7 @@ if ($user['paranoia'] < 2 || $user['hidecur'] == "yes" || $CURUSER['id'] == $id 
     //==Snatched
     $user_snatches_data = $mc1->get_value('user_snatches_data_'.$id);
     if ($user_snatches_data === false) {
-        $ressnatch = sql_query("SELECT s.*, t.name AS name, c.name AS catname, c.image AS catimg FROM snatched AS s INNER JOIN torrents AS t ON s.torrentid = t.id LEFT JOIN categories AS c ON t.category = c.id WHERE s.userid =".sqlesc($user['id'])) or sqlerr(__FILE__, __LINE__);
+        $ressnatch = sql_query("SELECT s.*, t.name AS name, c.name AS catname, c.image AS catimg FROM ".TBL_SNATCHED." AS s INNER JOIN ".TBL_TORRENTS." AS t ON s.torrentid = t.id LEFT JOIN ".TBL_CATEGORIES." AS c ON t.category = c.id WHERE s.userid =".sqlesc($user['id'])) or sqlerr(__FILE__, __LINE__);
         $user_snatches_data = snatchtable($ressnatch);
         $mc1->cache_value('user_snatches_data_'.$id, $user_snatches_data, $INSTALLER09['expires']['user_snatches_data']);
     }

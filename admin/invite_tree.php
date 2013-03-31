@@ -37,7 +37,7 @@ $HTMLOUT = '';
 //=== if we got here from a members page, get their info... if not, ask for a username to get the info...
 $id = (isset($_GET['id']) ? intval($_GET['id']) : (isset($_POST['id']) ? intval($_POST['id']) : 0));
 if ($id !== 0) {
-    $rez_user = sql_query('SELECT username, warned, suspended, enabled, donor, invitedby FROM users WHERE id = '.sqlesc($id));
+    $rez_user = sql_query('SELECT username, warned, suspended, enabled, donor, invitedby FROM '.TBL_USERS.' WHERE id = '.sqlesc($id));
     $arr_user = mysqli_fetch_assoc($rez_user);
     //=== start the page
     $HTMLOUT.= '<h1>'.htmlsafechars($arr_user['username']).(substr($arr_user['username'], -1) == 's' ? '\'' : '\'s').' Invite Tree</h1>
@@ -47,7 +47,7 @@ if ($id !== 0) {
     $HTMLOUT.= '<table class="main" width="750px" border="0" cellspacing="0" cellpadding="0">
 		<tr><td class="embedded" align="center">';
     //=== members invites
-    $rez_invited = sql_query('SELECT id, username, email, uploaded, downloaded, status, warned, suspended, enabled, donor, email, ip, class, chatpost, leechwarn, pirate, king FROM users WHERE invitedby = '.sqlesc($id).' ORDER BY added');
+    $rez_invited = sql_query('SELECT id, username, email, uploaded, downloaded, status, warned, suspended, enabled, donor, email, ip, class, chatpost, leechwarn, pirate, king FROM '.TBL_USERS.' WHERE invitedby = '.sqlesc($id).' ORDER BY added');
     if (mysqli_num_rows($rez_invited) < 1) $HTMLOUT.= 'No invitees yet.';
     else {
         $HTMLOUT.= '<table width="100%" border="1" cellspacing="0" cellpadding="5">
@@ -61,7 +61,7 @@ if ($id !== 0) {
             $deeper = '';
             //=== if  deeper get the invitees invitees
             if (isset($_GET['deeper']) || isset($_GET['really_deep'])) {
-                $rez_invited_deeper = sql_query('SELECT id, username, email, uploaded, downloaded, status, warned, suspended, enabled, donor, email, ip, class, chatpost, leechwarn, pirate, king FROM users WHERE invitedby = '.sqlesc($arr_invited['id']).' ORDER BY added');
+                $rez_invited_deeper = sql_query('SELECT id, username, email, uploaded, downloaded, status, warned, suspended, enabled, donor, email, ip, class, chatpost, leechwarn, pirate, king FROM '.TBL_USERS.' WHERE invitedby = '.sqlesc($arr_invited['id']).' ORDER BY added');
                 if (mysqli_num_rows($rez_invited_deeper) > 0) {
                     $deeper.= '<tr><td  class="two" colspan="6"><span style="font-weight: bold;">'.$arr_invited['username'].(substr($arr_invited['username'], -1) == 's' ? '\'' : '\'s').' Invites:</span><br />
 						<div align="center"><table width="95%" border="1" cellspacing="0" cellpadding="5">
@@ -75,7 +75,7 @@ if ($id !== 0) {
                         $really_deep = '';
                         //=== if  really_deep get the invitees invitees invitees
                         if (isset($_GET['really_deep'])) {
-                            $rez_invited_really_deep = sql_query('SELECT id, username, email, uploaded, downloaded, status, warned, suspended, enabled, donor, email, ip, class, chatpost, leechwarn, pirate, king FROM users WHERE invitedby = '.sqlesc($arr_invited_deeper['id']).' ORDER BY added');
+                            $rez_invited_really_deep = sql_query('SELECT id, username, email, uploaded, downloaded, status, warned, suspended, enabled, donor, email, ip, class, chatpost, leechwarn, pirate, king FROM '.TBL_USERS.' WHERE invitedby = '.sqlesc($arr_invited_deeper['id']).' ORDER BY added');
                             if (mysqli_num_rows($rez_invited_really_deep) > 0) {
                                 $really_deep.= '<tr><td  class="one" colspan="6"><span style="font-weight: bold;">'.htmlsafechars($arr_invited_deeper['username']).(substr($arr_invited_deeper['username'], -1) == 's' ? '\'' : '\'s').' Invites:</span><br />
 										<div align="center"><table width="95%" border="1" cellspacing="0" cellpadding="5">
@@ -171,13 +171,13 @@ if ($id !== 0) {
     //=== get stuff for the pager
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
     $perpage = isset($_GET['perpage']) ? (int)$_GET['perpage'] : 20;
-    $res_count = @sql_query('SELECT COUNT(id) FROM users WHERE '.$query);
+    $res_count = @sql_query('SELECT COUNT(id) FROM '.TBL_USERS.' WHERE '.$query);
     $arr_count = mysqli_fetch_row($res_count);
     $count = ($arr_count[0] > 0 ? $arr_count[0] : 0);
     list($menu, $LIMIT) = pager_new($count, $perpage, $page, 'staffpanel.php?tool=invite_tree&amp;action=invite_tree');
     $HTMLOUT.= ($arr_count[0] > $perpage) ? ''.$menu.'<br /><br />' : '<br /><br />';
     if ($arr_count[0] > 0) {
-        $res = sql_query('SELECT users.*, countries.name, countries.flagpic FROM users FORCE INDEX ( username ) LEFT JOIN countries ON country = countries.id WHERE '.$query.' ORDER BY username '.$LIMIT);
+        $res = sql_query('SELECT '.TBL_USERS.'.*, '.TBL_COUNTRIES.'.name, '.TBL_COUNTRIES.'.flagpic FROM '.TBL_USERS.' FORCE INDEX ( username ) LEFT JOIN '.TBL_COUNTRIES.' ON country = '.TBL_COUNTRIES.'.id WHERE '.$query.' ORDER BY username '.$LIMIT);
         $HTMLOUT.= '<table border="1" cellspacing="0" cellpadding="5">
 
 			<tr><td class="colhead" align="left">User name</td>

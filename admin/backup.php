@@ -123,7 +123,7 @@ if (empty($mode)) {
  Click<a href='{$INSTALLER09['baseurl']}/staffpanel.php?tool=backup&amp;mode=backup'><b>&nbsp;Here&nbsp;</b></a>to backup now.<br />
  Click<a href='{$INSTALLER09['baseurl']}/staffpanel.php?tool=backup&amp;mode=check'><b>&nbsp;Here&nbsp;</b></a>to check config.</h1>";
     $HTMLOUT.= "<br /><h1 align='center'></h1>";
-    $res = sql_query('SELECT db.id, db.name, db.added, u.id AS uid, u.username '.'FROM dbbackup AS db '.'LEFT JOIN users AS u ON u.id = db.userid '.'ORDER BY db.added DESC') or sqlerr(__FILE__, __LINE__);
+    $res = sql_query('SELECT db.id, db.name, db.added, u.id AS uid, u.username '.'FROM ".TBL_DBBACKUP." AS db '.'LEFT JOIN '.TBL_USERS.' AS u ON u.id = db.userid '.'ORDER BY db.added DESC') or sqlerr(__FILE__, __LINE__);
     if (mysqli_num_rows($res) > 0) {
         $HTMLOUT.= "<form method='post' action='staffpanel.php?tool=backup&amp;mode=delete'>
     <input type='hidden' name='action' value='delete' />
@@ -176,7 +176,7 @@ if (empty($mode)) {
     $filepath = $backupdir.'/'.$ext;
     exec("$mysqldump_path --default-character-set=latin1 -h $mysql_host -u $mysql_user -p$mysql_pass $mysql_db > $filepath");
     if ($use_gzip) exec($gzip_path.' '.$filepath);
-    sql_query("INSERT INTO dbbackup (name, added, userid) VALUES (".sqlesc($ext.($use_gzip ? '.gz' : '')).", ".TIME_NOW.", ".sqlesc($CURUSER['id']).")") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_DBBACKUP." (name, added, userid) VALUES (".sqlesc($ext.($use_gzip ? '.gz' : '')).", ".TIME_NOW.", ".sqlesc($CURUSER['id']).")") or sqlerr(__FILE__, __LINE__);
     $location = 'mode=backup';
     if ($autodl) {
         $id = ((is_null($___mysqli_res = mysqli_insert_id($GLOBALS["___mysqli_ston"]))) ? false : $___mysqli_res);
@@ -187,7 +187,7 @@ if (empty($mode)) {
 } else if ($mode == "download") {
     $id = (isset($_GET['id']) ? (int)$_GET['id'] : 0);
     if (!is_valid_id($id)) stderr('Error', 'Invalid ID!');
-    $res = sql_query("SELECT name FROM dbbackup WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT name FROM ".TBL_DBBACKUP." WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_assoc($res);
     $filename = $backupdir.'/'.$arr['name'];
     //print $filename;
@@ -224,14 +224,14 @@ if (empty($mode)) {
     ) : array()));
     if (!empty($ids)) {
         foreach ($ids as $id) if (!is_valid_id($id)) stderr('Error', 'Invalid ID!');
-        $res = sql_query("SELECT name FROM dbbackup WHERE id IN (".implode(', ', $ids).")") or sqlerr(__FILE__, __LINE__);
+        $res = sql_query("SELECT name FROM ".TBL_DBBACKUP." WHERE id IN (".implode(', ', $ids).")") or sqlerr(__FILE__, __LINE__);
         $count = mysqli_num_rows($res);
         if ($count > 0) {
             while ($arr = mysqli_fetch_assoc($res)) {
                 $filename = $backupdir.'/'.$arr['name'];
                 if (is_file($filename)) unlink($filename);
             }
-            sql_query('DELETE FROM dbbackup WHERE id IN ('.implode(', ', $ids).')') or sqlerr(__FILE__, __LINE__);
+            sql_query('DELETE FROM ".TBL_DBBACKUP." WHERE id IN ('.implode(', ', $ids).')') or sqlerr(__FILE__, __LINE__);
             if ($write2log) write_log($CURUSER['username'].'('.get_user_class_name($CURUSER['class']).') successfully deleted '.$count.' database'.($count > 1 ? 's' : '').'.');
             $location = 'backup';
         } else $location = 'noselection';

@@ -31,24 +31,24 @@ $HTMLOUT = "";
 function deletetorrent($tid)
 {
     global $INSTALLER09, $mc1, $CURUSER;
-    sql_query("DELETE peers.*, files.*,comments.*,snatched.*, thanks.*, bookmarks.*, coins.*, ratings.*, torrents.* FROM torrents 
-				 LEFT JOIN peers ON peers.torrent = torrents.id
-				 LEFT JOIN files ON files.torrent = torrents.id
-				 LEFT JOIN comments ON comments.torrent = torrents.id
-				 LEFT JOIN thanks ON thanks.torrentid = torrents.id
-				 LEFT JOIN bookmarks ON bookmarks.torrentid = torrents.id
-				 LEFT JOIN coins ON coins.torrentid = torrents.id
-				 LEFT JOIN ratings ON ratings.torrent = torrents.id
-				 LEFT JOIN snatched ON snatched.torrentid = torrents.id
-				 WHERE torrents.id = $tid") or sqlerr(__FILE__, __LINE__);
+    sql_query("DELETE ".TBL_PEERS.".*, ".TBL_FILES.".*,".TBL_COMMENTS.".*,".TBL_SNATCHED.".*, ".TBL_THANKS.".*, ".TBL_BOOKMARKS.".*, ".TBL_COINS.".*, ".TBL_RATING.".*, ".TBL_TORRENTS.".* FROM ".TBL_TORRENTS." 
+				 LEFT JOIN ".TBL_PEERS." ON ".TBL_PEERS.".torrent = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_FILES." ON ".TBL_FILES.".torrent = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_COMMENTS." ON ".TBL_COMMENTS.".torrent = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_THANKS." ON ".TBL_THANKS.".torrentid = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_BOOKMARKS." ON ".TBL_BOOKMARKS.".torrentid = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_COINS." ON ".TBL_COINS.".torrentid = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_RATING." ON ".TBL_RATING.".torrent = ".TBL_TORRENTS.".id
+				 LEFT JOIN ".TBL_SNATCHED." ON ".TBL_SNATCHED.".torrentid = ".TBL_TORRENTS.".id
+				 WHERE ".TBL_TORRENTS.".id = $tid") or sqlerr(__FILE__, __LINE__);
     unlink("{$INSTALLER09['torrent_dir']}/$id.torrent");
     $mc1->delete('MyPeers_'.$CURUSER['id']);
 }
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $tid = (isset($_POST["tid"]) ? 0 + $_POST["tid"] : 0);
     if ($tid == 0) stderr(":w00t:", "wtf are your trying to do!?");
-    if (get_row_count("torrents", "where id=".$tid) != 1) stderr(":w00t:", "That is not a torrent !!!!");
-    $q1 = sql_query("SELECT s.downloaded as sd , t.id as tid, t.name,t.size, u.username,u.id as uid,u.downloaded as ud FROM torrents as t LEFT JOIN snatched as s ON s.torrentid = t.id LEFT JOIN users as u ON u.id = s.userid WHERE t.id =".$tid) or sqlerr(__FILE__, __LINE__);
+    if (get_row_count(TBL_TORRENTS, "where id=".$tid) != 1) stderr(":w00t:", "That is not a torrent !!!!");
+    $q1 = sql_query("SELECT s.downloaded as sd , t.id as tid, t.name,t.size, u.username,u.id as uid,u.downloaded as ud FROM ".TBL_TORRENTS." as t LEFT JOIN ".TBL_SNATCHED." as s ON s.torrentid = t.id LEFT JOIN ".TBL_USERS." as u ON u.id = s.userid WHERE t.id =".$tid) or sqlerr(__FILE__, __LINE__);
     while ($a = mysqli_fetch_assoc($q1)) {
         $newd = ($a["ud"] > 0 ? $a["ud"] - $a["sd"] : 0);
         $new_download[] = "(".$a["uid"].",".$newd.")";
@@ -69,9 +69,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $mc1->commit_transaction($INSTALLER09['expires']['curuser']);
     }
     //==Send the pm !!
-    sql_query("INSERT into messages (sender, receiver, added, msg) VALUES ".join(",", $pms)) or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT into ".TBL_MESSAGES." (sender, receiver, added, msg) VALUES ".join(",", $pms)) or sqlerr(__FILE__, __LINE__);
     //==Update user download amount
-    sql_query("INSERT INTO users (id,downloaded) VALUES ".join(",", $new_download)." ON DUPLICATE key UPDATE downloaded=values(downloaded)") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_USERS." (id,downloaded) VALUES ".join(",", $new_download)." ON DUPLICATE key UPDATE downloaded=values(downloaded)") or sqlerr(__FILE__, __LINE__);
     deletetorrent($tid);
     write_log("Torrent $tname was deleted by ".$CURUSER["username"]." and all users were Re-Paid Download credit");
     header("Refresh: 3; url=staffpanel.php?tool=datareset");

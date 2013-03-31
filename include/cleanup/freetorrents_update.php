@@ -13,7 +13,7 @@ function docleanup($data)
     set_time_limit(0);
     ignore_user_abort(1);
     //=== Clean free
-    $res = sql_query("SELECT id, free FROM torrents WHERE free > 1 AND free < ".TIME_NOW) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT id, free FROM ".TBL_TORRENTS." WHERE free > 1 AND free < ".TIME_NOW) or sqlerr(__FILE__, __LINE__);
     $Free_buffer = array();
     if (mysqli_num_rows($res) > 0) {
         while ($arr = mysqli_fetch_assoc($res)) {
@@ -26,7 +26,7 @@ function docleanup($data)
         }
         $count = count($Free_buffer);
         if ($count > 0) {
-            sql_query("INSERT INTO torrents (id, free) VALUES ".implode(', ', $Free_buffer)." ON DUPLICATE key UPDATE free=values(free)") or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_TORRENTS." (id, free) VALUES ".implode(', ', $Free_buffer)." ON DUPLICATE key UPDATE free=values(free)") or sqlerr(__FILE__, __LINE__);
             write_log("Cleanup - Removed Free from ".$count." torrents");
         }
         unset($Free_buffer, $count);
@@ -46,6 +46,6 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 ?>

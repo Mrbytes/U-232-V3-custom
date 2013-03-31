@@ -13,7 +13,7 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 function docleanup($data)
 {
@@ -22,7 +22,7 @@ function docleanup($data)
     ignore_user_abort(1);
     //== Updated demote power users
     $minratio = 0.85;
-    $res = sql_query("SELECT id, uploaded, downloaded, modcomment FROM users WHERE class = ".UC_POWER_USER." AND uploaded / downloaded < $minratio") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT id, uploaded, downloaded, modcomment FROM ".TBL_USERS." WHERE class = ".UC_POWER_USER." AND uploaded / downloaded < $minratio") or sqlerr(__FILE__, __LINE__);
     $subject = "Auto Demotion";
     $msgs_buffer = $users_buffer = array();
     if (mysqli_num_rows($res) > 0) {
@@ -54,8 +54,8 @@ function docleanup($data)
         }
         $count = count($users_buffer);
         if ($count > 0) {
-            sql_query("INSERT INTO messages (sender,receiver,added,msg,subject) VALUES ".implode(', ', $msgs_buffer)) or sqlerr(__FILE__, __LINE__);
-            sql_query("INSERT INTO users (id, class, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE class=values(class),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_MESSAGES." (sender,receiver,added,msg,subject) VALUES ".implode(', ', $msgs_buffer)) or sqlerr(__FILE__, __LINE__);
+            sql_query("INSERT INTO ".TBL_USERS." (id, class, modcomment) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE class=values(class),modcomment=concat(values(modcomment),modcomment)") or sqlerr(__FILE__, __LINE__);
             write_log("Cleanup: Demoted ".$count." member(s) from Power User to User");
             status_change($arr['id']);
         }

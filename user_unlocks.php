@@ -38,13 +38,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     //if ($clrbits)
     //$updateset[] = 'perms = (perms & ~'.$clrbits.')';
     //if (count($updateset))
-    //sql_query('UPDATE users SET '.implode(',', $updateset).' WHERE id = '.$id) or sqlerr(__FILE__, __LINE__);
+    //sql_query('UPDATE '.TBL_USERS.' SET '.implode(',', $updateset).' WHERE id = '.$id) or sqlerr(__FILE__, __LINE__);
     // update perms
-    if ($setbits || $clrbits) sql_query('UPDATE users SET perms = ((perms | '.$setbits.') & ~'.$clrbits.') 
+    if ($setbits || $clrbits) sql_query('UPDATE '.TBL_USERS.' SET perms = ((perms | '.$setbits.') & ~'.$clrbits.') 
                  WHERE id = '.$id) or sqlerr(__file__, __line__);
     //if ($id == $CURUSER['id']) {
     // grab current data
-    $res = sql_query('SELECT perms FROM users 
+    $res = sql_query('SELECT perms FROM '.TBL_USERS.' 
                      WHERE id = '.sqlesc($id).' LIMIT 1') or sqlerr(__file__, __line__);
     $row = mysqli_fetch_assoc($res);
     $row['perms'] = (int)$row['perms'];

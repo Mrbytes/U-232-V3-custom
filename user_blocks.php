@@ -179,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($clrbits_global_stdhead) $updateset[] = 'global_stdhead = (global_stdhead & ~'.$clrbits_global_stdhead.')';
     if ($setbits_userdetails_page) $updateset[] = 'userdetails_page = (userdetails_page | '.$setbits_userdetails_page.')';
     if ($clrbits_userdetails_page) $updateset[] = 'userdetails_page = (userdetails_page & ~'.$clrbits_userdetails_page.')';
-    if (count($updateset)) sql_query('UPDATE user_blocks SET '.implode(',', $updateset).' WHERE userid = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    if (count($updateset)) sql_query('UPDATE '.TBL_USER_BLOCKS.' SET '.implode(',', $updateset).' WHERE userid = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $mc1->delete_value('blocks::'.$id);
     header('Location: '.$INSTALLER09['baseurl'].'/user_blocks.php');
     exit();

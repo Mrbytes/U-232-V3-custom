@@ -1,7 +1,7 @@
 <?php
 // 09 poster mod
 if (($scroll_torrents = $mc1->get_value('scroll_tor_')) === false) {
-    $scroll = sql_query("SELECT id, seeders, leechers, name, poster FROM torrents WHERE seeders >= '1' ORDER BY added DESC LIMIT {$INSTALLER09['latest_torrents_limit_scroll']}") or sqlerr(__FILE__, __LINE__);
+    $scroll = sql_query("SELECT id, seeders, leechers, name, poster FROM ".TBL_TORRENTS." WHERE seeders >= '1' ORDER BY added DESC LIMIT {$INSTALLER09['latest_torrents_limit_scroll']}") or sqlerr(__FILE__, __LINE__);
     while ($scroll_torrent = mysqli_fetch_assoc($scroll)) $scroll_torrents[] = $scroll_torrent;
     $mc1->cache_value('scroll_tor_', $scroll_torrents, $INSTALLER09['expires']['scroll_torrents']);
 }

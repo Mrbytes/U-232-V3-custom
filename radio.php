@@ -58,7 +58,7 @@ function radioinfo($radio)
             foreach ($data as $d) $html.= '<li><b>'.$d.'</b></li>';
             $html.= '<li><b>Playlist history: </b> '.(count($history) > 0 ? join(', ', $history) : 'No playlist history').'</li>';
             if (empty($users_ip) === false) {
-                $q1 = sql_query('SELECT id, username FROM users WHERE ip IN ('.$users_ip.') ORDER BY username ASC') or sqlerr(__FILE__, __LINE__);
+                $q1 = sql_query('SELECT id, username FROM '.TBL_USERS.' WHERE ip IN ('.$users_ip.') ORDER BY username ASC') or sqlerr(__FILE__, __LINE__);
                 if (mysqli_num_rows($q1) == 0) $html.= '<li><b>Listeners</b>: currently no listener from site </li>';
                 else {
                     $users = array();

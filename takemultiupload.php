@@ -247,7 +247,7 @@ foreach ($tmpname as $value) {
     $vip = (isset($_POST["vip3"]) ? "1" : "0");
     $vip = (isset($_POST["vip4"]) ? "1" : "0");
     $vip = (isset($_POST["vip5"]) ? "1" : "0");
-    $ret = mysqli_query($GLOBALS["___mysqli_ston"], "INSERT INTO torrents (search_text, filename, owner, username, visible, anonymous, vip, info_hash, name, size, numfiles, type, descr, ori_descr, category, save_as, added, last_action, nfo) VALUES (".implode(",", array_map("sqlesc", array(
+    $ret = mysqli_query($GLOBALS["___mysqli_ston"], "INSERT INTO ".TBL_TORRENTS." (search_text, filename, owner, username, visible, anonymous, vip, info_hash, name, size, numfiles, type, descr, ori_descr, category, save_as, added, last_action, nfo) VALUES (".implode(",", array_map("sqlesc", array(
         searchfield("$first $second $third") ,
         $fname[$i],
         $CURUSER["id"],
@@ -273,9 +273,9 @@ foreach ($tmpname as $value) {
     $ids[] = $id;
     $mc1->delete_value('MyPeers_'.$CURUSER['id']);
     $mc1->delete_value('lastest_tor_');
-    sql_query("DELETE FROM files WHERE torrent = $id");
+    sql_query("DELETE FROM ".TBL_FILES." WHERE torrent = $id");
     foreach ($filelist as $file) {
-        sql_query("INSERT INTO files (torrent, filename, size) VALUES ($id, ".sqlesc($file[0]).",".$file[1].")");
+        sql_query("INSERT INTO ".TBL_FILES." (torrent, filename, size) VALUES ($id, ".sqlesc($file[0]).",".$file[1].")");
     }
     $fp = fopen("{$INSTALLER09['torrent_dir']}/$id.torrent", "w");
     if ($fp) {
@@ -287,7 +287,7 @@ foreach ($tmpname as $value) {
 //unset($filelist);
 //unset($flist);
 // ===add karma
-sql_query("UPDATE users SET seedbonus = seedbonus+75.0 WHERE id =".sqlesc($CURUSER['id'])."") or sqlerr(__FILE__, __LINE__);
+sql_query("UPDATE ".TBL_USERS." SET seedbonus = seedbonus+75.0 WHERE id =".sqlesc($CURUSER['id'])."") or sqlerr(__FILE__, __LINE__);
 // ===end
 ////////new torrent upload detail sent to shoutbox//////////
 if ($CURUSER["anonymous"] == 'yes') $message = "[url={$INSTALLER09['baseurl']}/multidetails.php?id1=$ids[0]&id2=$ids[1]&id3=$ids[2]&id4=$ids[3]&id5=$ids[4]]Multiple Torrents were just uploaded! Click here to see them[/url] - Anonymous User";

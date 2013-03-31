@@ -22,13 +22,13 @@ $md5 = $_GET['key'];
 $email = urldecode($_GET['email']);
 if (!validemail($email)) stderr("{$lang['confirmmail_user_error']}", "{$lang['confirmmail_false_email']}");
 dbconn();
-$res = sql_query("SELECT editsecret FROM users WHERE id =".sqlesc($id));
+$res = sql_query("SELECT editsecret FROM ".TBL_USERS." WHERE id =".sqlesc($id));
 $row = mysqli_fetch_assoc($res);
 if (!$row) stderr("{$lang['confirmmail_user_error']}", "{$lang['confirmmail_not_complete']}");
 $sec = $row['editsecret'];
 if (preg_match('/^ *$/s', $sec)) stderr("{$lang['confirmmail_user_error']}", "{$lang['confirmmail_not_complete']}");
 if ($md5 != md5($sec.$email.$sec)) stderr("{$lang['confirmmail_user_error']}", "{$lang['confirmmail_not_complete']}");
-sql_query("UPDATE users SET editsecret='', email=".sqlesc($email)." WHERE id=".sqlesc($id)." AND editsecret=".sqlesc($row["editsecret"]));
+sql_query("UPDATE ".TBL_USERS." SET editsecret='', email=".sqlesc($email)." WHERE id=".sqlesc($id)." AND editsecret=".sqlesc($row["editsecret"]));
 $mc1->begin_transaction('MyUser_'.$id);
 $mc1->update_row(false, array(
     'editsecret' => '',

@@ -47,7 +47,7 @@ $stdhead = array(
 );
 $newpage = new page_verify();
 $newpage->create('teit');
-$res = sql_query("SELECT * FROM torrents WHERE id = ".sqlesc($id));
+$res = sql_query("SELECT * FROM ".TBL_TORRENTS." WHERE id = ".sqlesc($id));
 $row = mysqli_fetch_assoc($res);
 if (!$row) stderr($lang['edit_user_error'], $lang['edit_no_torrent']);
 if (!isset($CURUSER) || ($CURUSER["id"] != $row["owner"] && $CURUSER["class"] < UC_STAFF)) {

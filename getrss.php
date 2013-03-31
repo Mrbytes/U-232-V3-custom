@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <tr>
 	<td align="right" valign="top">{$lang['getrss_cat']}</td><td align="left" width="100%">
 HTML;
-    $q1 = sql_query('SELECT id, name, image FROM categories ORDER BY id') or sqlerr(__FILE__, __LINE__);
+    $q1 = sql_query('SELECT id, name, image FROM ".TBL_CATEGORIES." ORDER BY id') or sqlerr(__FILE__, __LINE__);
     $i = 0;
     while ($a = mysqli_fetch_assoc($q1)) {
         if ($i % 5 == 0 && $i > 0) $HTMLOUT.= "<br/>";

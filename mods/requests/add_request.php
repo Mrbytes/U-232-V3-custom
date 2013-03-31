@@ -64,7 +64,7 @@ if ($INSTALLER09['karma'] && isset($CURUSER['seedbonus']) && $CURUSER['seedbonus
 {$lang['add_good_ratio']}".$INSTALLER09['req_gigs_upped']."{$lang['add_share']}</td></tr>
 <tr><td align='right'><b>{$lang['add_title']}</b></td><td align='left'><input type='text' size='40' name='requesttitle' />
 <select name='category'><option value='0'>{$lang['add_select_cat']}</option>\n";
-    $res2 = sql_query('SELECT id, name FROM categories order by name');
+    $res2 = sql_query('SELECT id, name FROM ".TBL_CATEGORIES." order by name');
     $num = mysqli_num_rows($res2);
     $catdropdown2 = '';
     for ($i = 0; $i < $num; ++$i) {
@@ -93,9 +93,9 @@ if ($INSTALLER09['karma'] && isset($CURUSER['seedbonus']) && $CURUSER['seedbonus
 </form>
 <br /><br />\n";
 }
-$rescount = sql_query('SELECT id FROM requests LIMIT 1') or sqlerr(__FILE__, __LINE__);
+$rescount = sql_query('SELECT id FROM '.TBL_REQUESTS.' LIMIT 1') or sqlerr(__FILE__, __LINE__);
 if (mysqli_num_rows($rescount) > 0) {
-    $res = sql_query("SELECT users.username, requests.id, requests.userid, requests.cat, requests.request, requests.added, categories.name, categories.image, uploaded, downloaded FROM users inner join requests ON requests.userid = users.id left join categories ON requests.cat = categories.id order by requests.id desc LIMIT 10") or sqlerr();
+    $res = sql_query("SELECT ".TBL_USERS.".username, ".TBL_REQUESTS.".id, ".TBL_REQUESTS.".userid, ".TBL_REQUESTS.".cat, ".TBL_REQUESTS.".request, ".TBL_REQUESTS.".added, ".TBL_CATEGORIES.".name, ".TBL_CATEGORIES.".image, uploaded, downloaded FROM ".TBL_USERS." inner join ".TBL_REQUESTS." ON ".TBL_REQUESTS.".userid = ".TBL_USERS.".id LEFT JOIN ".TBL_CATEGORIES." ON ".TBL_REQUESTS.".cat = ".TBL_CATEGORIES.".id ORDE BY ".TBL_REQUESTS.".id DESC LIMIT 10") or sqlerr();
     $num = mysqli_num_rows($res);
     $HTMLOUT.= "<table border='1' cellspacing='0' width='750px' cellpadding='5'>
     <tr><td width='50px' class='colhead' align='left'>{$lang['add_cat']}</td>

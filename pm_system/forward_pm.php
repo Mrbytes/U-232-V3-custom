@@ -15,20 +15,20 @@ if (!defined('BUNNY_PM_SYSTEM')) {
     exit();
 }
 //=== make sure they "should" be forwarding this PM
-$res = sql_query('SELECT * FROM messages WHERE id='.sqlesc($pm_id)) or sqlerr(__FILE__, __LINE__);
+$res = sql_query('SELECT * FROM '.TBL_MESSAGES.' WHERE id='.sqlesc($pm_id)) or sqlerr(__FILE__, __LINE__);
 $message = mysqli_fetch_assoc($res);
 if (mysqli_num_rows($res) === 0) stderr('Error', 'Message Not Found!');
 if ($message['receiver'] == $CURUSER['id'] && $message['sender'] == $CURUSER['id']) stderr('Error', 'He be as good a gentleman as the devil is, as Lucifer and Beelzebub himself.');
 //=== Try finding a user with specified name
-$res_username = sql_query('SELECT id, class, acceptpms, notifs FROM users WHERE LOWER(username)=LOWER('.sqlesc(htmlsafechars($_POST['to'])).') LIMIT 1');
+$res_username = sql_query('SELECT id, class, acceptpms, notifs FROM '.TBL_USERS.' WHERE LOWER(username)=LOWER('.sqlesc(htmlsafechars($_POST['to'])).') LIMIT 1');
 $to_username = mysqli_fetch_assoc($res_username);
 if (mysqli_num_rows($res_username) === 0) stderr('Error', 'Sorry, there is no member with that username.');
 //=== make sure the reciever has space in their box
-$res_count = sql_query('SELECT COUNT(id) FROM messages WHERE receiver = '.sqlesc($to_username['id']).' AND location = 1') or sqlerr(__FILE__, __LINE__);
+$res_count = sql_query('SELECT COUNT(id) FROM '.TBL_MESSAGES.' WHERE receiver = '.sqlesc($to_username['id']).' AND location = 1') or sqlerr(__FILE__, __LINE__);
 if (mysqli_num_rows($res_count) > ($maxbox * 3) && $CURUSER['class'] < UC_STAFF) stderr('Sorry', 'Members mailbox is full.');
 //=== allow suspended users to PM / forward to staff only
 if ($CURUSER['suspended'] === 'yes') {
-    $res = sql_query('SELECT class FROM users WHERE id = '.sqlesc($to_username['id'])) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query('SELECT class FROM '.TBL_USERS.' WHERE id = '.sqlesc($to_username['id'])) or sqlerr(__FILE__, __LINE__);
     $row = mysqli_fetch_assoc($res);
     if ($row['class'] < UC_STAFF) stderr('Error', 'Your account is suspended, you may only forward PMs to staff!');
 }
@@ -37,11 +37,11 @@ if ($CURUSER['class'] < UC_STAFF) {
     //=== first if they have PMs turned off
     if ($to_username['acceptpms'] === 'no') stderr('Error', 'This user dosen\'t accept PMs.');
     //=== if this member has blocked the sender
-    $res2 = sql_query('SELECT id FROM blocks WHERE userid='.sqlesc($to_username['id']).' AND blockid='.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+    $res2 = sql_query('SELECT id FROM '.TBL_BLOCKS.' WHERE userid='.sqlesc($to_username['id']).' AND blockid='.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
     if (mysqli_num_rows($res2) === 1) stderr('Refused', 'This member has blocked PMs from you.');
     //=== finally if they only allow PMs from friends
     if ($to_username['acceptpms'] === 'friends') {
-        $res2 = sql_query('SELECT * FROM friends WHERE userid='.sqlesc($to_username['id']).' AND friendid='.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+        $res2 = sql_query('SELECT * FROM '.TBL_FRIENDS.' WHERE userid='.sqlesc($to_username['id']).' AND friendid='.sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
         if (mysqli_num_rows($res2) != 1) stderr('Refused', 'This member only accepts PMs from members on their friends list.');
     }
 }
@@ -49,7 +49,7 @@ if ($CURUSER['class'] < UC_STAFF) {
 $subject = htmlsafechars($_POST['subject']);
 $first_from = (validusername($_POST['first_from']) ? htmlsafechars($_POST['first_from']) : '');
 $body = "\n\n".$_POST['body']."\n\n-------- Original Message from [b]".$first_from."::[/b] \"".htmlsafechars($message['subject'])."\"  -------------------------------------\n".$message['msg']."\n";
-sql_query('INSERT INTO `messages` (`sender`, `receiver`, `added`, `subject`, `msg`, `unread`, `location`, `saved`, `poster`, `urgent`) 
+sql_query('INSERT INTO '.TBL_MESSAGES.' (`sender`, `receiver`, `added`, `subject`, `msg`, `unread`, `location`, `saved`, `poster`, `urgent`) 
                         VALUES ('.sqlesc($CURUSER['id']).', '.sqlesc($to_username['id']).', '.TIME_NOW.', '.sqlesc($subject).', '.sqlesc($body).', \'yes\', 1, '.sqlesc($save).', 0, '.sqlesc($urgent).')') or sqlerr(__FILE__, __LINE__);
 $mc1->delete_value('inbox_new_'.$to_username['id']);
 $mc1->delete_value('inbox_new_sb_'.$to_username['id']);

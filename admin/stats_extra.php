@@ -131,8 +131,8 @@ function show_views()
         'sortby' => $inbound['sortby']
     );
     $q = sql_query("SELECT SUM(t.views) as result_count, t.forumid, f.name as result_name
-					FROM topics t
-					LEFT JOIN forums f ON (f.id=t.forumid)
+					FROM ".TBL_TOPICS." t
+					LEFT JOIN '.TBL_FORUMS.' f ON (f.id=t.forumid)
 					WHERE t.start_date > '{$sql['from_time']}'
 					AND t.start_date < '{$sql['to_time']}'
 					GROUP BY t.forumid
@@ -208,37 +208,37 @@ function result_screen($mode = 'reg')
     $human_from_date = getdate($from_time);
     if ($mode == 'reg') {
         $table = 'Registration Statistics';
-        $sql_table = 'users';
+        $sql_table = '.TBL_USERS.';
         $sql_field = 'added';
         $page_detail = "Showing the number of users registered. (Note: All times based on GMT)";
     } else if ($mode == 'topic') {
         $table = 'New Topic Statistics';
-        $sql_table = 'topics';
+        $sql_table = '.TBL_TOPICS.';
         $sql_field = 'added';
         $page_detail = "Showing the number of topics started. (Note: All times based on GMT)";
     } else if ($mode == 'post') {
         $table = 'Post Statistics';
-        $sql_table = 'posts';
+        $sql_table = '.TBL_POSTS.';
         $sql_field = 'added';
         $page_detail = "Showing the number of posts. (Note: All times based on GMT)";
     } else if ($mode == 'msg') {
         $table = 'PM Sent Statistics';
-        $sql_table = 'messages';
+        $sql_table = '.TBL_MESSAGES.';
         $sql_field = 'added';
         $page_detail = "Showing the number of sent messages. (Note: All times based on GMT)";
     } else if ($mode == 'comms') {
         $table = 'Comment Statistics';
-        $sql_table = 'comments';
+        $sql_table = '.TBL_COMMENTS.';
         $sql_field = 'added';
         $page_detail = "Showing the number of sent comments. (Note: All times based on GMT)";
     } else if ($mode == 'torrents') {
         $table = 'Torrents Statistics';
-        $sql_table = 'torrents';
+        $sql_table = '.TBL_TORRENTS.';
         $sql_field = 'added';
         $page_detail = "Showing the number of Torrents. (Note: All times based on GMT)";
     } else if ($mode == 'reps') {
         $table = 'Reputation Statistics';
-        $sql_table = 'reputation';
+        $sql_table = '.TBL_REPUTATION.';
         $sql_field = 'dateadd';
         $page_detail = "Showing the number of Reputations. (Note: All times based on GMT)";
     }

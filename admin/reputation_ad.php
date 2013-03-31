@@ -97,7 +97,7 @@ function show_level()
 {
     $title = "User Reputation Manager - Overview";
     $html = "<p>On this page you can modify the minimum amount required for each reputation level. Make sure you press Update Minimum Levels to save your changes. You cannot set the same minimum amount to more than one level.<br />From here you can also choose to edit or remove any single level. Click the Edit link to modify the Level description (see Editing a Reputation Level) or click Remove to delete a level. If you remove a level or modify the minimum reputation needed to be at a level, all users will be updated to reflect their new level if necessary.</p><br />";
-    $query = sql_query('SELECT * FROM reputationlevel ORDER BY minimumreputation ASC');
+    $query = sql_query('SELECT * FROM '.TBL_REPUTATIONLEVEL.' ORDER BY minimumreputation ASC');
     if (!mysqli_num_rows($query)) {
         do_update('new');
         return;
@@ -129,7 +129,7 @@ function show_form($type = 'edit')
     global $input;
     $html = "This allows you to add a new reputation level or edit an existing reputation level.";
     if ($type == 'edit') {
-        $query = sql_query('SELECT * FROM reputationlevel WHERE reputationlevelid='.intval($input['reputationlevelid'])) or sqlerr(__LINE__, __FILE__);
+        $query = sql_query('SELECT * FROM '.TBL_REPUTATIONLEVEL.' WHERE reputationlevelid='.intval($input['reputationlevelid'])) or sqlerr(__LINE__, __FILE__);
         if (!$res = mysqli_fetch_assoc($query)) {
             stderr("Error:", "Please specify an ID.");
         }
@@ -184,24 +184,24 @@ function do_update($type = "")
     }
     // what we gonna do?
     if ($type == 'new') {
-        @sql_query("INSERT INTO reputationlevel ( minimumreputation, level ) 
+        @sql_query("INSERT INTO ".TBL_REPUTATIONLEVEL." ( minimumreputation, level ) 
 							VALUES  ($minrep, $level )");
     } elseif ($type == 'edit') {
         $levelid = intval($input['reputationlevelid']);
         if (!is_valid_id($levelid)) stderr('', 'Not a valid try');
         // check it's a valid rep id
-        $query = sql_query("SELECT reputationlevelid FROM reputationlevel WHERE 
+        $query = sql_query("SELECT ".TBL_REPUTATIONLEVEL."id FROM reputationlevel WHERE 
 									reputationlevelid={$levelid}");
         if (!mysqli_num_rows($query)) {
             stderr('', 'Not a valid ID.');
         }
-        @sql_query("UPDATE reputationlevel SET minimumreputation = $minrep, level = $level 
+        @sql_query("UPDATE ".TBL_REPUTATIONLEVEL." SET minimumreputation = $minrep, level = $level 
 							WHERE reputationlevelid = $levelid");
     } else {
         $ids = $input['reputation'];
         if (is_array($ids) && count($ids)) {
             foreach ($ids as $k => $v) {
-                @sql_query("UPDATE reputationlevel SET minimumreputation = ".intval($v)." WHERE reputationlevelid = ".intval($k));
+                @sql_query("UPDATE ".TBL_REPUTATIONLEVEL." SET minimumreputation = ".intval($v)." WHERE reputationlevelid = ".intval($k));
             }
         } else {
             stderr('', 'No valid ID.');
@@ -220,12 +220,12 @@ function do_delete()
     if (!isset($input['reputationlevelid']) || !is_valid_id($input['reputationlevelid'])) stderr('', 'No valid ID.');
     $levelid = intval($input['reputationlevelid']);
     // check the id is valid within db
-    $query = sql_query("SELECT reputationlevelid FROM reputationlevel WHERE reputationlevelid=$levelid");
+    $query = sql_query("SELECT reputationlevelid FROM ".TBL_REPUTATIONLEVEL." WHERE reputationlevelid=$levelid");
     if (!mysqli_num_rows($query)) {
         stderr('', 'Rep ID doesn\'t exist');
     }
     // if we here, we delete it!
-    @sql_query("DELETE FROM reputationlevel WHERE reputationlevelid=$levelid");
+    @sql_query("DELETE FROM ".TBL_REPUTATIONLEVEL." WHERE reputationlevelid=$levelid");
     rep_cache();
     redirect('staffpanel.php?tool=reputation_ad&amp;mode=done', 'Reputation deleted successfully', 5);
 }
@@ -239,11 +239,11 @@ function show_form_rep()
     $title = 'User Reputation Manager';
     $query = sql_query("SELECT r.*, p.topic_id, t.topic_name, leftfor.username as leftfor_name, 
 					leftby.username as leftby_name
-					FROM reputation r
-					left join posts p on p.id=r.postid
-					left join topics t on p.topic_id=t.id
-					left join users leftfor on leftfor.id=r.userid
-					left join users leftby on leftby.id=r.whoadded
+					FROM ".TBL_REPUTATION." r
+					LEFT JOIN ".TBL_POSTS." p on p.id=r.postid
+					LEFT JOIN ".TBL_TOPICS." t on p.topic_id=t.id
+					LEFT JOIN ".TBL_USERS." leftfor on leftfor.id=r.userid
+					LEFT JOIN ".TBL_USERS." leftby on leftby.id=r.whoadded
 					WHERE reputationid = ".intval($input['reputationid']));
     if (!$res = mysqli_fetch_assoc($query)) {
         stderr('', 'Erm, it\'s not there!');
@@ -318,7 +318,7 @@ function view_list()
             stderr('Time', 'Start date is after the end date.');
         }
         if (!empty($input['leftby'])) {
-            $left_b = @sql_query("SELECT id FROM users WHERE username = ".sqlesc($input['leftby']));
+            $left_b = @sql_query("SELECT id FROM ".TBL_USERS." WHERE username = ".sqlesc($input['leftby']));
             if (!mysqli_num_rows($left_b)) {
                 stderr('DB ERROR', 'Could not find user '.htmlsafechars($input['leftby'], ENT_QUOTES));
             }
@@ -327,7 +327,7 @@ function view_list()
             $cond = "r.whoadded=".$who;
         }
         if (!empty($input['leftfor'])) {
-            $left_f = @sql_query("SELECT id FROM users WHERE username = ".sqlesc($input['leftfor']));
+            $left_f = @sql_query("SELECT id FROM ".TBL_USERS." WHERE username = ".sqlesc($input['leftfor']));
             if (!mysqli_num_rows($left_f)) {
                 stderr('DB ERROR', 'Could not find user '.htmlsafechars($input['leftfor'], ENT_QUOTES));
             }
@@ -368,7 +368,7 @@ function view_list()
         $table_header.= "<td width='10%'>Controls</td></tr>";
         $html.= $table_header;
         // do the count for pager etc
-        $query = sql_query("SELECT COUNT(*) AS cnt FROM reputation r WHERE $cond");
+        $query = sql_query("SELECT COUNT(*) AS cnt FROM ".TBL_REPUTATION." r WHERE $cond");
         //echo_r($input); exit;
         $total = mysqli_fetch_assoc($query);
         if (!$total['cnt']) {
@@ -390,10 +390,10 @@ function view_list()
         $query = sql_query("SELECT r.*, p.topic_id, leftfor.id as leftfor_id, 
 									leftfor.username as leftfor_name, leftby.id as leftby_id, 
 									leftby.username as leftby_name 
-									FROM reputation r 
-									left join posts p on p.id=r.postid 
-									left join users leftfor on leftfor.id=r.userid 
-									left join users leftby on leftby.id=r.whoadded 
+									FROM ".TBL_REPUTATION." r 
+									LEFT JOIN ".TBL_POSTS." p on p.id=r.postid 
+									LEFT JOIN ".TBL_USERS." leftfor on leftfor.id=r.userid 
+									LEFT JOIN ".TBL_USERS." leftby on leftby.id=r.whoadded 
 									WHERE $cond ORDER BY $order LIMIT $first,$deflimit");
         if (!mysqli_num_rows($query)) stderr('DB ERROR', 'Nothing here');
         while ($r = mysqli_fetch_assoc($query)) {
@@ -419,15 +419,15 @@ function do_delete_rep()
     global $input;
     if (!is_valid_id($input['reputationid'])) stderr('ERROR', 'Can\'t find ID');
     // check it's a valid ID.
-    $query = sql_query("SELECT reputationid, reputation, userid FROM reputation WHERE reputationid=".intval($input['reputationid']));
+    $query = sql_query("SELECT reputationid, reputation, userid FROM ".TBL_REPUTATION." WHERE reputationid=".intval($input['reputationid']));
     if (false === ($r = mysqli_fetch_assoc($query))) {
         stderr('DELETE', 'No valid ID.');
     }
-    $sql = sql_query('SELECT reputation '.'FROM users '.'WHERE id = '.sqlesc($input['reputationid'])) or sqlerr(__FILE__, __LINE__);
+    $sql = sql_query('SELECT reputation '.'FROM '.TBL_USERS.' '.'WHERE id = '.sqlesc($input['reputationid'])) or sqlerr(__FILE__, __LINE__);
     $User = mysqli_fetch_assoc($sql);
     // do the delete
-    sql_query("DELETE FROM reputation WHERE reputationid=".intval($r['reputationid']));
-    sql_query("UPDATE users SET reputation = (reputation-{$r['reputation']} ) WHERE id=".intval($r['userid']));
+    sql_query("DELETE FROM ".TBL_REPUTATION." WHERE reputationid=".intval($r['reputationid']));
+    sql_query("UPDATE ".TBL_USERS." SET reputation = (reputation-{$r['reputation']} ) WHERE id=".intval($r['userid']));
     $update['rep'] = ($User['reputation'] - $r['reputation']);
     $mc1->begin_transaction('MyUser_'.$r['userid']);
     $mc1->update_row(false, array(
@@ -460,18 +460,18 @@ function do_edit_rep()
     $oldrep = intval($input['oldreputation']);
     $newrep = intval($input['reputation']);
     // valid ID?
-    $query = sql_query("SELECT reputationid, reason, userid FROM reputation WHERE reputationid=".intval($input['reputationid']));
+    $query = sql_query("SELECT reputationid, reason, userid FROM ".TBL_REPUTATION." WHERE reputationid=".intval($input['reputationid']));
     if (false === $r = mysqli_fetch_assoc($query)) {
         stderr('INPUT', 'No ID');
     }
     if ($oldrep != $newrep) {
         if ($r['reason'] != $reason) {
-            @sql_query("UPDATE reputation SET reputation = ".intval($newrep).", reason = ".sqlesc($reason)." WHERE reputationid = ".intval($r['reputationid']));
+            @sql_query("UPDATE ".TBL_REPUTATION." SET reputation = ".intval($newrep).", reason = ".sqlesc($reason)." WHERE reputationid = ".intval($r['reputationid']));
         }
-        $sql = sql_query('SELECT reputation '.'FROM users '.'WHERE id = '.sqlesc($input['reputationid'])) or sqlerr(__FILE__, __LINE__);
+        $sql = sql_query('SELECT reputation '.'FROM '.TBL_USERS.' '.'WHERE id = '.sqlesc($input['reputationid'])) or sqlerr(__FILE__, __LINE__);
         $User = mysqli_fetch_assoc($sql);
         $diff = $oldrep - $newrep;
-        @sql_query("UPDATE users SET reputation = (reputation-{$diff}) WHERE id=".intval($r['userid']));
+        @sql_query("UPDATE ".TBL_USERS." SET reputation = (reputation-{$diff}) WHERE id=".intval($r['userid']));
         $update['rep'] = ($User['reputation'] - $diff);
         $mc1->begin_transaction('MyUser_'.$r['userid']);
         $mc1->update_row(false, array(
@@ -562,7 +562,7 @@ function get_month_dropdown($i = 0)
 /////////////////////////////
 function rep_cache()
 {
-    $query = @sql_query("SELECT * FROM reputationlevel");
+    $query = @sql_query("SELECT * FROM ".TBL_REPUTATIONLEVEL."");
     if (!mysqli_num_rows($query)) stderr('CACHE', 'No items to cache');
     $rep_cache_file = "{$INSTALLER09['baseurl']}/cache/rep_cache.php";
     $rep_out = "<"."?php\n\n\$reputations = array(\n";

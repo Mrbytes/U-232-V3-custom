@@ -65,7 +65,7 @@ Please search torrents before adding an offer!</td></tr><tr><td align='left'>
 Offers are for Users with a good ratio who have uploaded at least ".$INSTALLER09['offer_gigs_upped']." gigs Only... Share and you shall recieve!</td></tr>
 <tr><td align='right'><b>Title</b></td><td align='left'><input type='text' size='40' name='offertitle' />
 <select name='category'><option value='0'>(Select a Category)</option>\n";
-    $res2 = sql_query('SELECT id, name FROM categories order by name');
+    $res2 = sql_query('SELECT id, name FROM ".TBL_CATEGORIES." order by name');
     $num = mysqli_num_rows($res2);
     $catdropdown2 = '';
     for ($i = 0; $i < $num; ++$i) {
@@ -94,9 +94,9 @@ Offers are for Users with a good ratio who have uploaded at least ".$INSTALLER09
 </form>
 <br /><br />\n";
 }
-$rescount = sql_query('SELECT id FROM offers LIMIT 1') or sqlerr(__FILE__, __LINE__);
+$rescount = sql_query('SELECT id FROM '.TBL_OFFERS.' LIMIT 1') or sqlerr(__FILE__, __LINE__);
 if (mysqli_num_rows($rescount) > 0) {
-    $res = sql_query("SELECT users.username, offers.id, offers.userid, offers.cat, offers.offer, offers.added, categories.name, categories.image, uploaded, downloaded FROM users inner join offers ON offers.userid = users.id left join categories ON offers.cat = categories.id order by offers.id desc LIMIT 10") or sqlerr();
+    $res = sql_query("SELECT ".TBL_USERS.".username, ".TBL_OFFERS.".id, ".TBL_OFFERS.".userid, ".TBL_OFFERS.".cat, ".TBL_OFFERS.".offer, ".TBL_OFFERS.".added, ".TBL_CATEGORIES.".name,  ".TBL_CATEGORIES.".image, uploaded, downloaded FROM ".TBL_USERS." inner join ".TBL_OFFERS." ON ".TBL_OFFERS.".userid = ".TBL_USERS.".id LEFT JOIN ".TBL_CATEGORIES." ON ".TBL_OFFERS.".cat =  ".TBL_CATEGORIES.".id order by ".TBL_OFFERS.".id desc LIMIT 10") or sqlerr();
     $num = mysqli_num_rows($res);
     $HTMLOUT.= "<table border='1' cellspacing='0' width='750px' cellpadding='5'>
     <tr><td width='50px' class='colhead' align='left'>Category</td>

@@ -44,12 +44,12 @@ $lang = array_merge(load_language('global') , load_language('usercp'));
 $newpage = new page_verify();
 $newpage->create('tkepe');
 $HTMLOUT = $stylesheets = $wherecatina = '';
-$templates = sql_query("SELECT id, name FROM stylesheets ORDER BY id");
+$templates = sql_query("SELECT id, name FROM ".TBL_STYLESHEETS." ORDER BY id");
 while ($templ = mysqli_fetch_assoc($templates)) {
     if (file_exists("templates/$templ[id]/template.php")) $stylesheets.= "<option value='".(int)$templ['id']."'".($templ['id'] == $CURUSER['stylesheet'] ? " selected='selected'" : "").">".htmlsafechars($templ['name'])."</option>";
 }
 $countries = "<option value='0'>---- {$lang['usercp_none']} ----</option>\n";
-$ct_r = sql_query("SELECT id,name FROM countries ORDER BY name") or sqlerr(__FILE__, __LINE__);
+$ct_r = sql_query("SELECT id,name FROM ".TBL_COUNTRIES." ORDER BY name") or sqlerr(__FILE__, __LINE__);
 while ($ct_a = mysqli_fetch_assoc($ct_r)) {
     $countries.= "<option value='".(int)$ct_a['id']."'".($CURUSER["country"] == $ct_a['id'] ? " selected='selected'" : "").">".htmlsafechars($ct_a['name'])."</option>\n";
 }

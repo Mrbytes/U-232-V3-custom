@@ -32,25 +32,25 @@ if ($action == '') {
         //== if it's the member flushing
         if ($id == $CURUSER['id']) {
             //=== catch any missed snatched stuff thingies to stop ghost leechers from getting peers (if the peers they have drop off)
-            sql_query('UPDATE snatched SET seeder=\'no\' WHERE userid = '.sqlesc($CURUSER['id']));
+            sql_query('UPDATE '.TBL_SNATCHED.' SET seeder=\'no\' WHERE userid = '.sqlesc($CURUSER['id']));
             //=== flush dem torrents!!! \o/
-            sql_query('DELETE FROM peers WHERE userid = '.sqlesc($CURUSER['id']));
+            sql_query('DELETE FROM '.TBL_PEERS.' WHERE userid = '.sqlesc($CURUSER['id']));
             $number_of_torrents_flushed = mysqli_affected_rows();
             //=== add it to the log
-            sql_query('INSERT INTO `sitelog` (`id`, `added`, `txt`) VALUES (NULL , '.TIME_NOW.', '.sqlesc('<a class="altlink" href="userdetails.php?id='.$CURUSER['id'].'">'.$CURUSER['username'].'</a> flushed <b>'.$number_of_torrents_flushed.'</b> torrents.').')');
+            sql_query('INSERT INTO '.TBL_SITELOG.' (`id`, `added`, `txt`) VALUES (NULL , '.TIME_NOW.', '.sqlesc('<a class="altlink" href="userdetails.php?id='.$CURUSER['id'].'">'.$CURUSER['username'].'</a> flushed <b>'.$number_of_torrents_flushed.'</b> torrents.').')');
         }
         //=== if it's staff flushing for a member
         elseif ($id !== $CURUSER['id'] && $CURUSER['class'] >= UC_STAFF) {
             //=== it's a staff...
-            $res_get_info = sql_query('SELECT username FROM users WHERE id='.sqlesc($id));
+            $res_get_info = sql_query('SELECT username FROM '.TBL_USERS.' WHERE id='.sqlesc($id));
             $user_get_info = mysqli_fetch_assoc($res_get_info);
             //=== catch any missed snatched stuff thingies to stop ghost leechers from getting peers (if the peers they have drop off)
-            sql_query('UPDATE snatched SET seeder=\'no\' WHERE userid = '.sqlesc($id));
+            sql_query('UPDATE '.TBL_SNATCHED.' SET seeder=\'no\' WHERE userid = '.sqlesc($id));
             //=== flush dem torrents!!! \o/
-            sql_query('DELETE FROM peers WHERE userid = '.sqlesc($id));
+            sql_query('DELETE FROM '.TBL_PEERS.' WHERE userid = '.sqlesc($id));
             $number_of_torrents_flushed = mysqli_affected_rows();
             //=== add it to the log
-            sql_query('INSERT INTO `sitelog` (`id`, `added`, `txt`) VALUES (NULL , '.TIME_NOW.', '.sqlesc('<b>Staff Flush</b> <a class="altlink" href="userdetails.php?id='.$CURUSER['id'].'">'.$CURUSER['username'].'</a> flushed <b>'.$number_of_torrents_flushed.'</b> torrents for <a class="altlink" href="userdetails.php?id='.$id.'">'.$user_get_info['username'].'</a>.').')');
+            sql_query('INSERT INTO '.TBL_SITELOG.' (`id`, `added`, `txt`) VALUES (NULL , '.TIME_NOW.', '.sqlesc('<b>Staff Flush</b> <a class="altlink" href="userdetails.php?id='.$CURUSER['id'].'">'.$CURUSER['username'].'</a> flushed <b>'.$number_of_torrents_flushed.'</b> torrents for <a class="altlink" href="userdetails.php?id='.$id.'">'.$user_get_info['username'].'</a>.').')');
         }
         break;
 
@@ -61,11 +61,11 @@ if ($action == '') {
         $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
         $posted_notes = isset($_POST['new_staff_note']) ? htmlsafechars($_POST['new_staff_note']) : '';
         //=== make sure they are staff, not editing their own and playing nice :P
-        $staff_notes_res = sql_query('SELECT staff_notes, class, username FROM users WHERE id='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+        $staff_notes_res = sql_query('SELECT staff_notes, class, username FROM '.TBL_USERS.' WHERE id='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
         $staff_notes_arr = mysqli_fetch_assoc($staff_notes_res);
         if ($id !== $CURUSER['id'] && $CURUSER['class'] > $staff_notes_arr['class']) {
             //=== add / edit staff_notes
-            sql_query('UPDATE users SET staff_notes = '.sqlesc($posted_notes).' WHERE id ='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+            sql_query('UPDATE '.TBL_USERS.' SET staff_notes = '.sqlesc($posted_notes).' WHERE id ='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
             $mc1->begin_transaction('user'.$id);
             $mc1->update_row(false, array(
                 'staff_notes' => $posted_notes
@@ -84,13 +84,13 @@ if ($action == '') {
         $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
         $posted = isset($_POST['watched_reason']) ? htmlsafechars($_POST['watched_reason']) : '';
         //=== make sure they are staff, not editing their own and playing nice :P
-        $watched_res = sql_query('SELECT watched_user, watched_user_reason, class, username FROM users WHERE id='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+        $watched_res = sql_query('SELECT watched_user, watched_user_reason, class, username FROM '.TBL_USERS.' WHERE id='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
         $watched_arr = mysqli_fetch_assoc($watched_res);
         if ($id !== $CURUSER['id'] || $CURUSER['class'] < $watched_arr['class']) {
             //=== add / remove from watched users
             if (isset($_POST['add_to_watched_users']) && $_POST['add_to_watched_users'] == 'yes' && $watched_arr['watched_user'] == 0) {
                 //=== set them to watched user
-                sql_query('UPDATE users SET watched_user = '.TIME_NOW.' WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+                sql_query('UPDATE '.TBL_USERS.' SET watched_user = '.TIME_NOW.' WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
                 $mc1->begin_transaction('MyUser_'.$id);
                 $mc1->update_row(false, array(
                     'watched_user' => TIME_NOW
@@ -106,7 +106,7 @@ if ($action == '') {
             }
             if (isset($_POST['add_to_watched_users']) && $_POST['add_to_watched_users'] == 'no' && $watched_arr['watched_user'] > 0) {
                 //=== remove them from watched users
-                sql_query('UPDATE users SET watched_user = 0 WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+                sql_query('UPDATE '.TBL_USERS.' SET watched_user = 0 WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
                 $mc1->begin_transaction('MyUser_'.$id);
                 $mc1->update_row(false, array(
                     'watched_user' => 0
@@ -123,7 +123,7 @@ if ($action == '') {
             //=== only change if different
             if ($_POST['watched_reason'] !== $watched_arr['watched_user_reason']) {
                 //=== edit watched users text
-                sql_query('UPDATE users SET watched_user_reason = '.sqlesc($posted).' WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+                sql_query('UPDATE '.TBL_USERS.' SET watched_user_reason = '.sqlesc($posted).' WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
                 $mc1->begin_transaction('user'.$id);
                 $mc1->update_row(false, array(
                     'watched_user_reason' => $posted

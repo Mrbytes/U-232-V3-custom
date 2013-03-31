@@ -61,12 +61,12 @@ case 'vote':
     //=== kill if nasty
     if (!isset($id) || !is_valid_id($id) || !isset($vote) || !is_valid_id($vote)) stderr('USER ERROR', 'Bad id / bad vote');
     //=== see if they voted yet
-    $res_did_they_vote = sql_query('SELECT vote FROM offer_votes WHERE user_id = '.sqlesc($CURUSER['id']).' AND offer_id = '.sqlesc($id));
+    $res_did_they_vote = sql_query('SELECT vote FROM '.TBL_OFFER_VOTES.' WHERE user_id = '.sqlesc($CURUSER['id']).' AND offer_id = '.sqlesc($id));
     $row_did_they_vote = mysqli_fetch_row($res_did_they_vote);
     if ($row_did_they_vote[0] == '') {
         $yes_or_no = ($vote == 1 ? 'yes' : 'no');
-        sql_query('INSERT INTO offer_votes (offer_id, user_id, vote) VALUES ('.sqlesc($id).', '.sqlesc($CURUSER['id']).', \''.$yes_or_no.'\')');
-        sql_query('UPDATE offers SET '.($yes_or_no == 'yes' ? 'vote_yes_count = vote_yes_count + 1' : 'vote_no_count = vote_no_count + 1').' WHERE id = '.sqlesc($id));
+        sql_query('INSERT INTO '.TBL_OFFER_VOTES.' (offer_id, user_id, vote) VALUES ('.sqlesc($id).', '.sqlesc($CURUSER['id']).', \''.$yes_or_no.'\')');
+        sql_query('UPDATE '.TBL_OFFERS.' SET '.($yes_or_no == 'yes' ? 'vote_yes_count = vote_yes_count + 1' : 'vote_no_count = vote_no_count + 1').' WHERE id = '.sqlesc($id));
         header('Location: /offers.php?action=offer_details&voted=1&id='.$id);
         die();
     } else stderr('USER ERROR', 'You have voted on this offer before.');
@@ -79,7 +79,7 @@ case 'default':
     require_once INCL_DIR.'bbcode_functions.php';
     require_once INCL_DIR.'pager_new.php';
     //=== get stuff for the pager
-    $count_query = sql_query('SELECT COUNT(id) FROM offers');
+    $count_query = sql_query('SELECT COUNT(id) FROM '.TBL_OFFERS.'');
     $count_arr = mysqli_fetch_row($count_query);
     $count = $count_arr[0];
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
@@ -88,9 +88,9 @@ case 'default':
     $main_query_res = sql_query('SELECT o.id AS offer_id, o.offer_name, o.category, o.added, o.offered_by_user_id, o.vote_yes_count, o.vote_no_count, o.comments, o.status,
                                                     u.id, u.username, u.warned, u.suspended, u.enabled, u.donor, u.class,  u.leechwarn, u.chatpost, u.pirate, u.king,
                                                     c.id AS cat_id, c.name AS cat_name, c.image AS cat_image
-                                                    FROM offers AS o
-                                                    LEFT JOIN categories AS c ON o.category = c.id
-                                                    LEFT JOIN users AS u ON o.offered_by_user_id = u.id
+                                                    FROM '.TBL_OFFERS.' AS o
+                                                    LEFT JOIN '.TBL_CATEGORIES.' AS c ON o.category = c.id
+                                                    LEFT JOIN '.TBL_USERS.' AS u ON o.offered_by_user_id = u.id
                                                     ORDER BY o.added DESC '.$LIMIT);
     if ($count = 0) stderr('Error!', 'Sorry, there are no current offers!');
     $HTMLOUT.= (isset($_GET['new']) ? '<h1>Offer Added!</h1>' : '').(isset($_GET['offer_deleted']) ? '<h1>Offer Deleted!</h1>' : '').$top_menu.''.$menu.'<br />';
@@ -138,13 +138,13 @@ case 'offer_details':
                             o.vote_no_count, o.image, o.link, o.description, o.comments,
                             u.id, u.username, u.warned, u.suspended, u.enabled, u.donor, u.class, u.uploaded, u.downloaded, u.leechwarn, u.chatpost, u.pirate, u.king,
                             c.name AS cat_name, c.image AS cat_image
-                            FROM offers AS o
-                            LEFT JOIN categories AS c ON o.category = c.id
-                            LEFT JOIN users AS u ON o.offered_by_user_id = u.id
+                            FROM '.TBL_OFFERS.' AS o
+                            LEFT JOIN '.TBL_CATEGORIES.' AS c ON o.category = c.id
+                            LEFT JOIN '.TBL_USERS.' AS u ON o.offered_by_user_id = u.id
                             WHERE o.id = '.sqlesc($id));
     $arr = mysqli_fetch_assoc($res);
     //=== see if they voted yet
-    $res_did_they_vote = sql_query('SELECT vote FROM offer_votes WHERE user_id = '.sqlesc($CURUSER['id']).' AND offer_id = '.sqlesc($id));
+    $res_did_they_vote = sql_query('SELECT vote FROM '.TBL_OFFER_VOTES.' WHERE user_id = '.sqlesc($CURUSER['id']).' AND offer_id = '.sqlesc($id));
     $row_did_they_vote = mysqli_fetch_row($res_did_they_vote);
     if ($row_did_they_vote[0] == '') {
         $vote_yes = '<form method="post" action="offers.php">
@@ -227,7 +227,7 @@ case 'offer_details':
         $perpage = isset($_GET['perpage']) ? (int)$_GET['perpage'] : 20;
         list($menu, $LIMIT) = pager_new($count, $perpage, $page, 'offers.php?action=offer_details&amp;id='.$id, ($perpage == 20 ? '' : '&amp;perpage='.$perpage).'#comments');
         $subres = sql_query('SELECT c.offer, c.id AS comment_id, c.text, c.added, c.editedby, c.editedat, 
-                                    u.id, u.username, u.warned, u.suspended, u.enabled, u.donor, u.class, u.avatar, u.offensive_avatar, u.title, u.leechwarn, u.chatpost, u.pirate, u.king FROM comments AS c LEFT JOIN users AS u ON c.user = u.id WHERE c.offer = '.sqlesc($id).' ORDER BY c.id '.$LIMIT) or sqlerr(__FILE__, __LINE__);
+                                    u.id, u.username, u.warned, u.suspended, u.enabled, u.donor, u.class, u.avatar, u.offensive_avatar, u.title, u.leechwarn, u.chatpost, u.pirate, u.king FROM '.TBL_COMMENTS.' AS c LEFT JOIN '.TBL_USERS.' AS u ON c.user = u.id WHERE c.offer = '.sqlesc($id).' ORDER BY c.id '.$LIMIT) or sqlerr(__FILE__, __LINE__);
         $allrows = array();
         while ($subrow = mysqli_fetch_assoc($subres)) $allrows[] = $subrow;
         $HTMLOUT.= $commentbar.'<a name="comments"></a>';
@@ -256,14 +256,14 @@ case 'add_new_offer':
     }
     $category_drop_down.= '</select>';
     if (isset($_POST['category'])) {
-        $cat_res = sql_query('SELECT id AS cat_id, name AS cat_name, image AS cat_image FROM categories WHERE id = '.sqlesc($category));
+        $cat_res = sql_query('SELECT id AS cat_id, name AS cat_name, image AS cat_image FROM '.TBL_CATEGORIES.' WHERE id = '.sqlesc($category));
         $cat_arr = mysqli_fetch_assoc($cat_res);
         $cat_image = htmlsafechars($cat_arr['cat_image'], ENT_QUOTES);
         $cat_name = htmlsafechars($cat_arr['cat_name'], ENT_QUOTES);
     }
     //=== if posted and not preview, process it :D
     if (isset($_POST['button']) && $_POST['button'] == 'Submit') {
-        sql_query('INSERT INTO offers (offer_name, image, description, category, added, offered_by_user_id, link) VALUES 
+        sql_query('INSERT INTO '.TBL_OFFERS.' (offer_name, image, description, category, added, offered_by_user_id, link) VALUES 
                     ('.sqlesc($offer_name).', '.sqlesc($image).', '.sqlesc($body).', '.sqlesc($category).', '.TIME_NOW.', '.sqlesc($CURUSER['id']).',  '.sqlesc($link).');');
         $new_offer_id = ((is_null($___mysqli_res = mysqli_insert_id($GLOBALS["___mysqli_ston"]))) ? false : $___mysqli_res);
         header('Location: offers.php?action=offer_details&new=1&id='.$new_offer_id);
@@ -355,7 +355,7 @@ case 'add_new_offer':
     
 case 'delete_offer':
     if (!isset($id) || !is_valid_id($id)) stderr('Error', 'Bad ID.');
-    $res = sql_query('SELECT offer_name, offered_by_user_id FROM offers WHERE id ='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query('SELECT offer_name, offered_by_user_id FROM '.TBL_OFFERS.' WHERE id ='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_assoc($res);
     if (!$arr) stderr('Error', 'Invalid ID.');
     if ($arr['offered_by_user_id'] !== $CURUSER['id'] && $CURUSER['class'] < UC_STAFF) stderr('Error', 'Permission denied.');
@@ -363,9 +363,9 @@ case 'delete_offer':
         stderr('Sanity check...', 'are you sure you would like to delete the offer <b>"'.htmlsafechars($arr['offer_name'], ENT_QUOTES).'"</b>? If so click 
         <a class="altlink" href="offers.php?action=delete_offer&id='.$id.'&amp;do_it=666" >HERE</a>.');
     } else {
-        sql_query('DELETE FROM offers WHERE id='.$id);
-        sql_query('DELETE FROM offer_votes WHERE offer_id ='.$id);
-        sql_query('DELETE FROM comments WHERE offer ='.$id);
+        sql_query('DELETE FROM '.TBL_OFFERS.' WHERE id='.$id);
+        sql_query('DELETE FROM '.TBL_OFFER_VOTES.' WHERE offer_id ='.$id);
+        sql_query('DELETE FROM '.TBL_COMMENTS.' WHERE offer ='.$id);
         header('Location: /offers.php?offer_deleted=1');
         die();
     }
@@ -378,7 +378,7 @@ case 'delete_offer':
 case 'edit_offer':
     require_once INCL_DIR.'bbcode_functions.php';
     if (!isset($id) || !is_valid_id($id)) stderr('Error', 'Bad ID.');
-    $edit_res = sql_query('SELECT offer_name, image, description, category, offered_by_user_id, link FROM offers WHERE id ='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    $edit_res = sql_query('SELECT offer_name, image, description, category, offered_by_user_id, link FROM '.TBL_OFFERS.' WHERE id ='.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $edit_arr = mysqli_fetch_assoc($edit_res);
     if ($CURUSER['class'] < UC_STAFF && $CURUSER['id'] !== $edit_arr['offered_by_user_id']) stderr('Error!', 'This is not your offer to edit!');
     $offer_name = strip_tags(isset($_POST['offer_name']) ? trim($_POST['offer_name']) : $edit_arr['offer_name']);
@@ -393,13 +393,13 @@ case 'edit_offer':
         $category_drop_down.= '<option class="body" value="'.(int)$row['id'].'"'.($category == $row['id'] ? ' selected="selected"' : '').'>'.htmlsafechars($row['name'], ENT_QUOTES).'</option>';
     }
     $category_drop_down.= '</select>';
-    $cat_res = sql_query('SELECT id AS cat_id, name AS cat_name, image AS cat_image FROM categories WHERE id = '.sqlesc($category));
+    $cat_res = sql_query('SELECT id AS cat_id, name AS cat_name, image AS cat_image FROM '.TBL_CATEGORIES.' WHERE id = '.sqlesc($category));
     $cat_arr = mysqli_fetch_assoc($cat_res);
     $cat_image = htmlsafechars($cat_arr['cat_image'], ENT_QUOTES);
     $cat_name = htmlsafechars($cat_arr['cat_name'], ENT_QUOTES);
     //=== if posted and not preview, process it :D
     if (isset($_POST['button']) && $_POST['button'] == 'Edit') {
-        sql_query('UPDATE offers SET offer_name = '.sqlesc($offer_name).', image = '.sqlesc($image).', description = '.sqlesc($body).', 
+        sql_query('UPDATE '.TBL_OFFERS.' SET offer_name = '.sqlesc($offer_name).', image = '.sqlesc($image).', description = '.sqlesc($body).', 
                     category = '.sqlesc($category).', link = '.sqlesc($link).' WHERE id = '.sqlesc($id));
         header('Location: offers.php?action=offer_details&edited=1&id='.$id);
         die();
@@ -487,15 +487,15 @@ case 'add_comment':
     require_once INCL_DIR.'pager_new.php';
     //=== kill if nasty
     if (!isset($id) || !is_valid_id($id)) stderr('USER ERROR', 'Bad id');
-    $res = sql_query('SELECT offer_name FROM offers WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query('SELECT offer_name FROM '.TBL_OFFERS.' WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_assoc($res);
     if (!$arr) stderr('Error', 'No offer with that ID.');
     if (isset($_POST['button']) && $_POST['button'] == 'Save') {
         $body = trim($_POST['body']);
         if (!$body) stderr('Error', 'Comment body cannot be empty!');
-        sql_query("INSERT INTO comments (user, offer, added, text, ori_text) VALUES (".sqlesc($CURUSER['id']).", ".sqlesc($id).", ".TIME_NOW.", ".sqlesc($body).",".sqlesc($body).")");
+        sql_query("INSERT INTO ".TBL_COMMENTS." (user, offer, added, text, ori_text) VALUES (".sqlesc($CURUSER['id']).", ".sqlesc($id).", ".TIME_NOW.", ".sqlesc($body).",".sqlesc($body).")");
         $newid = ((is_null($___mysqli_res = mysqli_insert_id($GLOBALS["___mysqli_ston"]))) ? false : $___mysqli_res);
-        sql_query('UPDATE offers SET comments = comments + 1 WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+        sql_query('UPDATE '.TBL_OFFERS.' SET comments = comments + 1 WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
         header('Location: /offers.php?action=offer_details&id='.$id.'&viewcomm='.$newid.'#comm'.$newid);
         die();
     }
@@ -524,7 +524,7 @@ case 'add_comment':
     <input name="button" type="submit" class="button" value="Save" onmouseover="this.className=\'button_hover\'" onmouseout="this.className=\'button\'" /></td>
     </tr>
 	 </table></form>';
-    $res = sql_query('SELECT c.offer, c.id AS comment_id, c.text, c.added, c.editedby, c.editedat, u.id, u.username, u.warned, u.suspended, u.enabled, u.donor, u.class, u.avatar, u.offensive_avatar, u.title, u.leechwarn, u.chatpost, u.pirate, u.king FROM comments AS c LEFT JOIN users AS u ON c.user = u.id WHERE offer = '.sqlesc($id).' ORDER BY c.id DESC LIMIT 5');
+    $res = sql_query('SELECT c.offer, c.id AS comment_id, c.text, c.added, c.editedby, c.editedat, u.id, u.username, u.warned, u.suspended, u.enabled, u.donor, u.class, u.avatar, u.offensive_avatar, u.title, u.leechwarn, u.chatpost, u.pirate, u.king FROM '.TBL_COMMENTS.' AS c LEFT JOIN '.TBL_USERS.' AS u ON c.user = u.id WHERE offer = '.sqlesc($id).' ORDER BY c.id DESC LIMIT 5');
     $allrows = array();
     while ($row = mysqli_fetch_assoc($res)) $allrows[] = $row;
     if (count($allrows)) {
@@ -540,21 +540,21 @@ case 'add_comment':
 case 'edit_comment':
     require_once INCL_DIR.'bbcode_functions.php';
     if (!isset($comment_id) || !is_valid_id($comment_id)) stderr('Error', 'Bad ID.');
-    $res = sql_query('SELECT c.*, o.offer_name FROM comments AS c LEFT JOIN offers AS o ON c.offer = o.id WHERE c.id='.sqlesc($comment_id)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query('SELECT c.*, o.offer_name FROM '.TBL_COMMENTS.' AS c LEFT JOIN '.TBL_OFFERS.' AS o ON c.offer = o.id WHERE c.id='.sqlesc($comment_id)) or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_assoc($res);
     if (!$arr) stderr('Error', 'Invalid ID.');
     if ($arr['user'] != $CURUSER['id'] && $CURUSER['class'] < UC_STAFF) stderr('Error', 'Permission denied.');
     $body = htmlsafechars((isset($_POST['body']) ? $_POST['body'] : $arr['text']));
     if (isset($_POST['button']) && $_POST['button'] == 'Edit') {
         if ($body == '') stderr('Error', 'Comment body cannot be empty!');
-        sql_query('UPDATE comments SET text='.sqlesc($body).', editedat='.TIME_NOW.', editedby='.sqlesc($CURUSER['id']).' WHERE id='.sqlesc($comment_id)) or sqlerr(__FILE__, __LINE__);
+        sql_query('UPDATE '.TBL_COMMENTS.' SET text='.sqlesc($body).', editedat='.TIME_NOW.', editedby='.sqlesc($CURUSER['id']).' WHERE id='.sqlesc($comment_id)) or sqlerr(__FILE__, __LINE__);
         header('Location: /offers.php?action=offer_details&id='.$id.'&viewcomm='.$comment_id.'#comm'.$comment_id);
         die();
     }
     if ($CURUSER['id'] == $arr['user']) {
         $avatar = avatar_stuff($CURUSER);
     } else {
-        $res_user = sql_query('SELECT avatar, offensive_avatar, view_offensive_avatar FROM users WHERE id='.sqlesc($arr['user'])) or sqlerr(__FILE__, __LINE__);
+        $res_user = sql_query('SELECT avatar, offensive_avatar, view_offensive_avatar FROM '.TBL_USERS.' WHERE id='.sqlesc($arr['user'])) or sqlerr(__FILE__, __LINE__);
         $arr_user = mysqli_fetch_assoc($res_user);
         $avatar = avatar_stuff($arr_user);
     }
@@ -591,7 +591,7 @@ case 'edit_comment':
     
 case 'delete_comment':
     if (!isset($comment_id) || !is_valid_id($comment_id)) stderr('Error', 'Bad ID.');
-    $res = sql_query('SELECT user, offer FROM comments WHERE id='.sqlesc($comment_id)) or sqlerr(__FILE__, __LINE__);
+    $res = sql_query('SELECT user, offer FROM '.TBL_COMMENTS.' WHERE id='.sqlesc($comment_id)) or sqlerr(__FILE__, __LINE__);
     $arr = mysqli_fetch_assoc($res);
     if (!$arr) stderr('Error', 'Invalid ID.');
     if ($arr['user'] != $CURUSER['id'] && $CURUSER['class'] < UC_STAFF) stderr('Error', 'Permission denied.');
@@ -599,8 +599,8 @@ case 'delete_comment':
         stderr('Sanity check...', 'are you sure you would like to delete this comment? If so click 
         <a class="altlink" href="offers.php?action=delete_comment&amp;id='.(int)$arr['offer'].'&amp;comment_id='.$comment_id.'&amp;do_it=666" >HERE</a>.');
     } else {
-        sql_query('DELETE FROM comments WHERE id='.sqlesc($comment_id));
-        sql_query('UPDATE offers SET comments = comments - 1 WHERE id = '.sqlesc($arr['offer']));
+        sql_query('DELETE FROM '.TBL_COMMENTS.' WHERE id='.sqlesc($comment_id));
+        sql_query('UPDATE '.TBL_OFFERS.' SET comments = comments - 1 WHERE id = '.sqlesc($arr['offer']));
         header('Location: /offers.php?action=offer_details&id='.$id.'&comment_deleted=1');
         die();
     }
@@ -623,22 +623,22 @@ case 'alter_status':
     if ($change_it == 'poop') //=== ok, so I had a bit of fun with that *blush
     stderr('Error', 'Nice try Mr. Fancy Pants!');
     //=== get torrent name :P
-    $res_name = sql_query('SELECT offer_name, offered_by_user_id FROM offers WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    $res_name = sql_query('SELECT offer_name, offered_by_user_id FROM '.TBL_OFFERS.' WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     $arr_name = mysqli_fetch_assoc($res_name);
     if ($change_it == 'approved') {
         $subject = sqlesc('Your Offer has been approved!');
         $message = sqlesc("Hi, \n An offer you made has been approved!!! \n\n Please  [url=".$INSTALLER09['baseurl']."/upload.php]Upload ".htmlsafechars($arr_name['offer_name'], ENT_QUOTES)."[/url] as soon as possible! \n Members who voted on it will be notified as soon as you do! \n\n [url=".$INSTALLER09['baseurl']."/offers.php?action=offer_details&id=".$id."]HERE[/url] is your offer.");
-        sql_query('INSERT INTO messages (sender, receiver, added, msg, subject, saved, location) 
+        sql_query('INSERT INTO '.TBL_MESSAGES.' (sender, receiver, added, msg, subject, saved, location) 
                 VALUES(0, '.sqlesc($arr_name['offered_by_user_id']).', '.TIME_NOW.', '.$message.', '.$subject.', \'yes\', 1)') or sqlerr(__FILE__, __LINE__);
     }
     if ($change_it == 'denied') {
         $subject = sqlesc('Your Offer has been denied!');
         $message = sqlesc("Hi, \n An offer you made has been denied. \n\n  [url=".$INSTALLER09['baseurl']."/offers.php?action=offer_details&id=".$id."]".htmlsafechars($arr_name['offer_name'], ENT_QUOTES)."[/url] was denied by ".$CURUSER['username'].". Please contact them to find out why.");
-        sql_query('INSERT INTO messages (sender, receiver, added, msg, subject, saved, location) 
+        sql_query('INSERT INTO '.TBL_MESSAGES.' (sender, receiver, added, msg, subject, saved, location) 
                 VALUES(0, '.sqlesc($arr_name['offered_by_user_id']).', '.TIME_NOW.', '.$message.', '.$subject.', \'yes\', 1)') or sqlerr(__FILE__, __LINE__);
     }
     //=== ok, looks good :D let's set that status!
-    sql_query('UPDATE offers SET status = '.sqlesc($change_it).' WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
+    sql_query('UPDATE '.TBL_OFFERS.' SET status = '.sqlesc($change_it).' WHERE id = '.sqlesc($id)) or sqlerr(__FILE__, __LINE__);
     header('Location: /offers.php?action=offer_details&status_changed=1&id='.$id);
     die();
     break;
@@ -657,7 +657,7 @@ function comment_table($rows)
         $class = ($count2 == 0 ? 'one' : 'two');
         $text = format_comment($row['text']);
         if ($row['editedby']) {
-            $res_user = sql_query('SELECT username FROM users WHERE id='.sqlesc($row['editedby'])) or sqlerr(__FILE__, __LINE__);
+            $res_user = sql_query('SELECT username FROM '.TBL_USERS.' WHERE id='.sqlesc($row['editedby'])) or sqlerr(__FILE__, __LINE__);
             $arr_user = mysqli_fetch_assoc($res_user);
             $text.= '<p><font size="1" class="small">Last edited by <a href="userdetails.php?id='.(int)$row['editedby'].'">
         <b>'.htmlsafechars($arr_user['username']).'</b></a> at '.get_date($row['editedat'], 'DATE').'</font></p>';

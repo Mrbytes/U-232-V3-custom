@@ -41,7 +41,7 @@ if ($_hash === $hash) {
     dbconn(false, false);
     if (empty($_user) && ($_do == "stats" || $_do == "torrents" || $_do == "irc")) exit("Can't find the username");
     if ($_do == "stats") {
-        $q = sql_query("SELECT id, username, last_access, downloaded, uploaded, added, status, warned, disable_reason, warn_reason FROM users WHERE username = ".sqlesc($_user)) or exit(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
+        $q = sql_query("SELECT id, username, last_access, downloaded, uploaded, added, status, warned, disable_reason, warn_reason FROM ".TBL_USERS." WHERE username = ".sqlesc($_user)) or exit(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
         if (mysqli_num_rows($q) == 1) {
             $a = mysqli_fetch_assoc($q);
             $txt = $a["username"]." is ".((TIME_NOW - $a["last_access"]) < 300 ? "online" : "offline")."\nJoined - ".get_date($a["added"], 'LONG', 0, 1)."\nLast seen - ".get_date($a["last_access"], 'DATE', 0, 1)."\nDownloaded - ".mksize($a["downloaded"])."\nUploaded - ".mksize($a["uploaded"])."\n";
@@ -54,7 +54,7 @@ if ($_hash === $hash) {
         unset($a);
         unset($q);
     } elseif ($_do == "torrents") {
-        $q = sql_query("SELECT count(p.id) as count, p.seeder,p.agent,p.port,p.connectable, u.username FROM peers as p LEFT JOIN users as u ON u.id = p.userid WHERE u.username=".sqlesc($_user)." GROUP BY p.seeder") or exit(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
+        $q = sql_query("SELECT count(p.id) as count, p.seeder,p.agent,p.port,p.connectable, u.username FROM ".TBL_PEERS." as p LEFT JOIN ".TBL_USERS." as u ON u.id = p.userid WHERE u.username=".sqlesc($_user)." GROUP BY p.seeder") or exit(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
         if (mysqli_num_rows($q) == 0) exit("User \"".$_user."\"  has no torrent active");
         $act['seed'] = $act['leech'] = 0;
         while ($a = mysqli_fetch_assoc($q)) {
@@ -71,7 +71,7 @@ if ($_hash === $hash) {
         unset($a);
         unset($q);
     } elseif ($_do == "fls") {
-        $q = sql_query("SELECT id,username,last_access ,supportfor FROM users WHERE support = 'yes' ORDER BY added desc") or exit(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
+        $q = sql_query("SELECT id,username,last_access ,supportfor FROM ".TBL_USERS." WHERE support = 'yes' ORDER BY added desc") or exit(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
         $txt = "";
         while ($a = mysqli_fetch_assoc($q)) {
             $txt.= $a["username"]." - status ".((TIME_NOW - $a["last_access"]) < 300 ? "online" : "offline")." | Support for ".$a["supportfor"]."\n";
@@ -83,7 +83,7 @@ if ($_hash === $hash) {
         unset($q);
         unset($txt);
     } elseif ($_do == "irc") {
-        $q = sql_query("SELECT onirc, irctotal,username FROM users WHERE username = ".sqlesc($_user)) or exit(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
+        $q = sql_query("SELECT onirc, irctotal,username FROM ".TBL_USERS." WHERE username = ".sqlesc($_user)) or exit(((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false)));
         if (mysqli_num_rows($q) == 0) exit("User \"".$_user."\" not found!");
         $a = mysqli_fetch_assoc($q);
         $txt = $a["username"]." ".($a["irctotal"] == 0 ? "never been on irc" : "has idled on irc ".calctime($a["irctotal"]))."\nAnd now he ".($a["onirc"] == "yes" ? "is" : "isn't")." on irc";
@@ -94,22 +94,22 @@ if ($_hash === $hash) {
     } elseif ($_do == "top") {
         switch ($_type) {
         case "idle":
-            $_q = "select username,irctotal FROM users ORDER BY irctotal DESC LIMIT 10";
+            $_q = "select username,irctotal FROM ".TBL_USERS." ORDER BY irctotal DESC LIMIT 10";
             $txt = "Top 10 idle\n";
             break;
 
         case "uploaders":
-            $_q = "select username, uploaded FROM users WHERE status = 'confirmed' ORDER BY uploaded DESC LIMIT 10";
+            $_q = "select username, uploaded FROM ".TBL_USERS." WHERE status = 'confirmed' ORDER BY uploaded DESC LIMIT 10";
             $txt = "Best uploaders (selected after uploaded amount)\n";
             break;
 
         case "torrents":
-            $_q = "select count(t.id) as c, u.username FROM torrents as t LEFT JOIN users as u ON t.owner = u.id WHERE u.username <> '' GROUP  BY u.id ORDER BY c DESC LIMIT 10";
+            $_q = "select count(t.id) as c, u.username FROM ".TBL_TORRENTS." as t LEFT JOIN ".TBL_USERS." as u ON t.owner = u.id WHERE u.username <> '' GROUP  BY u.id ORDER BY c DESC LIMIT 10";
             $txt = "Best uploaders (selected after the torrents uploaded)\n";
             break;
 
         case "posters":
-            $_q = "select count(p.id) as c, u.username FROM posts as p LEFT JOIN users as u ON p.user_id = u.id WHERE u.username <> '' GROUP  BY u.id ORDER BY c DESC LIMIT 10";
+            $_q = "select count(p.id) as c, u.username FROM ".TBL_POSTS." as p LEFT JOIN ".TBL_USERS." as u ON p.user_id = u.id WHERE u.username <> '' GROUP  BY u.id ORDER BY c DESC LIMIT 10";
             $txt = "Best posters (selected after number of posts)\n";
             break;
         }

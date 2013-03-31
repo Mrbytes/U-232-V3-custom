@@ -20,7 +20,7 @@ if (!$CURUSER) {
 $lang = array_merge(load_language('global') , load_language('takesignup'));
 $newpage = new page_verify();
 $newpage->check('tkIs');
-$res = sql_query("SELECT COUNT(id) FROM users") or sqlerr(__FILE__, __LINE__);
+$res = sql_query("SELECT COUNT(id) FROM ".TBL_USERS."") or sqlerr(__FILE__, __LINE__);
 $arr = mysqli_fetch_row($res);
 if ($arr[0] >= $INSTALLER09['inviteusers']) stderr($lang['stderr_errorhead'], sprintf($lang['stderr_ulimit'], $INSTALLER09['inviteusers']));
 if (!$INSTALLER09['openreg_invites']) stderr('Sorry', 'Invite Signups are closed presently');
@@ -56,11 +56,11 @@ if ((date('Y') - $_POST['year']) < 17) stderr('Error', 'You must be at least 18 
 // make sure user agrees to everything...
 if ($_POST["rulesverify"] != "yes" || $_POST["faqverify"] != "yes" || $_POST["ageverify"] != "yes") stderr("Error", "Sorry, you're not qualified to become a member of this site.");
 // check if email addy is already in use
-$a = (@mysqli_fetch_row(sql_query('SELECT COUNT(id) FROM users WHERE email = '.sqlesc($email)))) or sqlerr(__FILE__, __LINE__);
+$a = (@mysqli_fetch_row(sql_query('SELECT COUNT(id) FROM '.TBL_USERS.' WHERE email = '.sqlesc($email)))) or sqlerr(__FILE__, __LINE__);
 if ($a[0] != 0) stderr('Error', 'The e-mail address <b>'.htmlsafechars($email).'</b> is already in use.');
 //=== check if ip addy is already in use
 if ($INSTALLER09['dupeip_check_on']) {
-    $c = (mysqli_fetch_row(sql_query("SELECT COUNT(id) FROM users WHERE ip=".sqlesc($_SERVER['REMOTE_ADDR'])))) or sqlerr(__FILE__, __LINE__);
+    $c = (mysqli_fetch_row(sql_query("SELECT COUNT(id) FROM ".TBL_USERS." WHERE ip=".sqlesc($_SERVER['REMOTE_ADDR'])))) or sqlerr(__FILE__, __LINE__);
     if ($c[0] != 0) stderr("Error", "The ip ".htmlsafechars($_SERVER['REMOTE_ADDR'])." is already in use. We only allow one account per ip address.");
 }
 // TIMEZONE STUFF
@@ -72,7 +72,7 @@ if (isset($_POST["user_timezone"]) && preg_match('#^\-?\d{1,2}(?:\.\d{1,2})?$#',
 // have a stab at getting dst parameter?
 $dst_in_use = localtime(TIME_NOW + ($time_offset * 3600) , true);
 // TIMEZONE STUFF END
-$select_inv = sql_query('SELECT sender, receiver, status FROM invite_codes WHERE code = '.sqlesc($invite)) or sqlerr(__FILE__, __LINE__);
+$select_inv = sql_query('SELECT sender, receiver, status FROM '.TBL_INVITE_CODES.' WHERE code = '.sqlesc($invite)) or sqlerr(__FILE__, __LINE__);
 $rows = mysqli_num_rows($select_inv);
 $assoc = mysqli_fetch_assoc($select_inv);
 if ($rows == 0) stderr("Error", "Invite not found.\nPlease request a invite from one of our members.");
@@ -83,7 +83,7 @@ $editsecret = (!$arr[0] ? "" : make_passhash_login_key());
 $wanthintanswer = md5($hintanswer);
 check_banned_emails($email);
 $user_frees = (TIME_NOW + 14 * 86400);
-$new_user = sql_query("INSERT INTO users (username, passhash, secret, passhint, hintanswer, editsecret, birthday, invitedby, email, ".(!$arr[0] ? "class, " : "")."added, last_access, last_login, time_offset, dst_in_use, free_switch) VALUES (".implode(",", array_map("sqlesc", array(
+$new_user = sql_query("INSERT INTO '.TBL_USERS.' (username, passhash, secret, passhint, hintanswer, editsecret, birthday, invitedby, email, ".(!$arr[0] ? "class, " : "")."added, last_access, last_login, time_offset, dst_in_use, free_switch) VALUES (".implode(",", array_map("sqlesc", array(
     $wantusername,
     $wantpasshash,
     $secret,
@@ -94,7 +94,7 @@ $new_user = sql_query("INSERT INTO users (username, passhash, secret, passhint, 
     (int)$assoc['sender'],
     $email
 ))).", ".(!$arr[0] ? UC_SYSOP.", " : "")."'".TIME_NOW."','".TIME_NOW."','".TIME_NOW."', $time_offset, {$dst_in_use['tm_isdst']}, $user_frees)");
-sql_query("UPDATE usersachiev SET invited=invited+1 WHERE id =".sqlesc($assoc['sender'])) or sqlerr(__FILE__, __LINE__);
+sql_query("UPDATE ".TBL_USERSACHIEV." SET invited=invited+1 WHERE id =".sqlesc($assoc['sender'])) or sqlerr(__FILE__, __LINE__);
 $message = "Welcome New {$INSTALLER09['site_name']} Member : - ".htmlsafechars($wantusername)."";
 if (!$new_user) {
     if (((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_errno($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_errno()) ? $___mysqli_res : false)) == 1062) stderr("Error", "Username already exists!");
@@ -104,12 +104,12 @@ $sender = (int)$assoc["sender"];
 $added = TIME_NOW;
 $msg = sqlesc("Hey there [you] ! :wave:\nIt seems that someone you invited to {$INSTALLER09['site_name']} has arrived ! :clap2: \n\n Please go to your [url={$INSTALLER09['baseurl']}/invite.php]Invite page[/url] to confirm them so they can log in.\n\ncheers\n");
 $subject = sqlesc("Someone you invited has arrived!");
-sql_query("INSERT INTO messages (sender, subject, receiver, msg, added) VALUES (0, $subject, ".sqlesc($sender).", $msg, $added)") or sqlerr(__FILE__, __LINE__);
+sql_query("INSERT INTO ".TBL_MESSAGES." (sender, subject, receiver, msg, added) VALUES (0, $subject, ".sqlesc($sender).", $msg, $added)") or sqlerr(__FILE__, __LINE__);
 $mc1->delete_value('inbox_new_'.$sender);
 $mc1->delete_value('inbox_new_sb_'.$sender);
 //////////////end/////////////////////
 $id = ((is_null($___mysqli_res = mysqli_insert_id($GLOBALS["___mysqli_ston"]))) ? false : $___mysqli_res);
-sql_query('UPDATE invite_codes SET receiver = '.sqlesc($id).', status = "Confirmed" WHERE sender = '.sqlesc((int)$assoc['sender']).' AND code = '.sqlesc($invite)) or sqlerr(__FILE__, __LINE__);
+sql_query('UPDATE '.TBL_INVITE_CODES.' SET receiver = '.sqlesc($id).', status = "Confirmed" WHERE sender = '.sqlesc((int)$assoc['sender']).' AND code = '.sqlesc($invite)) or sqlerr(__FILE__, __LINE__);
 $latestuser_cache['id'] = (int)$id;
 $latestuser_cache['username'] = $wantusername;
 $latestuser_cache['class'] = '0';

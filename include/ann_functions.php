@@ -34,13 +34,13 @@ function crazyhour_announce()
     $crazy_hour = (TIME_NOW + 3600);
     $cz['crazyhour'] = $mc1->get_value('crazyhour');
     if ($cz['crazyhour'] === false) {
-        $cz['sql'] = mysqli_query($GLOBALS["___mysqli_ston"], 'SELECT var, amount FROM freeleech WHERE type = "crazyhour"') or ann_sqlerr(__FILE__, __LINE__);
+        $cz['sql'] = mysqli_query($GLOBALS["___mysqli_ston"], 'SELECT var, amount FROM '.TBL_FREELEECH.' WHERE type = "crazyhour"') or ann_sqlerr(__FILE__, __LINE__);
         $cz['crazyhour'] = array();
         if (mysqli_num_rows($cz['sql']) !== 0) $cz['crazyhour'] = mysqli_fetch_assoc($cz['sql']);
         else {
             $cz['crazyhour']['var'] = mt_rand(TIME_NOW, (TIME_NOW + 86400));
             $cz['crazyhour']['amount'] = 0;
-            mysqli_query($GLOBALS["___mysqli_ston"], 'UPDATE LOW_PRIORITY freeleech SET var = '.$cz['crazyhour']['var'].', amount = '.$cz['crazyhour']['amount'].' 
+            mysqli_query($GLOBALS["___mysqli_ston"], 'UPDATE LOW_PRIORITY '.TBL_FREELEECH.' SET var = '.$cz['crazyhour']['var'].', amount = '.$cz['crazyhour']['amount'].' 
          WHERE type = "crazyhour"') or ann_sqlerr(__FILE__, __LINE__);
         }
         $mc1->cache_value('crazyhour', $cz['crazyhour'], 0);
@@ -52,13 +52,13 @@ function crazyhour_announce()
             $cz['crazyhour']['var'] = mt_rand($cz['crazyhour_new'], ($cz['crazyhour_new'] + 86400));
             $cz['crazyhour']['amount'] = 0;
             $cz['remaining'] = ($cz['crazyhour']['var'] - TIME_NOW);
-            mysqli_query($GLOBALS["___mysqli_ston"], 'UPDATE LOW_PRIORITY freeleech SET var = '.$cz['crazyhour']['var'].', amount = '.$cz['crazyhour']['amount'].' '.'WHERE type = "crazyhour"') or ann_sqlerr(__FILE__, __LINE__);
+            mysqli_query($GLOBALS["___mysqli_ston"], 'UPDATE LOW_PRIORITY '.TBL_FREELEECH.' SET var = '.$cz['crazyhour']['var'].', amount = '.$cz['crazyhour']['amount'].' '.'WHERE type = "crazyhour"') or ann_sqlerr(__FILE__, __LINE__);
             $mc1->cache_value('crazyhour', $cz['crazyhour'], 0);
             // log, shoutbot
             $text = 'Next [color=orange][b]Crazyhour[/b][/color] is at '.date('F j, g:i a', $cz['crazyhour']['var']);
             $text_parsed = 'Next <span style="font-weight:bold;color:orange;">Crazyhour_A</span> is at '.date('F j, g:i a', $cz['crazyhour']['var']);
-            mysqli_query($GLOBALS["___mysqli_ston"], 'INSERT LOW_PRIORITY INTO sitelog (added, txt) '.'VALUES('.TIME_NOW.', '.ann_sqlesc($text_parsed).')') or ann_sqlerr(__FILE__, __LINE__);
-            mysqli_query($GLOBALS["___mysqli_ston"], 'INSERT LOW_PRIORITY INTO shoutbox (userid, date, text, text_parsed) '.'VALUES (2, '.TIME_NOW.', '.ann_sqlesc($text).', '.ann_sqlesc($text_parsed).')') or ann_sqlerr(__FILE__, __LINE__);
+            mysqli_query($GLOBALS["___mysqli_ston"], 'INSERT LOW_PRIORITY INTO '.TBL_SITELOG.' (added, txt) '.'VALUES('.TIME_NOW.', '.ann_sqlesc($text_parsed).')') or ann_sqlerr(__FILE__, __LINE__);
+            mysqli_query($GLOBALS["___mysqli_ston"], 'INSERT LOW_PRIORITY INTO '.TBL_SHOUTBOX.' (userid, date, text, text_parsed) '.'VALUES (2, '.TIME_NOW.', '.ann_sqlesc($text).', '.ann_sqlesc($text_parsed).')') or ann_sqlerr(__FILE__, __LINE__);
             $mc1->delete_value('shoutbox_');
         }
         return false;
@@ -67,15 +67,15 @@ function crazyhour_announce()
             $cz['crazyhour']['amount'] = 1;
             $cz_lock = $mc1->add_value('crazyhour_lock', 1, 10);
             if ($cz_lock !== false) {
-                mysqli_query($GLOBALS["___mysqli_ston"], 'UPDATE LOW_PRIORITY freeleech SET amount = '.$cz['crazyhour']['amount'].' 
+                mysqli_query($GLOBALS["___mysqli_ston"], 'UPDATE LOW_PRIORITY '.TBL_FREELEECH.' SET amount = '.$cz['crazyhour']['amount'].' 
             WHERE type = "crazyhour"') or ann_sqlerr(__FILE__, __LINE__);
                 $mc1->cache_value('crazyhour', $cz['crazyhour'], 0);
                 // log, shoutbot
                 $text = 'w00t! It\'s [color=orange][b]Crazyhour[/b][/color] :w00t:';
                 $text_parsed = 'w00t! It\'s <span style="font-weight:bold;color:orange;">Crazyhour_A</span> <img src="pic/smilies/w00t.gif" alt=":w00t:" />';
-                mysqli_query($GLOBALS["___mysqli_ston"], 'INSERT LOW_PRIORITY INTO sitelog (added, txt) 
+                mysqli_query($GLOBALS["___mysqli_ston"], 'INSERT LOW_PRIORITY INTO '.TBL_SITELOG.' (added, txt) 
             VALUES('.TIME_NOW.', '.ann_sqlesc($text_parsed).')') or ann_sqlerr(__FILE__, __LINE__);
-                mysqli_query($GLOBALS["___mysqli_ston"], 'INSERT LOW_PRIORITY INTO shoutbox (userid, date, text, text_parsed) '.'VALUES (2, '.TIME_NOW.', '.ann_sqlesc($text).', '.ann_sqlesc($text_parsed).')') or ann_sqlerr(__FILE__, __LINE__);
+                mysqli_query($GLOBALS["___mysqli_ston"], 'INSERT LOW_PRIORITY INTO '.TBL_SHOUTBOX.' (userid, date, text, text_parsed) '.'VALUES (2, '.TIME_NOW.', '.ann_sqlesc($text).', '.ann_sqlesc($text_parsed).')') or ann_sqlerr(__FILE__, __LINE__);
                 $mc1->delete_value('shoutbox_');
             }
         }
@@ -90,7 +90,7 @@ function get_torrent_from_hash($info_hash)
     $ttll = 21600; // 21600;
     $torrent = $mc1->get_value($key);
     if ($torrent === false) {
-        $res = mysqli_query($GLOBALS["___mysqli_ston"], 'SELECT id, category, banned, free, silver, vip, seeders, leechers, times_completed, seeders + leechers AS numpeers, added AS ts, visible FROM torrents WHERE info_hash = '.ann_sqlesc($info_hash)) or ann_sqlerr(__FILE__, __LINE__);
+        $res = mysqli_query($GLOBALS["___mysqli_ston"], 'SELECT id, category, banned, free, silver, vip, seeders, leechers, times_completed, seeders + leechers AS numpeers, added AS ts, visible FROM '.TBL_TORRENTS.' WHERE info_hash = '.ann_sqlesc($info_hash)) or ann_sqlerr(__FILE__, __LINE__);
         if (mysqli_num_rows($res)) {
             $torrent = mysqli_fetch_assoc($res);
             $torrent['id'] = (int)$torrent['id'];
@@ -122,7 +122,7 @@ function get_torrent_from_hash($info_hash)
         $torrent['leechers'] = $mc1->get_value($leech_key);
         $torrent['times_completed'] = $mc1->get_value($comp_key);
         if ($torrent['seeders'] === false || $torrent['leechers'] === false || $torrent['times_completed'] === false) {
-            $res = mysqli_query($GLOBALS["___mysqli_ston"], 'SELECT seeders, leechers, times_completed FROM torrents WHERE id = '.ann_sqlesc($torrent['id'])) or ann_sqlerr(__FILE__, __LINE__);
+            $res = mysqli_query($GLOBALS["___mysqli_ston"], 'SELECT seeders, leechers, times_completed FROM '.TBL_TORRENTS.' WHERE id = '.ann_sqlesc($torrent['id'])) or ann_sqlerr(__FILE__, __LINE__);
             if (mysqli_num_rows($res)) {
                 $torrentq = mysqli_fetch_assoc($res);
                 $torrent['seeders'] = (int)$torrentq['seeders'];
@@ -162,7 +162,7 @@ function get_happy($torrentid, $userid)
     global $mc1;
     $keys['happyhour'] = $userid.'_happy';
     if (($happy = $mc1->get_value($keys['happyhour'])) === false) {
-        $res_happy = mysqli_query($GLOBALS["___mysqli_ston"], "SELECT id, userid, torrentid, multiplier from happyhour where userid=".ann_sqlesc($userid)) or ann_sqlerr(__FILE__, __LINE__);
+        $res_happy = mysqli_query($GLOBALS["___mysqli_ston"], "SELECT id, userid, torrentid, multiplier from ".TBL_HAPPYHOUR." where userid=".ann_sqlesc($userid)) or ann_sqlerr(__FILE__, __LINE__);
         $happy = array();
         if (mysqli_num_rows($res_happy)) {
             while ($rowhappy = mysqli_fetch_assoc($res_happy)) $happy[$rowhappy['torrentid']] = $rowhappy['multiplier'];
@@ -180,7 +180,7 @@ function get_slots($torrentid, $userid)
     $torrent['freeslot'] = $torrent['doubleslot'] = 0;
     $slot = $mc1->get_value('fllslot_'.$userid);
     if ($slot === false) {
-        $res_slots = mysqli_query($GLOBALS["___mysqli_ston"], 'SELECT * FROM freeslots WHERE userid = '.ann_sqlesc($userid)) or ann_sqlerr(__FILE__, __LINE__);
+        $res_slots = mysqli_query($GLOBALS["___mysqli_ston"], 'SELECT * FROM '.TBL_FREESLOTS.' WHERE userid = '.ann_sqlesc($userid)) or ann_sqlerr(__FILE__, __LINE__);
         $slot = array();
         if (mysqli_num_rows($res_slots)) {
             while ($rowslot = mysqli_fetch_assoc($res_slots)) $slot[] = $rowslot;
@@ -196,7 +196,7 @@ function get_slots($torrentid, $userid)
 //=== detect abnormal uploads
 function auto_enter_abnormal_upload($userid, $rate, $upthis, $diff, $torrentid, $client, $realip, $last_up)
 {
-    mysqli_query($GLOBALS["___mysqli_ston"], 'INSERT LOW_PRIORITY INTO cheaters (added, userid, client, rate, beforeup, upthis, timediff, userip, torrentid) VALUES('.ann_sqlesc(TIME_NOW).', '.ann_sqlesc($userid).', '.ann_sqlesc($client).', '.ann_sqlesc($rate).', '.ann_sqlesc($last_up).', '.ann_sqlesc($upthis).', '.ann_sqlesc($diff).', '.ann_sqlesc($realip).', '.ann_sqlesc($torrentid).')') or ann_sqlerr(__FILE__, __LINE__);
+    mysqli_query($GLOBALS["___mysqli_ston"], 'INSERT LOW_PRIORITY INTO '.TBL_CHEATERS.' (added, userid, client, rate, beforeup, upthis, timediff, userip, torrentid) VALUES('.ann_sqlesc(TIME_NOW).', '.ann_sqlesc($userid).', '.ann_sqlesc($client).', '.ann_sqlesc($rate).', '.ann_sqlesc($last_up).', '.ann_sqlesc($upthis).', '.ann_sqlesc($diff).', '.ann_sqlesc($realip).', '.ann_sqlesc($torrentid).')') or ann_sqlerr(__FILE__, __LINE__);
 }
 function err($msg)
 {

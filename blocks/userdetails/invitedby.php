@@ -2,14 +2,14 @@
 //=== invite stuff - who invited this member by snuggles
 if ($user['invitedby'] > 0) {
     //=== Fetch inviter info
-    $res_get_invitor = sql_query('SELECT id, class, username, warned, suspended, enabled, donor, chatpost, leechwarn, pirate, king FROM users WHERE id='.sqlesc($user['invitedby'])) or sqlerr(__FILE__, __LINE__);
+    $res_get_invitor = sql_query('SELECT id, class, username, warned, suspended, enabled, donor, chatpost, leechwarn, pirate, king FROM '.TBL_USERS.' WHERE id='.sqlesc($user['invitedby'])) or sqlerr(__FILE__, __LINE__);
     $user_get_invitor = mysqli_fetch_assoc($res_get_invitor);
     $HTMLOUT.= '<tr><td class="rowhead">Invited&nbsp;By</td><td align="left">'.format_username($user_get_invitor).'</td></tr>';
 } else {
     $HTMLOUT.= '<tr><td class="rowhead">Invited&nbsp;By</td><td align="left"><b>Open Signups</b></td></tr>';
 }
 //=== members invites by snuggles
-$rez_invited = sql_query('SELECT id, class, username, email, uploaded, downloaded, status, warned, suspended, enabled, donor, email, ip, chatpost, leechwarn, pirate, king FROM users WHERE invitedby = '.sqlesc($user['id']).' ORDER BY added');
+$rez_invited = sql_query('SELECT id, class, username, email, uploaded, downloaded, status, warned, suspended, enabled, donor, email, ip, chatpost, leechwarn, pirate, king FROM '.TBL_USERS.' WHERE invitedby = '.sqlesc($user['id']).' ORDER BY added');
 $inviteted_by_this_member = '';
 if (mysqli_num_rows($rez_invited) < 1) $inviteted_by_this_member.= 'No invitees yet.';
 else {

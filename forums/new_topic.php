@@ -79,20 +79,20 @@ if (isset($_POST['button']) && $_POST['button'] == 'Post') {
         $multi_options = ((isset($_POST['multi_options']) && $_POST['multi_options'] <= $i) ? intval($_POST['multi_options']) : 1);
         //=== serialize it and slap it in the DB FFS!
         $poll_options = serialize($break_down_poll_options);
-        sql_query('INSERT INTO `forum_poll` (`user_id` ,`question` ,`poll_answers` ,`number_of_options` ,`poll_starts` ,`poll_ends` ,`change_vote` ,`multi_options`)
+        sql_query('INSERT INTO `'.TBL_FORUM_POLL.'` (`user_id` ,`question` ,`poll_answers` ,`number_of_options` ,`poll_starts` ,`poll_ends` ,`change_vote` ,`multi_options`)
 					VALUES (' . $CURUSER['id'] . ', ' . sqlesc($poll_question) . ', ' . sqlesc($poll_options) . ', ' . $i . ', ' . $poll_starts . ', ' . $poll_ends . ', \'' . $change_vote . '\', ' . $multi_options . ')');
         $poll_id = ((is_null($___mysqli_res = mysqli_insert_id($GLOBALS["___mysqli_ston"]))) ? false : $___mysqli_res);
     }
-    sql_query('INSERT INTO topics (`id`, `user_id`, `topic_name`, `forum_id`, `topic_desc`, `poll_id`, `anonymous`) VALUES (NULL, ' . $CURUSER['id'] . ', ' . sqlesc($topic_name) . ', ' . $forum_id . ', ' . sqlesc($topic_desc) . ', ' . $poll_id . ', ' . sqlesc($anonymous) . ')');
+    sql_query('INSERT INTO '.TBL_TOPICS.' (`id`, `user_id`, `topic_name`, `forum_id`, `topic_desc`, `poll_id`, `anonymous`) VALUES (NULL, ' . $CURUSER['id'] . ', ' . sqlesc($topic_name) . ', ' . $forum_id . ', ' . sqlesc($topic_desc) . ', ' . $poll_id . ', ' . sqlesc($anonymous) . ')');
     $topic_id = ((is_null($___mysqli_res = mysqli_insert_id($GLOBALS["___mysqli_ston"]))) ? false : $___mysqli_res);
-    sql_query('INSERT INTO `posts` ( `topic_id` , `user_id` , `added` , `body` , `icon` , `post_title` , `bbcode` , `ip` , `anonymous`) VALUES 
+    sql_query('INSERT INTO '.TBL_POSTS.' ( `topic_id` , `user_id` , `added` , `body` , `icon` , `post_title` , `bbcode` , `ip` , `anonymous`) VALUES 
       		(' . $topic_id . ', ' . $CURUSER['id'] . ', ' . TIME_NOW . ', ' . sqlesc($body) . ', ' . sqlesc($icon) . ',  ' . sqlesc($post_title) . ', ' . sqlesc($bb_code) . ', ' . sqlesc($ip) . ', ' . sqlesc($anonymous) . ')');
-    sql_query("UPDATE usersachiev SET forumtopics=forumtopics+1 WHERE id=" . sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
+    sql_query("UPDATE ".TBL_USERSACHIEV." SET forumtopics=forumtopics+1 WHERE id=" . sqlesc($CURUSER['id'])) or sqlerr(__FILE__, __LINE__);
     $post_id = ((is_null($___mysqli_res = mysqli_insert_id($GLOBALS["___mysqli_ston"]))) ? false : $___mysqli_res);
     $mc1->delete_value('last_posts_' . $CURUSER['class']);
     $mc1->delete_value('forum_posts_' . $CURUSER['id']);
-    sql_query('UPDATE `topics` SET last_post = ' . $post_id . ', first_post =  ' . $post_id . ', post_count = 1 WHERE id=' . sqlesc($topic_id));
-    sql_query('UPDATE `forums` SET post_count = post_count +1, topic_count = topic_count + 1 WHERE id =' . sqlesc($forum_id));
+    sql_query('UPDATE '.TBL_TOPICS.' SET last_post = ' . $post_id . ', first_post =  ' . $post_id . ', post_count = 1 WHERE id=' . sqlesc($topic_id));
+    sql_query('UPDATE `'.TBL_FORUMS.'` SET post_count = post_count +1, topic_count = topic_count + 1 WHERE id =' . sqlesc($forum_id));
     if ($INSTALLER09['autoshout_on'] == 1) {
         $message = $CURUSER['username'] . " Created a new topic [url={$INSTALLER09['baseurl']}/forums.php?action=view_topic&topic_id=$topic_id&page=last]{$topic_name}[/url]";
         //////remember to edit the ids to your staffforum ids :)
@@ -102,7 +102,7 @@ if (isset($_POST['button']) && $_POST['button'] == 'Post') {
         }
     }
     if ($INSTALLER09['seedbonus_on'] == 1) {
-        sql_query("UPDATE users SET seedbonus = seedbonus+3.0 WHERE id =  " . sqlesc($CURUSER['id'] . "")) or sqlerr(__FILE__, __LINE__);
+        sql_query("UPDATE ".TBL_USERS." SET seedbonus = seedbonus+3.0 WHERE id =  " . sqlesc($CURUSER['id'] . "")) or sqlerr(__FILE__, __LINE__);
         $update['seedbonus'] = ($CURUSER['seedbonus'] + 3);
         $mc1->begin_transaction('userstats_' . $CURUSER["id"]);
         $mc1->update_row(false, array(
@@ -160,7 +160,7 @@ if (isset($_POST['button']) && $_POST['button'] == 'Post') {
                 $name = substr($name, 0, -strlen($file_extension));
                 $upload_to = $upload_folder . $name . '(id-' . $post_id . ')' . $file_extension;
                 //===plop it into the DB all safe and snuggly
-                sql_query('INSERT INTO `attachments` (`post_id`, `user_id`, `file`, `file_name`, `added`, `extension`, `size`) VALUES 
+                sql_query('INSERT INTO '.TBL_ATTACHMENTS.' (`post_id`, `user_id`, `file`, `file_name`, `added`, `extension`, `size`) VALUES 
 ( ' . $post_id . ', ' . $CURUSER['id'] . ', ' . sqlesc($name . '(id-' . $post_id . ')' . $file_extension) . ', ' . sqlesc($name) . ', ' . TIME_NOW . ', ' . ($file_extension === '.zip' ? '\'zip\'' : '\'rar\'') . ', ' . $size . ')');
                 copy($_FILES['attachment']['tmp_name'][$key], $upload_to);
                 chmod($upload_to, 0777);
@@ -169,12 +169,12 @@ if (isset($_POST['button']) && $_POST['button'] == 'Post') {
     }
 } //=== end attachment stuff
 if ($subscribe == 'yes') {
-    sql_query('INSERT INTO `subscriptions` (`user_id`, `topic_id`) VALUES (' . sqlesc($CURUSER['id']) . ', ' . sqlesc($topic_id) . ')');
+    sql_query('INSERT INTO '.TBL_SUBSCRIPTIONS.' (`user_id`, `topic_id`) VALUES (' . sqlesc($CURUSER['id']) . ', ' . sqlesc($topic_id) . ')');
 }
 header('Location: forums.php?action=view_topic&topic_id=' . $topic_id . ($extension_error !== 0 ? '&ee=' . $extension_error : '') . ($size_error !== 0 ? '&se=' . $size_error : ''));
 die();
 }
-$res = sql_query('SELECT name FROM forums WHERE id=' . sqlesc($forum_id));
+$res = sql_query('SELECT name FROM '.TBL_FORUMS.' WHERE id=' . sqlesc($forum_id));
 $arr = mysqli_fetch_assoc($res);
 $section_name = htmlsafechars($arr['name'], ENT_QUOTES);
 $HTMLOUT.= '<table align="center" class="main" width="750px" border="0" cellspacing="0" cellpadding="0">

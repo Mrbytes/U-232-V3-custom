@@ -35,7 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $do == "addpromo") {
     $bonus_karma = (isset($_POST["bonus_karma"]) ? 0 + $_POST["bonus_karma"] : 0);
     if ($bonus_upload == 0 && $bonus_invites == 0 && $bonus_karma == 0) stderr("Error", "No gift for the new users ?! :w00t: give them some gifts :D");
     $link = md5("promo_link".TIME_NOW);
-    $q = sql_query("INSERT INTO promo (name,added,days_valid,max_users,link,creator,bonus_upload,bonus_invites,bonus_karma) VALUES (".implode(",", array_map("sqlesc", array(
+    $q = sql_query("INSERT INTO ".TBL_PROMO." (name,added,days_valid,max_users,link,creator,bonus_upload,bonus_invites,bonus_karma) VALUES (".implode(",", array_map("sqlesc", array(
         $promoname,
         TIME_NOW,
         $days_valid,
@@ -50,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $do == "addpromo") {
     else stderr("Success", "The promo link <b>".htmlsafechars($promoname)."</b> was added! here is the link <br /><input type=\"text\" name=\"promo-link\" value=\"".$INSTALLER09['baseurl'].$_SERVER["PHP_SELF"]."?do=signup&amp;link=".$link."\" size=\"80\" onclick=\"select();\"  /><br/><a href=\"".$_SERVER["PHP_SELF"]."\"><input type=\"button\" value=\"Back to Promos\" /></a>");
 } elseif ($_SERVER["REQUEST_METHOD"] == "POST" && $do == "signup") {
     //==err("w00t");
-    $r_check = sql_query("SELECT * FROM promo WHERE link=".sqlesc($link)) or sqlerr(__FILE__, __LINE__);
+    $r_check = sql_query("SELECT * FROM ".TBL_PROMO." WHERE link=".sqlesc($link)) or sqlerr(__FILE__, __LINE__);
     if (mysqli_num_rows($r_check) == 0) stderr("Error", "The link your using is not a valid link");
     else {
         $ar_check = mysqli_fetch_assoc($r_check);
@@ -69,12 +69,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $do == "addpromo") {
         if (empty($email)) stderr("Error", "No email adress, you forgot about that?");
         if (!validemail($email)) stderr("Error", "That dosen't look like an email adress");
         //==Check if username or password already exists
-        $var_check = sql_query("SELECT id, editsecret FROM users where username=".sqlesc($username)." OR email=".sqlesc($email)) or sqlerr(__FILE__, __LINE__);
+        $var_check = sql_query("SELECT id, editsecret FROM ".TBL_USERS." where username=".sqlesc($username)." OR email=".sqlesc($email)) or sqlerr(__FILE__, __LINE__);
         if (mysqli_num_rows($var_check) == 1) stderr("Error", "Username or password already exists");
         $secret = mksecret();
         $passhash = make_passhash($secret, md5($password));
         $editsecret = make_passhash_login_key();
-        $res = sql_query("INSERT INTO users(username, passhash, secret, editsecret, email, added, uploaded, invites, seedbonus) VALUES (".implode(",", array_map("sqlesc", array(
+        $res = sql_query("INSERT INTO ".TBL_USERS."(username, passhash, secret, editsecret, email, added, uploaded, invites, seedbonus) VALUES (".implode(",", array_map("sqlesc", array(
             $username,
             $passhash,
             $secret,
@@ -89,7 +89,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $do == "addpromo") {
             //==Updating promo table
             $userid = ((is_null($___mysqli_res = mysqli_insert_id($GLOBALS["___mysqli_ston"]))) ? false : $___mysqli_res);
             $users = (empty($ar_check["users"]) ? $userid : $ar_check["users"].",".$userid);
-            sql_query("update promo set accounts_made=accounts_made+1 , users=".sqlesc($users)." WHERE id=".sqlesc($ar_check["id"])) or sqlerr(__FILE__, __LINE__);
+            sql_query("update ".TBL_PROMO." set accounts_made=accounts_made+1 , users=".sqlesc($users)." WHERE id=".sqlesc($ar_check["id"])) or sqlerr(__FILE__, __LINE__);
             //==Email part :)
             $sec = $editsecret;
             $subject = $INSTALLER09['site_name']." user registration confirmation";
@@ -107,12 +107,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $do == "addpromo") {
         } else stderr("Error", "Something odd happned please retry");
     }
 } elseif ($do == "delete" && $id > 0) {
-    $r = sql_query("SELECT name FROM promo WHERE id=".$id) or sqlerr(__FILE__, __LINE__);
+    $r = sql_query("SELECT name FROM ".TBL_PROMO." WHERE id=".$id) or sqlerr(__FILE__, __LINE__);
     if ($sure == "no") {
         $a = mysqli_fetch_assoc($r);
         stderr("Sanity check...", "You are about to delete promo <b>".htmlsafechars($a["name"])."</b>, if you are sure click <a href=\"".$_SERVER["PHP_SELF"]."?do=delete&amp;id=".$id."&amp;sure=yes\">here</a>");
     } elseif ($sure == "yes") {
-        if (sql_query("DELETE FROM promo where id=".$id) or sqlerr(__FILE__, __LINE__)) {
+        if (sql_query("DELETE FROM ".TBL_PROMO." where id=".$id) or sqlerr(__FILE__, __LINE__)) {
             header("Refresh: 2; url=".$_SERVER["PHP_SELF"]);
             stderr("Success", "Promo was deleted!");
         } else stderr("Error", "Odd things happned!Contact your coder!");
@@ -154,7 +154,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $do == "addpromo") {
 } elseif ($do == "signup") {
     if (empty($link)) stderr("Error", "There is no link found! Please check the link");
     else {
-        $r_promo = sql_query("SELECT * from promo where link=".sqlesc($link)) or sqlerr(__FILE__, __LINE__);
+        $r_promo = sql_query("SELECT * from ".TBL_PROMO." where link=".sqlesc($link)) or sqlerr(__FILE__, __LINE__);
         if (mysqli_num_rows($r_promo) == 0) stderr("Error", "There is no promo with that link ");
         else {
             $ar = mysqli_fetch_assoc($r_promo);
@@ -187,12 +187,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $do == "addpromo") {
 } elseif ($do == "accounts") {
     if ($id == 0) die("Can't find id");
     else {
-        $q1 = sql_query("SELECT name, users FROM promo WHERE id=".$id."") or sqlerr(__FILE__, __LINE__);
+        $q1 = sql_query("SELECT name, users FROM ".TBL_PROMO." WHERE id=".$id."") or sqlerr(__FILE__, __LINE__);
         if (mysqli_num_rows($q1) == 1) {
             $a1 = mysqli_fetch_assoc($q1);
             if (!empty($a1["users"])) {
                 $users = explode(",", $a1["users"]);
-                if (!empty($users)) $q2 = sql_query("SELECT id, username, added FROM users WHERE id IN (".join(",", $users).")") or sqlerr(__FILE__, __LINE__);
+                if (!empty($users)) $q2 = sql_query("SELECT id, username, added FROM ".TBL_USERS." WHERE id IN (".join(",", $users).")") or sqlerr(__FILE__, __LINE__);
                 $HTMLOUT = "
           <!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN''http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
           <html xmlns='http://www.w3.org/1999/xhtml'>
@@ -230,7 +230,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $do == "addpromo") {
 } else {
     loggedinorreturn();
     if ($CURUSER['class'] < UC_STAFF) stderr("Error", "There is nothing for you here! Go play somewere else");
-    $r = sql_query("SELECT p.*,u.username from promo as p LEFT JOIN users as u on p.creator=u.id ORDER by p.added,p.days_valid DESC") or sqlerr(__FILE__, __LINE__);
+    $r = sql_query("SELECT p.*,u.username from ".TBL_PROMO." as p LEFT JOIN ".TBL_USERS." as u on p.creator=u.id ORDER by p.added,p.days_valid DESC") or sqlerr(__FILE__, __LINE__);
     if (mysqli_num_rows($r) == 0) stderr("Error", "There is no promo if you want to make one click <a href=\"".$_SERVER["PHP_SELF"]."?do=addpromo\">here</a>");
     else {
         $HTMLOUT.= begin_frame("Current Promos&nbsp;<font class=\"small\"><a href=\"".$_SERVER["PHP_SELF"]."?do=addpromo\">- Add promo</a></font>");

@@ -13,7 +13,7 @@ function docleanup($data)
     set_time_limit(0);
     ignore_user_abort(1);
     //==Irc idle mod - pdq
-    $res = sql_query("SELECT id, seedbonus, irctotal FROM users WHERE onirc = 'yes'") or sqlerr(__FILE__, __LINE__);
+    $res = sql_query("SELECT id, seedbonus, irctotal FROM ".TBL_USERS." WHERE onirc = 'yes'") or sqlerr(__FILE__, __LINE__);
     if (mysqli_num_rows($res) > 0) {
         while ($arr = mysqli_fetch_assoc($res)) {
             $users_buffer[] = '('.$arr['id'].',0.225,'.$INSTALLER09['autoclean_interval'].')'; // .250 karma
@@ -38,8 +38,8 @@ function docleanup($data)
         }
         $count = count($users_buffer);
         if ($count > 0) {
-            sql_query("INSERT INTO users (id,seedbonus,irctotal) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE seedbonus=seedbonus+values(seedbonus),irctotal=irctotal+values(irctotal)") or sqlerr(__FILE__, __LINE__);
-            //sql_query("INSERT INTO users (id,uploaded,irctotal) VALUES ".implode(', ',$users_buffer)." ON DUPLICATE key UPDATE uploaded=uploaded+values(uploaded),irctotal=irctotal+values(irctotal)") or sqlerr(__FILE__,__LINE__);
+            sql_query("INSERT INTO ".TBL_USERS." (id,seedbonus,irctotal) VALUES ".implode(', ', $users_buffer)." ON DUPLICATE key UPDATE seedbonus=seedbonus+values(seedbonus),irctotal=irctotal+values(irctotal)") or sqlerr(__FILE__, __LINE__);
+            //sql_query("INSERT INTO ".TBL_USERS." (id,uploaded,irctotal) VALUES ".implode(', ',$users_buffer)." ON DUPLICATE key UPDATE uploaded=uploaded+values(uploaded),irctotal=irctotal+values(irctotal)") or sqlerr(__FILE__,__LINE__);
             write_log("Cleanup ".$count." users idling on IRC");
         }
         unset($users_buffer, $update, $count);
@@ -59,6 +59,6 @@ function cleanup_log($data)
     $added = TIME_NOW;
     $ip = sqlesc($_SERVER['REMOTE_ADDR']);
     $desc = sqlesc($data['clean_desc']);
-    sql_query("INSERT INTO cleanup_log (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
+    sql_query("INSERT INTO ".TBL_CLEANUP_LOG." (clog_event, clog_time, clog_ip, clog_desc) VALUES ($text, $added, $ip, {$desc})") or sqlerr(__FILE__, __LINE__);
 }
 ?>

@@ -8,7 +8,7 @@ if (!defined('IN_OFFERS')) exit('No direct script access allowed');
  *   Project Leaders: Mindless, putyn.
  *
  */
-$rs = sql_query("SELECT o.*, c.id AS catid, c.name AS catname FROM offers AS o LEFT JOIN categories AS c ON (c.id=o.cat) WHERE o.id = $id") or sqlerr(__FILE__, __LINE__);
+$rs = sql_query("SELECT o.*, c.id AS catid, c.name AS catname FROM ".TBL_OFFERS." AS o LEFT JOIN ".TBL_CATEGORIES." AS c ON (c.id=o.cat) WHERE o.id = $id") or sqlerr(__FILE__, __LINE__);
 $numz = mysqli_fetch_assoc($rs);
 if ($CURUSER['id'] != $numz['userid'] && $CURUSER['class'] < UC_MODERATOR) stderr('Error!', 'This is not your offer to edit.');
 $s = htmlspecialchars($numz['offer']);

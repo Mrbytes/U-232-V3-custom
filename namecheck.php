@@ -44,7 +44,7 @@ if (strlen($_GET["wantusername"]) > 12) {
     exit();
 }
 $checkname = sqlesc($_GET["wantusername"]);
-$sql = "SELECT username FROM users WHERE username = $checkname";
+$sql = "SELECT username FROM ".TBL_USERS." WHERE username = $checkname";
 $result = sql_query($sql);
 $numbers = mysqli_num_rows($result);
 if ($numbers > 0) {

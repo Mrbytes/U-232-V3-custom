@@ -34,7 +34,7 @@ function usercommenttable($rows)
 $HTMLOUT.= "<h1>Comments left for <a href='userdetails.php?id=$id'>".htmlsafechars($user['username'])."</a></h1>
     <a name='startcomments'></a>";
 $commentbar = "<a href='usercomment.php?action=add&amp;userid={$id}'>Add a comment</a>\n";
-$subres = sql_query("SELECT COUNT(id) FROM usercomments WHERE userid = ".sqlesc($id));
+$subres = sql_query("SELECT COUNT(id) FROM ".TBL_USERCOMMENTS." WHERE userid = ".sqlesc($id));
 $subrow = mysqli_fetch_array($subres, MYSQLI_NUM);
 $count = $subrow[0];
 if (!$count) {
@@ -44,7 +44,7 @@ if (!$count) {
     $pager = pager(5, $count, "userdetails.php?id=$id&amp;", array(
         'lastpagedefault' => 1
     ));
-    $subres = sql_query("SELECT usercomments.id, text, user, usercomments.added, editedby, editedat, avatar, warned, username, title, class, leechwarn, chatpost, pirate, king, donor FROM usercomments LEFT JOIN users ON usercomments.user = users.id WHERE userid = {$id} ORDER BY usercomments.id {$pager['limit']}") or sqlerr(__FILE__, __LINE__);
+    $subres = sql_query("SELECT ".TBL_USERCOMMENTS.".id, text, user, ".TBL_USERCOMMENTS.".added, editedby, editedat, avatar, warned, username, title, class, leechwarn, chatpost, pirate, king, donor FROM ".TBL_USERCOMMENTS." LEFT JOIN ".TBL_USERS." ON ".TBL_USERCOMMENTS.".user = ".TBL_USERS.".id WHERE userid = {$id} ORDER BY ".TBL_USERCOMMENTS.".id {$pager['limit']}") or sqlerr(__FILE__, __LINE__);
     $allrows = array();
     while ($subrow = mysqli_fetch_assoc($subres)) $allrows[] = $subrow;
     $HTMLOUT.= ($commentbar);
