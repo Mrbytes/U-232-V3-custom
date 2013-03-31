@@ -48,6 +48,7 @@ $lang = array(
     'last5torrents_seeders' => "Seeders",
     'last5torrents_leechers' => "Leechers",
     'last5torrents_no_torrents' => "No torrents Found",
+    'last5torrents_no_torrentname' => "No name",
     // top 5
     'top5torrents_title' => " Top 5 torrents",
     'top5torrents_type' => "Type",
