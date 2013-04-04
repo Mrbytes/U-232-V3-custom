@@ -27,7 +27,7 @@ if (!$res) {
     if (((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_errno($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_errno()) ? $___mysqli_res : false)) == 1062) stderr("Error", "{$lang['rate_already_voted']}");
     else ((is_object($GLOBALS["___mysqli_ston"])) ? mysqli_error($GLOBALS["___mysqli_ston"]) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false));
 }
-sql_query("UPDATE ".TBL_TORRENTS." SET numratings = numratings + 1, ratingsum = ratingsum + ".sqlesc($rating)." WHERE id = ".sqlesc($id")) or sqlerr(__FILE__, __LINE__);
+sql_query("UPDATE ".TBL_TORRENTS." SET numratings = numratings + 1, ratingsum = ratingsum + ".sqlesc($rating)." WHERE id = ".sqlesc($id)) or sqlerr(__FILE__, __LINE__);
 //$f_r = sql_query("SELECT ratingsum, numratings, IF(numratings < {$INSTALLER09['minvotes']}, NULL, ROUND(ratingsum / numratings, 1)) AS rating FROM ".TBL_TORRENTS." WHERE id = ".$id) or sqlerr(__FILE__, __LINE__);
 //$r_f = mysqli_fetch_assoc($f_r);
 $update['numratings'] = ($r_f['numratings'] + 1);
