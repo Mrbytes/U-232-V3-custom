@@ -22,7 +22,7 @@ function docleanup($data)
     ignore_user_abort(1);
     // Remove expired readposts...
     $dt = TIME_NOW - $INSTALLER09["readpost_expiry"];
-    sql_query("DELETE ".TBL_READ_POSTS." FROM ".TBL_READ_POSTS." LEFT JOIN ".TBL_POSTS." ON ".TBL_READ_POSTS."last_post_read = ".TBL_POSTS.".id WHERE  ".TBL_POSTS.".added < $dt") or sqlerr(__FILE__, __LINE__);
+    sql_query("DELETE ".TBL_READ_POSTS." FROM ".TBL_READ_POSTS." LEFT JOIN ".TBL_POSTS." ON ".TBL_READ_POSTS.".last_post_read = ".TBL_POSTS.".id WHERE ".TBL_POSTS.".added < $dt") or sqlerr(__FILE__, __LINE__);
     if ($queries > 0) write_log("Readpost Clean -------------------- Readpost cleanup Complete using $queries queries --------------------");
     if (false !== mysqli_affected_rows($GLOBALS["___mysqli_ston"])) {
         $data['clean_desc'] = mysqli_affected_rows($GLOBALS["___mysqli_ston"]) . " items deleted/updated";
