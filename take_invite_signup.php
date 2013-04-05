@@ -83,7 +83,7 @@ $editsecret = (!$arr[0] ? "" : make_passhash_login_key());
 $wanthintanswer = md5($hintanswer);
 check_banned_emails($email);
 $user_frees = (TIME_NOW + 14 * 86400);
-$new_user = sql_query("INSERT INTO '.TBL_USERS.' (username, passhash, secret, passhint, hintanswer, editsecret, birthday, invitedby, email, ".(!$arr[0] ? "class, " : "")."added, last_access, last_login, time_offset, dst_in_use, free_switch) VALUES (".implode(",", array_map("sqlesc", array(
+$new_user = sql_query("INSERT INTO ".TBL_USERS." (username, passhash, secret, passhint, hintanswer, editsecret, birthday, invitedby, email, ".(!$arr[0] ? "class, " : "")."added, last_access, last_login, time_offset, dst_in_use, free_switch) VALUES (".implode(",", array_map("sqlesc", array(
     $wantusername,
     $wantpasshash,
     $secret,
@@ -121,7 +121,8 @@ $latestuser_cache['leechwarn'] = '0';
 $latestuser_cache['pirate'] = '0';
 $latestuser_cache['king'] = '0';
 /** OOP **/
-$mc1->cache_value('latestuser', $latestuser_cache, 0, $INSTALLER09['expires']['latestuser']);
+$latestuser_cache = mysqli_fetch_assoc(sql_query('SELECT id, username, class, donor, warned, enabled, chatpost, leechwarn, pirate, king FROM '.TBL_USERS.' WHERE status="confirmed" ORDER BY id DESC LIMIT 1'));
+if ($latestuser_cache['id']) $mc1->cache_value('latestuser', $latestuser_cache, 0, $INSTALLER09['expires']['latestuser']);
 $mc1->delete_value('birthdayusers');
 write_log('User account '.htmlsafechars($wantusername).' was created!');
 if ($INSTALLER09['autoshout_on'] == 1) {

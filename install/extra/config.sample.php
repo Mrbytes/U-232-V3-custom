@@ -153,7 +153,7 @@ $INSTALLER09['catsperrow'] = 4;
 $INSTALLER09['subcatperrow'] = 1;
 $INSTALLER09['maxwidth'] = '90%';
 //== Memcache expires
-$INSTALLER09['expires']['latestuser'] = 0; // 0 = infinite
+$INSTALLER09['expires']['latestuser'] = 600; // 600 = 10 min
 $INSTALLER09['expires']['MyPeers_'] = 120; // 60 = 60 seconds
 $INSTALLER09['expires']['unread'] = 86400; // 86400 = 1 day
 $INSTALLER09['expires']['alerts'] = 0; // 0 = infinite

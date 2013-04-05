@@ -129,7 +129,8 @@ $latestuser_cache['pirate'] = '0';
 $latestuser_cache['king'] = '0';
 
 /** OOP **/
-$mc1->cache_value('latestuser', $latestuser_cache, $INSTALLER09['expires']['latestuser']);
+$latestuser_cache = mysqli_fetch_assoc(sql_query('SELECT id, username, class, donor, warned, enabled, chatpost, leechwarn, pirate, king FROM '.TBL_USERS.' WHERE status="confirmed" ORDER BY id DESC LIMIT 1'));
+if ($latestuser_cache['id']) $mc1->cache_value('latestuser', $latestuser_cache, 0, $INSTALLER09['expires']['latestuser']);
 write_log("User account " . (int)$id . " (" . htmlsafechars($wantusername) . ") was created");
 $psecret = $editsecret;
 if ($INSTALLER09['autoshout_on'] == 1) {
