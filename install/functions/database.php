@@ -71,13 +71,13 @@ function split_sql_file($sql, $delimiter)
 function db_test()
 {
     global $root, $INSTALLER09;
-    $out = '<fieldset><legend>Database</legend>';
+    $out = '<fieldset><legend>'.____('Database').'</legend>';
     require_once ($root.'include/config.php');
     if (@mysqli_connect($INSTALLER09['mysql_host'], $INSTALLER09['mysql_user'], $INSTALLER09['mysql_pass'], $INSTALLER09['mysql_db']))
     {
-        $out.= '<div class="readable">Connection to database no issues reported, data may be imported.</div>';
-        $out.= '<form action="index.php" method="post"><div class="info" style="text-align:center;"><input type="hidden" name="do" value="db_insert" /><input type="submit" value="Import database" /></div></form>';
-    } else $out.= '<div class="notreadable">The connection to the database reported the next issue: </br>'.mysqli_connect_error().'</div><div class="info" style="text-align:center"><input type="button" value="Reload" onclick="window.location.reload()"/></div>';   
+        $out.= '<div class="readable">'.____('Connection to database no issues reported, data may be imported.').'</div>';
+        $out.= '<form action="index.php" method="post"><div class="info" style="text-align:center;"><input type="hidden" name="do" value="db_insert" /><input type="submit" value='.____('Import database').' /></div></form>';
+    } else $out.= '<div class="notreadable">'.____('The connection to the database reported the next issue: ').'</br>'.mysqli_connect_error().'</div><div class="info" style="text-align:center"><input type="button" value='.____('Reload').' onclick="window.location.reload()"/></div>';   
 	$out.= '</fieldset>';
     	print ($out);
 }
@@ -91,7 +91,7 @@ function db_insert()
     $mysqli = new mysqli($INSTALLER09['mysql_host'], $INSTALLER09['mysql_user'], $INSTALLER09['mysql_pass'], $INSTALLER09['mysql_db']);
     $endqueries = ';'; 
     $endqueries_basicdata = ';'; 
-    $out = '<fieldset><legend>Database</legend>';
+    $out = '<fieldset><legend>'.____('Database').'</legend>';
     $sql_query = @fread(@fopen($table_structure, 'r'), @filesize($table_structure));
     $sql_query = preg_replace('/U232v3/',$INSTALLER09['table_prefix'], $sql_query);
     $sql_query = take_out_remarks($sql_query);
@@ -103,14 +103,14 @@ function db_insert()
             $stmt_query->execute();
             if (($stmt_query->errno) != 0)
             {
-                $out.= '<div class="notreadable">There was an error while importing the structure: <br/>'.$stmt_query->errno.' check for error.</div><div class="info" style="text-align:center"><input type="button" value="Reload" onclick="window.location.reload()"/></div>';
+                $out.= '<div class="notreadable">'.____('There was an error while importing the structure: ').'<br/>'.$stmt_query->errno.''.____(' check for error.').'</div><div class="info" style="text-align:center"><input type="button" value='.____('Reload').' onclick="window.location.reload()"/></div>';
                 $out.= '</fieldset>';
                 print ($out);
                 $mysqli->close();
                 die();
             }
         }
-        $out.= '<div class="readable">The structure of database was imported successful</div>';
+        $out.= '<div class="readable">'.____('The structure of database was imported successful').'</div>';
     unset($sql_query);
     $sql_query = @fread(@fopen($table_basicdata, 'r'), @filesize($table_basicdata));
     $sql_query = preg_replace('/U232v3/',$INSTALLER09['table_prefix'], $sql_query);
@@ -123,14 +123,14 @@ function db_insert()
             $stmt_query->execute();
             if (($stmt_query->errno) != 0)
             {
-                $out.= '<div class="notreadable">There was an error while importing the basicdata: <br/>'.$stmt_query->errno.' check for error.</div><div class="info" style="text-align:center"><input type="button" value="Reload" onclick="window.location.reload()"/></div>';
+                $out.= '<div class="notreadable">'.____('There was an error while importing the basicdata: ').'<br/>'.$stmt_query->errno.''.____(' check for error.').'</div><div class="info" style="text-align:center"><input type="button" value='.____('Reload').' onclick="window.location.reload()"/></div>';
                 $out.= '</fieldset>';
                 print ($out);
                 $mysqli->close();
                 die();
             }
         }
-        $out.= '<div class="readable">Basicdata of database was imported successful</div><div class="info" style="text-align:center"><input type="button" value="Finish" onclick="window.location.href=\'?step=3\'"/></div>';
+        $out.= '<div class="readable">'.____('Basicdata of database was imported successful').'</div><div class="info" style="text-align:center"><input type="button" value='.____('Finish').' onclick="window.location.href=\'?step=3\'"/></div>';
         file_put_contents('step2.lock', 1);
     $out.= '</fieldset>';
     print ($out);

@@ -1,8 +1,46 @@
 <?php
+class TempDB extends SQLite3
+{
+    function __construct()
+    {
+        $this->open(":memory:");
+    }
+}
+
+function ____($words)
+{
+    global $db;
+    $stmt = $db->prepare('SELECT locale FROM script_texts WHERE deftext = :words');
+    $stmt->bindValue(':words', $words);
+    $res = $stmt->execute();
+    $res = $res->fetchArray(SQLITE3_ASSOC);
+    $locale = $res['locale'];
+    if (!isset($locale)) return $words;
+    return $locale;
+}
+require_once ('functions/database.php');
+$table_locales = 'extra/script_text_locales.sql';
+$sql_query = @fread(@fopen($table_locales, 'r'), @filesize($table_locales));
+$sql_query = take_out_remarks($sql_query);
+$sql_query = split_sql_file($sql_query,';');
+$db = new TempDB();
+if (!$db) die ("Could not create in-memory database.");
+$lang = substr($_SERVER["HTTP_ACCEPT_LANGUAGE"],0,2);
+for ($i = 0; $i < count($sql_query); $i++)
+{
+    $stmt = $db->prepare($sql_query[$i]);
+    if (($db->lastErrorCode()) != 0)
+    {
+        die("There was an error while importing locales text: " . $db->lastErrorMsg() );
+        $bd->close();
+    }
+    $stmt->bindValue(':lang', $lang);
+    $stmt->execute();
+}
 $step = isset($_GET['step']) ? (int)$_GET['step'] : 0;
 $root = $_SERVER['DOCUMENT_ROOT'];
 if ($root[strlen($root) - 1] != DIRECTORY_SEPARATOR) $root = $root.DIRECTORY_SEPARATOR;
-if (file_exists($root.'include/install.lock')) die('This was already installed, huh ? how this happened');
+if (file_exists($root.'include/install.lock')) die(____('This was already installed, huh ? how this happened'));
 function checkpreviousstep()
 {
     $step = isset($_GET['step']) ? (int)$_GET['step'] - 1 : 0;
@@ -39,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         break;
 
     default:
-        print ('<fieldset><div class="notreadable">Unknown action</div></fieldset>');
+        print ('<fieldset><div class="notreadable">'.____('Unknown action').'</div></fieldset>');
     }
 } else {
     switch ($step) {
@@ -53,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         require_once ('functions/writeconfig.php');
         $out = '<form action="index.php" method="post">';
         foreach ($foo as $fo => $fooo) $out.= createblock($fo, $fooo);
-        $out.= '<fieldset><div style="text-align:center"><input type="submit" value="Submit data" /><input type="hidden" value="write" name="do" /></div></fieldset></form>';
+        $out.= '<fieldset><div style="text-align:center"><input type="submit" value='.____('Submit data').' /><input type="hidden" value="write" name="do" /></div></fieldset></form>';
         print ($out);
         break;
 
@@ -64,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         break;
 
     case 3:
-        $out = '<fieldset><legend>All done</legend><div class="info">Installation complete</div></fieldset>';
+        $out = '<fieldset><legend>'.____('All done').'</legend><div class="info">'.____('Installation complete').'</div></fieldset>';
         print ($out);
         break;
     }

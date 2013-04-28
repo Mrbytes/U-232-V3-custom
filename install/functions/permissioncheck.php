@@ -29,15 +29,15 @@ function permissioncheck()
     );
     checkdir($dirs);
     $continue = true;
-    $out = '<fieldset><legend>Directory check</legend>';
+    $out = '<fieldset><legend>'.____('Directory check').'</legend>';
     foreach ($dirs as $dir => $state) {
         if (!$state) $continue = false;
         $out.= '<div class="'.($state ? 'readable' : 'notreadable').'">'.$dir.'</div>';
     }
-    if (!$continue) $out.= '<div class="info" style="text-align:center">It looks like you need to chmod some directories!<br/>all directories marked in red should be chmoded 0777<br/><input type="button" value="Reload" onclick="window.location.reload()"/></div>';
+    if (!$continue) $out.= '<div class="info" style="text-align:center">'.____('It looks like you need to chmod some directories!').'<br/>'.____('all directories marked in red should be chmoded 0777').'<br/><input type="button" value='.____('Reload').' onclick="window.location.reload()"/></div>';
     $out.= '</fieldset>';
     if ($continue) {
-        $out.= '<fieldset><div style="text-align:center"><input type="button" onclick="window.location.href=\'index.php?step=1\'" value="Next step" /></div></fieldset>';
+        $out.= '<fieldset><div style="text-align:center"><input type="button" onclick="window.location.href=\'index.php?step=1\'" value='.____('Next step').' /></div></fieldset>';
         file_put_contents('step0.lock', '1');
     }
     return $out;
